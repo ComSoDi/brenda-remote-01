@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soy iaBrenda</title>
+  <link rel="icon" type="image/x-icon" href="/images/brenda-avatar-32x32.png">
+
+  <!-- Fonts for Auth Overlay -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Nunito+Sans:wght@400&family=Open+Sans:wght@600&family=Roboto:wght@400&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css?GAGv22A" />
+</head>
+
+<body>
+
+  <div class="container">
+    <!-- Fixed header inside container -->
+    <div class="header">
+      <div class="header-left">
+        <img src="images/brenda-avatar.png" alt="Brenda" class="avatar" id="brendaAvatar" />
+        <div class="header-title-block">
+          <div class="header-top">
+            <h1>Soy iaBrenda</h1>
+
+            <button id="accountBtn" class="account-btn" type="button"></button>
+          </div>
+          <div class="header-actions">
+            <button id="subjectsBtn" class="subjects-btn" type="button"></button>
+            <button id="startBtn" class="start-btn" type="button"></button>
+            <button id="helpBtn" class="help-btn" type="button" aria-label="Help">?</button>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content area -->
+    <div class="main">
+
+      <!-- MODE VISUAL AREA (top) -->
+      <section class="mode-visual">
+
+        <!-- TALK visual -->
+        <div id="panelTalk" class="panel panel-talk">
+          <div class="voice-visualizer">
+            <canvas id="waveform"></canvas>
+          </div>
+        </div>
+
+        <!-- TEXT visual (none for now) -->
+        <div id="panelText" class="panel panel-text hidden"></div>
+
+        <!-- VIDEO (future) -->
+        <div id="panelVideo" class="panel panel-video hidden"></div>
+
+      </section>
+
+      <!-- SHARED TRANSCRIPT (never changes across modes) -->
+      <section class="panel panel-transcript" aria-live="polite">
+        <div id="transcript" class="transcript">
+          <div class="transcript-inner" id="transcriptInner"></div>
+        </div>
+      </section>
+
+      <!-- CALL OVERLAY (new) -->
+      <div id="callConnecting" class="call-connecting hidden" aria-hidden="true">
+        <div class="connecting-pill" role="status" aria-live="polite">
+          <span class="connecting-label" id="callConnectingLabel">Connecting</span>
+          <span class="connecting-dots" aria-hidden="true">
+            <span class="connecting-dot"></span>
+            <span class="connecting-dot"></span>
+            <span class="connecting-dot"></span>
+          </span>
+        </div>
+      </div>
+      <div id="callThinking" class="call-connecting hidden" aria-hidden="true">
+        <div class="connecting-pill" role="status" aria-live="polite">
+          <span class="connecting-label" id="callThinkingLabel">Thinking</span>
+          <span class="connecting-dots" aria-hidden="true">
+            <span class="connecting-dot"></span>
+            <span class="connecting-dot"></span>
+            <span class="connecting-dot"></span>
+          </span>
+        </div>
+      </div>
+
+      <div id="callOverlay" class="call-overlay hidden" aria-hidden="true">
+        <div class="call-card">
+          <button id="callMinBtn" class="call-min-btn" type="button" aria-label="Minimise">
+            <!-- square + hyphen -->
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path d="M7 7h10v10H7z" fill="none" stroke="currentColor" stroke-width="2" />
+              <path d="M8 17h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+
+          <div class="call-card-body">
+            <img class="call-avatar" src="images/brenda-avatar.png" alt="Brenda" />
+            <div class="call-title" id="callTitle"></div>
+          </div>
+
+          <button id="callHangBtn" class="call-hang-btn" type="button" aria-label="Hang up">
+            <div class="call-hang-progress" aria-hidden="true"></div>
+            <img src="images/hangup-icon-100x100.png" alt="" class="call-hang-icon" draggable="false" />
+          </button>
+
+        </div>
+      </div>
+
+      <!-- MINIMISED CALL TILE (new) -->
+      <div id="callTile" class="call-tile hidden" aria-hidden="true">
+        <button id="callExpandBtn" class="call-expand-btn" type="button" aria-label="Expand">
+          <!-- hyphen icon (square + short line) -->
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+            <path d="M7 7h10v10H7z" fill="none" stroke="currentColor" stroke-width="2" />
+            <path d="M8 12h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- MODE INPUT AREA (bottom of main; switches by mode) -->
+      <section class="mode-input">
+
+        <!-- TEXT input -->
+        <div id="textInputWrap" class="text-input-wrap hidden">
+          <div class="chat-inputbar">
+            <textarea id="chatInput" class="chat-input" rows="1" placeholder="Type a message..."></textarea>
+            <button id="chatSendBtn" class="chat-send" type="button">Send</button>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- Bottom controls (Talk/Text buttons) -->
+    <div class="activate-buttons-frame">
+      <div class="row">
+
+        <!--  <button id="toggleBtnTalk" class="btn-toggle-talk btn-connect-talk" type="button"></button> -->
+        <!--  <button id="toggleBtnText" class="btn-toggle-text btn-connect-text" type="button"></button> -->
+        <button id="toggleBtnTalk" class="btn-toggle-talk btn-connect-talk" type="button">Talk</button>
+        <button id="toggleBtnText" class="btn-toggle-text btn-connect-text" type="button">Text</button>
+
+      </div>
+
+      <div class="row">
+        <div class="column">
+          <p class="hintTalk" id="hintTalk">Click to Speak</p>
+        </div>
+        <div class="column">
+          <p class="hintText" id="hintText">Click to Text</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTH OVERLAY (Sign in / Sign up) -->
+    <div id="authOverlay" class="auth-overlay hidden" aria-hidden="true">
+      <div class="auth-card">
+        <button id="authCloseBtn" class="auth-close hidden" type="button" aria-label="Close">×</button>
+
+        <div class="auth-top">
+          <img src="images/brenda-avatar.png" alt="Brenda" class="auth-avatar" />
+          <div class="auth-greeting" id="authGreeting"></div>
+          <div class="auth-explain" id="authExplain"></div>
+        </div>
+
+        <div class="auth-form">
+          <label class="auth-label" for="authNick" id="authNickLabel"></label>
+          <input id="authNick" class="auth-input" type="text" inputmode="text" autocomplete="username" />
+          <div class="auth-help" id="authNickHelp"></div>
+
+          <label class="auth-label" for="authPin" id="authPinLabel"></label>
+          <input id="authPin" class="auth-input" type="password" inputmode="numeric" autocomplete="current-password"
+            maxlength="4" />
+          <div class="auth-help" id="authPinHelp"></div>
+
+          <button id="authContinueBtn" class="auth-continue" type="button"></button>
+
+          <div class="auth-error" id="authError" role="alert" aria-live="polite"></div>
+
+          <button id="authAnonBtn" class="auth-anon-link" type="button"></button>
+
+          <a class="auth-privacy" id="authPrivacyLink" href="privacy.html" target="_blank" rel="noopener"></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBJECTS POPUP -->
+    <div id="subjectsOverlay" class="subjects-overlay hidden" aria-hidden="true">
+      <div class="subjects-card" role="dialog" aria-modal="true" aria-labelledby="subjectsTitle">
+        <div class="subjects-card-header">
+          <h1 id="subjectsTitle"></h1>
+          <button id="subjectsCloseBtn" class="subjects-close-btn" type="button" aria-label="Close">×</button>
+        </div>
+        <h2 id="subjectsSubtitle" class="subjects-subtitle"></h2>
+
+        <form id="subjectsForm" class="subjects-form">
+          <label class="subject-field">
+            <span id="subjectLabel1" class="subject-label"></span>
+            <input id="subjectInput1" name="subject1" type="text" maxlength="120" />
+          </label>
+          <label class="subject-field">
+            <span id="subjectLabel2" class="subject-label"></span>
+            <input id="subjectInput2" name="subject2" type="text" maxlength="120" />
+          </label>
+          <label class="subject-field">
+            <span id="subjectLabel3" class="subject-label"></span>
+            <input id="subjectInput3" name="subject3" type="text" maxlength="120" />
+          </label>
+          <label class="subject-field">
+            <span id="subjectLabel4" class="subject-label"></span>
+            <input id="subjectInput4" name="subject4" type="text" maxlength="120" />
+          </label>
+          <label class="subject-field">
+            <span id="subjectLabel5" class="subject-label"></span>
+            <input id="subjectInput5" name="subject5" type="text" maxlength="120" />
+          </label>
+        </form>
+
+        <div class="subjects-actions">
+          <button id="subjectsCancelBtn" class="subjects-btn-cancel" type="button"></button>
+          <button id="subjectsSaveBtn" class="subjects-btn-save" type="button"></button>
+        </div>
+        <div id="subjectsStatus" class="subjects-status" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <!-- HELP OVERLAY -->
+    <div id="helpOverlay" class="help-overlay hidden" aria-hidden="true">
+      <div class="help-card" role="dialog" aria-modal="true">
+        <button id="helpCloseBtn" class="help-close-btn" type="button" aria-label="Close">×</button>
+        <div id="helpContent" class="help-content" role="document"></div>
+        <button id="helpBottomCloseBtn" class="help-bottom-close" type="button"></button>
+      </div>
+    </div>
+
+    <!-- I AM BRENDA OVERLAY -->
+    <div id="brendaOverlay" class="brenda-overlay hidden" aria-hidden="true">
+      <div class="brenda-card" role="dialog" aria-modal="true">
+        <button id="brendaCloseBtn" class="brenda-close-btn" type="button" aria-label="Close">×</button>
+        
+        <div class="brenda-top">
+          <img src="images/brenda-avatar.png" alt="Brenda" class="brenda-avatar" />
+          <h1 id="brendaTitle" class="brenda-title"></h1>
+          <h2 id="brendaSubtitle" class="brenda-subtitle"></h2>
+        </div>
+
+        <div id="brendaContent" class="brenda-content"></div>
+        
+        <button id="brendaBottomCloseBtn" class="brenda-bottom-close" type="button"></button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="config.js?v=22-GAGA"></script>
+  <script src="voiceAgent.js?v=22-GAGA"></script>
+  <script type="module" src="app.js?v=22-GAGA"></script>
+</body>
+
+</html>

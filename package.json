@@ -1,0 +1,26 @@
+{
+  "name": "voice-agent-mvp-ephemeral",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon --env-file=.env server.js",
+    "start": "node --env-file=.env server.js",
+    "vercel-dev": "vercel dev --listen 3000",
+    "test:gemini-key": "node --env-file=.env scripts/test-gemini-key.js",
+    "test:gemini-live": "node --env-file=.env scripts/test-gemini-live.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "mongodb": "^7.0.0",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}

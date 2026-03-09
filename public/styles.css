@@ -1,0 +1,1538 @@
+/* =========================================================
+   0) RESET
+========================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+/* =========================================================
+   1) PAGE BACKGROUND + CENTERING (DESKTOP)
+========================================================= */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+/* =========================================================
+   2) APP FRAME (DEFAULT = DESKTOP PHONE-LIKE)
+========================================================= */
+.container {
+  width: 640px;
+  height: min(800px, 100dvh);
+
+  background-image: url("images/brenda-background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  padding: 14px 14px 10px;
+}
+
+/* =========================================================
+   3) TOP / MIDDLE / BOTTOM LAYOUT
+========================================================= */
+.header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 40px;
+  /* intentional */
+}
+
+.header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+}
+
+.header-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  width: 70px;
+  /* Was 40px */
+  height: 80px;
+  /* Was 40px */
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+.header h1 {
+  color: #333;
+  font-size: 1.6em;
+  margin: 0;
+}
+
+.subjects-btn {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #bfe1f8;
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.subjects-btn:hover {
+  background: #7eff7e;
+  border-color: rgba(27, 148, 78, 0.32);
+}
+
+.start-btn {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: #ffff00;
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+
+}
+
+.start-btn:hover {
+  background: #7eff7e;
+  border-color: rgba(27, 148, 78, 0.32);
+}
+
+.start-btn:active {
+  transform: translateY(1px);
+}
+
+.start-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.help-btn {
+  align-self: flex-start;
+  /* Was flex-start*/
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  height: 36px;
+  min-width: 26px;
+  line-height: 1;
+}
+
+.help-btn:hover {
+  background: #7eff7e;
+  border-color: rgba(27, 148, 78, 0.32);
+}
+
+/* Main needs positioning context for overlay/tile */
+.main {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Unified transcript layout blocks */
+.mode-visual {
+  flex: 0 0 auto;
+}
+
+.panel-transcript {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mode-input {
+  flex: 0 0 auto;
+}
+
+/* Text input wrapper toggled by mode */
+.text-input-wrap.hidden {
+  display: none !important;
+}
+
+.panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-talk {
+  flex: 1;
+  min-height: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Bottom controls stick to bottom */
+.activate-buttons-frame {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.row {
+  display: flex;
+  gap: 14px;
+}
+
+.row:first-child {
+  margin-bottom: 2px;
+}
+
+.column {
+  flex: 1;
+  padding: 2px;
+  background-color: #ffffff;
+  border: 0px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.column p {
+  margin: 0;
+  color: #555;
+  font-size: 0.92em;
+}
+
+/* =========================================================
+   4) TALK MODE (WAVEFORM)
+========================================================= */
+.voice-visualizer {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 10px;
+  background: #fafafa;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  margin-bottom: 12px;
+}
+
+#waveform {
+  display: block;
+  width: 100%;
+  height: 60px;
+}
+
+/* =========================================================
+   5) SHARED TRANSCRIPT
+========================================================= */
+.transcript {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+
+  background: #f9f9f9;
+  border-radius: 10px;
+  padding: 12px;
+  color: #333;
+
+  font-size: 1em;
+  line-height: 1.3;
+
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.transcript-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: flex-end;
+  min-height: 100%;
+}
+
+.transcript-inner:empty::before {
+  content: attr(data-placeholder);
+  color: #999;
+}
+
+/* =========================================================
+   6) TEXT INPUT
+========================================================= */
+.chat-inputbar {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  margin-top: 8px;
+}
+
+.chat-input {
+  flex: 1;
+  resize: none;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 1em;
+  line-height: 1.3;
+  min-height: 44px;
+  max-height: 120px;
+  outline: none;
+}
+
+.chat-send {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 0;
+  font-weight: 800;
+  cursor: pointer;
+  background: #16a34a;
+  color: #fff;
+}
+
+.chat-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   7) BUBBLES
+========================================================= */
+.bubble {
+  max-width: 85%;
+  padding: 6px 12px;
+  border-radius: 14px;
+  font-size: 0.98em;
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bubble-header {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.75;
+  line-height: 1.05;
+  margin: 0;
+  padding: 0;
+}
+
+.bubble-body {
+  margin: 0;
+  padding: 0;
+  line-height: 1.3;
+}
+
+.bubble.user {
+  margin-left: auto;
+  background: #dcf8c6;
+  color: #111;
+  border-top-right-radius: 6px;
+  text-align: left;
+}
+
+.bubble.ai {
+  margin-right: auto;
+  background: #fff;
+  color: #111;
+  border-top-left-radius: 6px;
+  text-align: left;
+}
+
+/* =========================================================
+   8) BUTTONS (BOTTOM BAR)
+========================================================= */
+.btn-toggle-talk,
+.btn-toggle-text {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 0;
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+  flex: 1;
+}
+
+/* ========================================================
+.btn-toggle-talk:hover,
+.btn-toggle-text:hover {
+  background:#7eff7e;
+  border-color:rgba(27, 148, 78, 0.32);
+  color: #2b2b2b; 
+}
+========================================================= */
+
+
+.btn-toggle-talk:disabled,
+.btn-toggle-text:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-connect-talk {
+  background: #16a34a;
+  color: #fff;
+}
+
+.btn-disconnect-talk {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-connect-text {
+  background: #5b5db1;
+  color: #fff;
+}
+
+.btn-disconnect-text {
+  background: #dc2626;
+  color: #fff;
+}
+
+/* =========================================================
+   8.5) CALL OVERLAY + MINIMISED TILE
+========================================================= */
+.call-connecting {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 92px;
+  bottom: 0;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.connecting-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 0, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  color: #0b0b0b;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.connecting-label {
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.connecting-dots {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.connecting-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #0b0b0b;
+  opacity: 0.4;
+  animation: dotJump 1s infinite ease-in-out;
+}
+
+.connecting-dot:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.connecting-dot:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+@keyframes dotJump {
+
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+.call-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* overlay covers the transcript area visually */
+  top: 92px;
+  /* below waveform block (fits your current layout) */
+  bottom: 0;
+  /* stays within .main */
+  z-index: 50;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+}
+
+.call-card {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  background: rgba(50, 220, 200, 0.95);
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.call-min-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.call-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 0 18px;
+  text-align: center;
+}
+
+.call-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+}
+
+.call-title {
+  font-size: 44px;
+  font-weight: 500;
+  line-height: 1.0;
+  color: #0b0b0b;
+}
+
+.call-hang-btn {
+  margin-top: 30px;
+  width: 110px;
+  height: 110px;
+  border-radius: 24px;
+  border: none;
+  background: transparent;
+  color: #0b0b0b;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  position: relative;
+  padding: 0;
+  isolation: isolate;
+  --countdown-ratio: 0;
+}
+
+.call-hang-progress {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  background: url("images/WhiteRing-115x115.png") center / contain no-repeat;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 150ms ease;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.35));
+  -webkit-mask-image: conic-gradient(#000 0deg calc(var(--countdown-ratio, 0) * 360deg), transparent calc(var(--countdown-ratio, 0) * 360deg) 360deg);
+  mask-image: conic-gradient(#000 0deg calc(var(--countdown-ratio, 0) * 360deg), transparent calc(var(--countdown-ratio, 0) * 360deg) 360deg);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: cover;
+  mask-size: cover;
+}
+
+.call-hang-btn.countdown-active .call-hang-progress {
+  opacity: 1;
+}
+
+@supports not (mask-image: conic-gradient(#000 0deg 360deg)) {
+  .call-hang-progress {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+.call-hang-icon {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  position: relative;
+  z-index: 2;
+  display: block;
+}
+
+/* Minimized tile */
+.call-tile {
+  position: absolute;
+  z-index: 60;
+  right: 12px;
+  top: 22px;
+  /* near the waveform area */
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
+  background: rgba(50, 220, 200, 0.95);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  display: grid;
+  place-items: center;
+}
+
+.call-expand-btn {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+/* =========================================================
+   9) MOBILE/TABLET: FULL-SCREEN + NO PAGE DRAG
+========================================================= */
+@media (max-width: 499px) {
+  body {
+    padding: 0 !important;
+    margin: 0 !important;
+    align-items: stretch !important;
+
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  .container {
+    position: fixed !important;
+    inset: 0 !important;
+
+    width: 100vw !important;
+    height: 100dvh !important;
+
+    background-image: url("images/brenda-background.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    border-radius: 16px;
+    box-shadow: none !important;
+    overflow: hidden !important;
+
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+
+    padding: 12px 12px 10px !important;
+  }
+
+  .call-tile {
+    right: 12px;
+    top: 22px;
+  }
+}
+
+/* =========================================================
+   10) ACCOUNT BUTTON (TOP RIGHT)
+========================================================= */
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.account-btn {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.85);
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.account-btn:hover {
+  background: #7eff7e;
+  border-color: rgba(27, 148, 78, 0.32);
+}
+
+/* =========================================================
+   11) AUTH OVERLAY
+========================================================= */
+
+/* Backdrop */
+.auth-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* The popup card (≈80% viewport, capped at 288x640) */
+.auth-card {
+  width: 85%;
+  max-width: 450px;
+  height: min(90vh, 680px);
+
+  position: relative;
+  background: #ffffff;
+  /* 0% transparency */
+  border: 1px solid #444;
+  /* thin dark grey border */
+  border-radius: 18px;
+
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  padding: 22px 18px 18px;
+  text-align: center;
+}
+
+/* Optional close button (if you show it) */
+.auth-close {
+  position: absolute;
+  /* Was relative */
+  top: 15px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #111;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* =========================================================
+   12) BRENDA OVERLAY
+========================================================= */
+
+.brenda-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.brenda-card {
+  width: 90%;
+  max-width: 500px;
+  height: min(90vh, 720px);
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #444;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  text-align: center;
+}
+
+.brenda-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #111;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.brenda-top {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.brenda-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+  margin-bottom: 10px;
+}
+
+.brenda-title {
+  font-size: 1.5em;
+  margin: 0;
+  color: #333;
+}
+
+.brenda-subtitle {
+  font-size: 1em;
+  font-weight: normal;
+  color: #666;
+  margin: 4px 0 0 0;
+}
+
+.brenda-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  text-align: left;
+  padding: 0 10px;
+  font-size: 0.95em;
+  line-height: 1.5;
+  color: #444;
+}
+
+.brenda-content h1, .brenda-content h2 {
+    display: none; /* Hide H1/H2 inside content since we show them in header */
+}
+
+.brenda-content p {
+  margin-bottom: 1em;
+}
+
+.brenda-content ul {
+  margin-bottom: 1em;
+  padding-left: 20px;
+}
+
+.brenda-bottom-close {
+  flex: 0 0 auto;
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  align-self: center;
+}
+
+/* Make avatar and title clickable */
+#brendaAvatar, .header-title-block h1 {
+    cursor: pointer;
+}
+
+/* Top content */
+.auth-top {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+  padding-top: 0px;
+}
+
+.auth-avatar {
+  width: 150px;
+  /* Was 92px */
+  height: 150px;
+  /* Was 92px */
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Title / subtitle fonts */
+.auth-greeting {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  /* Bold 700 */
+  font-size: 22px;
+  line-height: 1.2;
+  color: #111;
+  margin: 2px 0 6px;
+}
+
+.auth-explain {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  /* Regular 400 */
+  font-size: 14px;
+  line-height: 1.35;
+  color: #444;
+  max-width: 240px;
+  margin: 0 0 0px;
+}
+
+/* Form layout */
+.auth-form {
+  width: 100%;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  /* Was 10px */
+}
+
+/* Labels (if present) */
+.auth-label {
+  width: 100%;
+  text-align: left;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #444;
+  margin-top: 2px;
+}
+
+/* Inputs (white + dark border) */
+.auth-input {
+  width: 100%;
+  height: 52px;
+  border-radius: 10px;
+  border: 1px solid #555;
+  background: #fff;
+  padding: 0 14px;
+
+  outline: none;
+
+  font-family: "Nunito Sans", sans-serif;
+  /* placeholders + input */
+  font-weight: 400;
+  font-size: 16px;
+  color: #111;
+}
+
+.auth-input::placeholder {
+  font-family: "Nunito Sans", sans-serif;
+  font-weight: 400;
+  color: #8a8a8a;
+}
+
+/* =========================================================
+   12) HELP OVERLAY (standardized to match auth popup)
+========================================================= */
+:root {
+  /* Ported from help-texts.html */
+  --help-text-color: #1f2937;
+  --help-heading-color: #0f172a;
+  --help-callout-bg: #abffc0;
+  --help-callout-border: #e5e7eb;
+  --help-frame-border: #ffffff;
+  --help-frame-padding-block: 10px;
+  --help-frame-padding-inline: 14px;
+  --help-text-row-min-height: 32px;
+  --help-image-row-height: 72px;
+  --help-blank-row-height: 16px;
+  --help-image-max-width: 160px;
+  --help-image-col-width: 30px;
+}
+
+.help-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  /* Dark backdrop like auth */
+}
+
+/* The popup card (matches .auth-card) */
+.help-card {
+  width: 85%;
+  max-width: 450px;
+  /* height: min(90vh, 800px); allow auto height maxing out at screen */
+  max-height: min(95vh, 740px);
+  height: auto;
+
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #444;
+  border-radius: 18px;
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
+  padding: 22px 0 18px;
+  /* Vertical padding; horizontal handled by content */
+  text-align: center;
+}
+
+/* Close button - mirror .auth-close */
+.help-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 30px;
+  height: 30px;
+  /* match auth-close height */
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #111;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+/* Bottom close button - mirror .brenda-bottom-close */
+.help-bottom-close {
+  flex: 0 0 auto;
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  align-self: center;
+}
+
+/* Header areas */
+.help-top {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0px;
+  padding-top: 0px;
+  margin-bottom: 10px;
+}
+
+.help-avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+}
+
+.help-greeting {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.2;
+  color: #111;
+  margin: 2px 0 6px;
+}
+
+.help-explain {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.35;
+  color: #444;
+  max-width: 240px;
+  margin: 0;
+}
+
+/* Content Area */
+.help-content {
+  width: 100%;
+  overflow-y: auto;
+  padding: 0;
+  /* Internal frames handle padding */
+  font-family: "Nunito Sans", sans-serif;
+  color: var(--help-text-color);
+}
+
+/* --- Ported Grid Styles --- */
+
+.help-section {
+  display: grid;
+  gap: 8px;
+}
+
+.help-content h2 {
+  margin: 0;
+  font-family: "Montserrat", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--help-heading-color);
+}
+
+.help-content p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.help-callout {
+  padding: 4px 12px;
+  border-radius: 10px;
+  background: var(--help-callout-bg);
+  border: 1px solid var(--help-callout-border);
+}
+
+.help-content ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 15px;
+}
+
+.help-frame {
+  /* border: 1px solid var(--help-frame-border); removed border to blend in card */
+  padding-block: var(--help-frame-padding-block);
+  display: grid;
+  gap: 0;
+  box-sizing: border-box;
+}
+
+.help-frame-row {
+  border-top: 1px solid var(--help-frame-border);
+  padding-inline: var(--help-frame-padding-inline);
+  box-sizing: border-box;
+}
+
+.help-frame-row:first-child {
+  border-top: 0;
+}
+
+.help-frame-row--text {
+  min-height: var(--help-text-row-min-height);
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+
+.help-frame-row--text>* {
+  flex: 1;
+  min-width: 0;
+}
+
+.help-frame-row--text.is-large p {
+  font-size: 18px;
+  /* Slightly reduced from 20px to fit mobile better */
+  font-weight: 700;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  text-decoration: underline;
+}
+
+.help-frame-row--image {
+  min-height: var(--help-image-row-height);
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  justify-content: flex-start;
+}
+
+.help-frame-row--image img {
+  display: block;
+  height: auto;
+  max-height: 100%;
+  max-width: var(--help-image-max-width);
+}
+
+.help-frame-row--blank {
+  min-height: var(--help-blank-row-height);
+}
+
+.help-frame-row--two-col {
+  display: grid;
+  grid-template-columns: var(--help-image-col-width, 20px) 1fr;
+  align-items: center;
+  column-gap: 4px;
+  min-height: var(--help-image-row-height);
+}
+
+.help-frame-row--two-col-text-first {
+  grid-template-columns: 1fr var(--help-image-col-width, 20px);
+}
+
+.help-frame-row--two-row {
+  display: grid;
+  grid-template-rows: auto auto;
+  align-items: center;
+  margin-top: 10px;
+  row-gap: 2px;
+  min-height: var(--help-image-row-height);
+}
+
+.help-frame-cell {
+  min-width: 0;
+}
+
+.help-frame-cell--image {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.help-frame-cell--image-center {
+  justify-content: center;
+}
+
+.help-frame-cell--text {
+  display: flex;
+  align-items: center;
+}
+
+.help-frame-cell--text-center {
+  justify-content: center;
+  text-align: center;
+}
+
+.help-divider {
+  height: 1px;
+  background: #709aee;
+  margin: 4px 0 8px;
+}
+
+/* Media query for small screens */
+@media (max-width: 720px) {
+  .help-card {
+    padding: 5px 0 18px;
+  }
+
+  .help-overlay {
+    padding: 12px;
+  }
+}
+
+
+/* Help text under fields */
+.auth-help {
+  width: 100%;
+  text-align: center;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.25;
+  color: #666;
+  margin-top: -6px;
+  /* keeps it close to the input */
+}
+
+/* Continue button gradient */
+.auth-continue {
+  width: 100%;
+  height: 52px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+
+  background: linear-gradient(90deg, #17BF5A 0%, #2F7CF1 100%);
+  color: #fff;
+
+  font-family: "Open Sans", sans-serif;
+  /* Semi-Bold 600 */
+  font-weight: 600;
+  font-size: 16px;
+
+  margin-top: 4px;
+  /* Was 6px */
+  margin-bottom: 0px;
+}
+
+.auth-continue:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error line */
+.auth-error {
+  width: 100%;
+  min-height: 18px;
+  margin-top: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  color: #b00020;
+}
+
+/* Links */
+.auth-anon-link {
+  margin-top: 0px;
+  /* Was 12px */
+  line-height: 1.2;
+  /* Reduces vertical height */
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  font-family: "Roboto", sans-serif;
+  /* footer links */
+  font-weight: 400;
+  font-size: 13px;
+  color: #2F7CF1;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.auth-privacy {
+  margin-top: 12px;
+  /* Was 10px*/
+  line-height: 1.2;
+  /* New */
+  font-family: "Roboto", sans-serif;
+  /* footer links */
+  font-weight: 400;
+  font-size: 13px;
+  color: #2F7CF1;
+  text-decoration: underline;
+}
+
+/* Keep it centered on small screens too */
+/* Was (max-width: 768px) */
+@media (max-width:720px) {
+  .auth-card {
+    padding: 5px 16px 18px;
+    /* was 22px 18px 18px */
+  }
+
+  .auth-overlay {
+    padding: 12px;
+  }
+}
+
+/* ===== Auth overlay spacing FIX ===== */
+
+/* Reduce bottom padding of the card */
+.auth-card {
+  padding-bottom: 10px !important;
+}
+
+/* Pull links closer to Continue button */
+.auth-anon-link {
+  margin-top: 0px !important;
+}
+
+.auth-privacy {
+  margin-top: 2px !important;
+}
+
+/* If still tight on short screens, pull links upward */
+@media (max-height: 720px) {
+  .auth-anon-link {
+    margin-top: 0 !important;
+  }
+
+  .auth-privacy {
+    margin-top: 6px !important;
+  }
+}
+
+/* =========================================================
+   12) SUBJECTS OVERLAY
+========================================================= */
+.subjects-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.subjects-card {
+  width: min(90vw, 320px);
+  background: #ffffff;
+  border: 1px solid #d4d4d8;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  padding: 18px 18px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subjects-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.subjects-card-header h1 {
+  margin: 0;
+  font-size: 20px;
+  color: #111;
+}
+
+.subjects-close-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  color: #111;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.subjects-subtitle {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: #444;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.subjects-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subject-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #333;
+}
+
+.subject-label {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.subject-field input {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #0f172a;
+  background: #fff;
+}
+
+.subjects-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.subjects-btn-cancel,
+.subjects-btn-save {
+  flex: 1;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.subjects-btn-cancel {
+  background: #f3f4f6;
+  color: #111827;
+  border-color: #e5e7eb;
+}
+
+.subjects-btn-save {
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+  color: #fff;
+}
+
+.subjects-status {
+  min-height: 18px;
+  font-size: 12px;
+  color: #2563eb;
+  margin-top: 4px;
+}

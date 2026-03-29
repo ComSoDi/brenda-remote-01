@@ -9,6 +9,18 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+async function readBody(req) {
+  if (req.body && typeof req.body === "object") return req.body;
+  return await new Promise((resolve, reject) => {
+    let raw = "";
+    req.on("data", (c) => (raw += c));
+    req.on("end", () => {
+      try { resolve(JSON.parse(raw || "{}")); } catch { resolve({}); }
+    });
+    req.on("error", reject);
+  });
+}
+
 // Get user's saved location preference
 async function getUserLocation(db, userId) {
   const users = db.collection("users");
@@ -67,7 +79,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { action, city, state, country, lat, lon } = req.body || {};
+    const body = await readBody(req);
+    const { action, city, state, country, lat, lon } = body;
 
     const db = await getDb();
 
@@ -99,8 +112,7 @@ export default async function handler(req, res) {
     // ACTION: Get weather forecast
     if (action === "get_forecast") {
       const existingLocation = await getUserLocation(db, s.userId);
-      const hasSavedLocation = !!existingLocation?.city;
-      const { saveLocation } = req.body || {};
+      const { saveLocation } = body;
 
       let weatherLat = lat;
       let weatherLon = lon;

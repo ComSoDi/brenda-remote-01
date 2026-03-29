@@ -726,6 +726,13 @@ body {
   align-items: center;
 }
 
+.header-top-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .account-btn {
   flex-shrink: 0;
   height: 32px;
@@ -740,6 +747,24 @@ body {
 }
 
 .account-btn:hover {
+  background: #7eff7e;
+  border-color: rgba(27, 148, 78, 0.32);
+}
+
+.location-btn {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.location-btn:hover {
   background: #7eff7e;
   border-color: rgba(27, 148, 78, 0.32);
 }

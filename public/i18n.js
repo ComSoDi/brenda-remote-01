@@ -57,6 +57,18 @@ const STRINGS = {
     subjectsSaved: "Saved",
     subjectsSaveError: "Unable to save topics right now.",
 
+    // Location overlay
+    locationButton: "Where",
+    locationTitle: "Location",
+    locationSubtitle: "Please tell me where you are",
+    locationTown: "Town / City",
+    locationState: "State / Region (optional)",
+    locationCountry: "Country",
+    locationSave: "Save",
+    locationCancel: "Cancel",
+    locationSaved: "Saved",
+    locationSaveError: "Unable to save location right now.",
+
     // Help
     helpTitle: "aiBrenda",
     helpGreeting: "Hi! I'm aiBrenda",
@@ -128,6 +140,18 @@ const STRINGS = {
     subjectsSaved: "Saved",
     subjectsSaveError: "Unable to save topics right now.",
 
+    // Location overlay
+    locationButton: "Where",
+    locationTitle: "Location",
+    locationSubtitle: "Please tell me where you are",
+    locationTown: "Town / City",
+    locationState: "State / Region (optional)",
+    locationCountry: "Country",
+    locationSave: "Save",
+    locationCancel: "Cancel",
+    locationSaved: "Saved",
+    locationSaveError: "Unable to save location right now.",
+
     // Help
     helpTitle: "aiBrenda",
 
@@ -196,6 +220,18 @@ const STRINGS = {
     subjectsCancel: "Cancelar",
     subjectsSaved: "Guardado",
     subjectsSaveError: "No puedo guardar los temas ahora mismo.",
+
+    // Location overlay
+    locationButton: "Dónde",
+    locationTitle: "Ubicación",
+    locationSubtitle: "Por favor, dime dónde estás",
+    locationTown: "Población / Ciudad",
+    locationState: "Región (opcional)",
+    locationCountry: "País",
+    locationSave: "Guardar",
+    locationCancel: "Cancelar",
+    locationSaved: "Guardado",
+    locationSaveError: "No puedo guardar la ubicación ahora mismo.",
 
     // Help
     helpTitle: "aiBrenda Help",
@@ -266,6 +302,18 @@ const STRINGS = {
     subjectsCancel: "Cancelar",
     subjectsSaved: "Guardado",
     subjectsSaveError: "No puedo guardar los temas ahora mismo.",
+
+    // Location overlay
+    locationButton: "Dónde",
+    locationTitle: "Ubicación",
+    locationSubtitle: "Por favor, dime dónde estás",
+    locationTown: "Población / Ciudad",
+    locationState: "Región (opcional)",
+    locationCountry: "País",
+    locationSave: "Guardar",
+    locationCancel: "Cancelar",
+    locationSaved: "Guardado",
+    locationSaveError: "No puedo guardar la ubicación ahora mismo.",
 
     // Help
     helpTitle: "aiBrenda Help",

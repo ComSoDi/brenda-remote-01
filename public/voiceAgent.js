@@ -344,6 +344,11 @@
       if (!evt || !evt.type) return;
 
       if (evt.type === "error") {
+        // Ignore response.cancel race-condition errors — expected when the model
+        // finishes its response before our cancel arrives over the data channel.
+        const errCode = String(evt.error?.code || "").toLowerCase();
+        const errMsg  = String(evt.error?.message || "").toLowerCase();
+        if (errCode.includes("cancel") || errMsg.includes("cancel") || errMsg.includes("no active")) return;
         if (this.onError) this.onError(evt.error || evt);
         return;
       }
@@ -622,6 +627,9 @@
       }
       const safeText = String(text || "").replace(/"/g, "'");
       if (this.backend === "openai") {
+        if (this.remoteAudio?.paused) {
+          try { await this.remoteAudio.play(); } catch { }
+        }
         const payload = `[INTERNAL_INSTRUCTION: SAY EXACTLY "${safeText}"]`;
         return this.sendOpenAIUserText(payload);
       }

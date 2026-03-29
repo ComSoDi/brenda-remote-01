@@ -160,6 +160,22 @@ class BrendaApp {
       subjectsSaveBtn: document.getElementById("subjectsSaveBtn"),
       subjectsStatus: document.getElementById("subjectsStatus"),
 
+      // Location UI
+      locationBtn: document.getElementById("locationBtn"),
+      locationOverlay: document.getElementById("locationOverlay"),
+      locationCloseBtn: document.getElementById("locationCloseBtn"),
+      locationTitle: document.getElementById("locationTitle"),
+      locationSubtitle: document.getElementById("locationSubtitle"),
+      locationTownLabel: document.getElementById("locationTownLabel"),
+      locationStateLabel: document.getElementById("locationStateLabel"),
+      locationCountryLabel: document.getElementById("locationCountryLabel"),
+      locationTownInput: document.getElementById("locationTownInput"),
+      locationStateInput: document.getElementById("locationStateInput"),
+      locationCountryInput: document.getElementById("locationCountryInput"),
+      locationCancelBtn: document.getElementById("locationCancelBtn"),
+      locationSaveBtn: document.getElementById("locationSaveBtn"),
+      locationStatus: document.getElementById("locationStatus"),
+
       // Help UI
       helpBtn: document.getElementById("helpBtn"),
       helpOverlay: document.getElementById("helpOverlay"),
@@ -211,6 +227,7 @@ class BrendaApp {
 
     // Subjects UI labels
     this.localizeSubjectsUI();
+    this.localizeLocationUI();
 
     // Mode button labels (i18n)
     if (this.elements.toggleBtnText) {
@@ -253,6 +270,12 @@ class BrendaApp {
     this.elements.subjectsCloseBtn?.addEventListener("click", () => this.closeSubjectsOverlay());
     this.elements.subjectsCancelBtn?.addEventListener("click", () => this.closeSubjectsOverlay());
     this.elements.subjectsSaveBtn?.addEventListener("click", () => this.onSubjectsSave());
+
+    // Location overlay
+    this.elements.locationBtn?.addEventListener("click", () => this.onLocationButton());
+    this.elements.locationCloseBtn?.addEventListener("click", () => this.closeLocationOverlay());
+    this.elements.locationCancelBtn?.addEventListener("click", () => this.closeLocationOverlay());
+    this.elements.locationSaveBtn?.addEventListener("click", () => this.onLocationSave());
 
     // Help button
     this.elements.helpBtn?.addEventListener("click", () => this.openHelpOverlay());
@@ -643,6 +666,141 @@ class BrendaApp {
     o.setAttribute("aria-hidden", "true");
     this.setSubjectsStatus("");
     this.setSubjectsBusy(false);
+  }
+
+  /* --------------------
+     LOCATION OVERLAY
+  -------------------- */
+  localizeLocationUI() {
+    const v = this.locale.variant;
+    if (this.elements.locationBtn) this.elements.locationBtn.textContent = t(v, "locationButton");
+    if (this.elements.locationTitle) this.elements.locationTitle.textContent = t(v, "locationTitle");
+    if (this.elements.locationSubtitle) this.elements.locationSubtitle.textContent = t(v, "locationSubtitle");
+    if (this.elements.locationTownLabel) this.elements.locationTownLabel.textContent = t(v, "locationTown");
+    if (this.elements.locationStateLabel) this.elements.locationStateLabel.textContent = t(v, "locationState");
+    if (this.elements.locationCountryLabel) this.elements.locationCountryLabel.textContent = t(v, "locationCountry");
+    if (this.elements.locationSaveBtn) this.elements.locationSaveBtn.textContent = t(v, "locationSave");
+    if (this.elements.locationCancelBtn) this.elements.locationCancelBtn.textContent = t(v, "locationCancel");
+  }
+
+  setLocationStatus(msg, isError = false) {
+    if (this.elements.locationStatus) {
+      this.elements.locationStatus.textContent = msg || "";
+      this.elements.locationStatus.style.color = isError ? "#b00020" : "#2563eb";
+    }
+  }
+
+  setLocationBusy(isBusy) {
+    [this.elements.locationTownInput, this.elements.locationStateInput, this.elements.locationCountryInput].forEach((el) => {
+      if (el) el.disabled = isBusy;
+    });
+    if (this.elements.locationSaveBtn) this.elements.locationSaveBtn.disabled = isBusy;
+    if (this.elements.locationCancelBtn) this.elements.locationCancelBtn.disabled = isBusy;
+  }
+
+  async populateLocationForm() {
+    // Pre-fill with saved location if the user has one
+    if (!this.user || this.user.isAnonymous) return;
+    try {
+      const res = await fetch("/api/weather", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action: "get_location" }),
+      });
+      if (!res.ok) return;
+      const data = await res.json().catch(() => ({}));
+      if (data?.location) {
+        if (this.elements.locationTownInput) this.elements.locationTownInput.value = data.location.city || "";
+        if (this.elements.locationStateInput) this.elements.locationStateInput.value = data.location.state || "";
+        if (this.elements.locationCountryInput) this.elements.locationCountryInput.value = data.location.country || "";
+      }
+    } catch {
+      // ignore — form stays empty
+    }
+  }
+
+  async openLocationOverlay() {
+    const o = this.elements.locationOverlay;
+    if (!o) return;
+    this.setLocationStatus("");
+    // Clear fields first, then populate with saved data
+    if (this.elements.locationTownInput) this.elements.locationTownInput.value = "";
+    if (this.elements.locationStateInput) this.elements.locationStateInput.value = "";
+    if (this.elements.locationCountryInput) this.elements.locationCountryInput.value = "";
+    o.classList.remove("hidden");
+    o.setAttribute("aria-hidden", "false");
+    await this.populateLocationForm();
+    setTimeout(() => this.elements.locationTownInput?.focus(), 30);
+  }
+
+  closeLocationOverlay() {
+    const o = this.elements.locationOverlay;
+    if (!o) return;
+    o.classList.add("hidden");
+    o.setAttribute("aria-hidden", "true");
+    this.setLocationStatus("");
+    this.setLocationBusy(false);
+  }
+
+  onLocationButton() {
+    if (!this.user) {
+      this.openAuthOverlay({ closable: false, resetFields: true });
+      return;
+    }
+    this.openLocationOverlay();
+  }
+
+  async onLocationSave() {
+    if (!this.user) {
+      this.openAuthOverlay({ closable: false, resetFields: true });
+      return;
+    }
+    const city = (this.elements.locationTownInput?.value || "").trim();
+    const state = (this.elements.locationStateInput?.value || "").trim();
+    const country = (this.elements.locationCountryInput?.value || "").trim();
+    const v = this.locale.variant;
+
+    if (!city) {
+      this.setLocationStatus(t(v, "locationTown") + " is required", true);
+      this.elements.locationTownInput?.focus();
+      return;
+    }
+
+    this.setLocationBusy(true);
+    this.setLocationStatus("");
+
+    try {
+      const res = await fetch("/api/weather", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ action: "get_forecast", city, state, country, saveLocation: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok || !data.ok) {
+        if (data.code === "multiple_locations") {
+          const options = (data.candidates || [])
+            .map((c) => [c.city, c.state, c.country].filter(Boolean).join(", "))
+            .join(" / ");
+          this.setLocationStatus(`Multiple matches: ${options}. Please be more specific.`, true);
+        } else if (data.code === "city_not_found") {
+          this.setLocationStatus(v.startsWith("es") ? "Ciudad no encontrada. Intenta de nuevo." : "City not found. Please try again.", true);
+        } else {
+          this.setLocationStatus(data.error || t(v, "locationSaveError"), true);
+        }
+        return;
+      }
+
+      this.setLocationStatus(t(v, "locationSaved"));
+      setTimeout(() => this.closeLocationOverlay(), 600);
+    } catch (e) {
+      console.error(e);
+      this.setLocationStatus(e?.message || t(v, "locationSaveError"), true);
+    } finally {
+      this.setLocationBusy(false);
+    }
   }
 
   /* --------------------
@@ -1059,6 +1217,7 @@ class BrendaApp {
       if (this.callUI === "closed") this.setCallUI("open");
       this.recordVoiceActivity();
       if (status === "speaking" && prevStatus !== "speaking") {
+        this.setThinkingIndicator(false);
         this.flushPendingUserTranscript();
       }
       if (status === "connected" && (prevStatus === "disconnected" || prevStatus === "connecting") && !this._voiceGreetingSent) {
@@ -1073,6 +1232,7 @@ class BrendaApp {
       this.setTalkButtonState({ connected: false, disabled: false });
       this.setCallUI("closed");
       this.setConnectingIndicator(false);
+      this.setThinkingIndicator(false);
       this.clearVoiceCountdown();
       this.clearVoiceGreetingTimer();
 
@@ -1093,6 +1253,9 @@ class BrendaApp {
       }
       const cleaned = String(text || "").trim();
       if (!cleaned) return;
+
+      // Show thinking on the first transcript fragment of each user turn.
+      if (this._awaitingUserTranscript) this.setThinkingIndicator(true);
 
       // Buffer user transcript fragments; render once the turn is complete.
       this._pendingUserTranscript = this.appendTranscriptText(this._pendingUserTranscript, cleaned, "user");
@@ -1129,7 +1292,11 @@ class BrendaApp {
     if (!delta) return;
 
     if (this._awaitingUserTranscript) {
-      this._pendingAssistantText = this.appendTranscriptText(this._pendingAssistantText, delta, "assistant");
+      if (meta?.final) {
+        this._pendingAssistantText = delta;
+      } else {
+        this._pendingAssistantText = this.appendTranscriptText(this._pendingAssistantText, delta, "assistant");
+      }
 
       if (!this._pendingAssistantTimer) {
         this._pendingAssistantTimer = setTimeout(() => {
@@ -1164,7 +1331,9 @@ class BrendaApp {
 
     const idx = this.findMessageIndexById(this._currentAssistantId);
     if (idx >= 0) {
-      this.messages[idx].text = this.appendTranscriptText(this.messages[idx].text, delta, "assistant");
+      this.messages[idx].text = meta?.final
+        ? delta
+        : this.appendTranscriptText(this.messages[idx].text, delta, "assistant");
       this.messages[idx].status = "streaming";
       this.render();
     }
@@ -1352,7 +1521,7 @@ class BrendaApp {
       const payload = { localeVariant: this.locale.variant, messages: this.buildChatHistory(16) };
       const data = await this.chatRequest(payload);
       const reply = data.reply;
-      if (shouldShowThinking) this.setThinkingIndicator(false);
+      this.setThinkingIndicator(false);
 
       const msg = this.addMessage({ role: "assistant", channel: "voice", text: reply, status: "final" });
       this.render();
@@ -1361,7 +1530,7 @@ class BrendaApp {
       await this.speakText(reply);
     } catch (e) {
       console.error(e);
-      if (shouldShowThinking) this.setThinkingIndicator(false);
+      this.setThinkingIndicator(false);
       const errMsg = this.addMessage({ role: "assistant", channel: "voice", text: `(${e.message})`, status: "final" });
       this.render();
       await this.persistMessage(errMsg);
@@ -1388,6 +1557,7 @@ class BrendaApp {
       }
 
       const payload = { localeVariant: this.locale.variant, messages: this.buildChatHistory(16) };
+      if (this._voiceWeatherActive) payload.weatherPending = true;
       const data = await this.chatRequest(payload);
       const reply = data.reply;
       if (shouldShowThinking) this.setThinkingIndicator(false);
@@ -1410,6 +1580,7 @@ class BrendaApp {
     } catch (e) {
       console.error(e);
       if (shouldShowThinking) this.setThinkingIndicator(false);
+      this._voiceWeatherActive = false;
       this.showError(e);
     } finally {
       this._voiceWeatherInFlight = false;
@@ -1426,34 +1597,41 @@ class BrendaApp {
     const btn = this.elements.chatSendBtn;
     const text = (input.value || "").trim();
     if (!text) return;
-    const shouldShowThinking = this.isWeatherQuery(text) || this.isTimeQuery(text);
-
     const userMsg = this.addMessage({ role: "user", channel: "text", text, status: "final" });
 
     input.value = "";
     this.autoGrowTextarea();
     this.render();
-    if (shouldShowThinking) this.setThinkingIndicator(true);
+    this.setThinkingIndicator(true);
 
     btn.disabled = true;
     try {
       await this.persistMessage(userMsg);
 
-      const reply = await this.callChatAPI();
-      if (shouldShowThinking) this.setThinkingIndicator(false);
+      const payload = { localeVariant: this.locale.variant, messages: this.buildChatHistory(16) };
+      if (this._textWeatherPending) payload.weatherPending = true;
+      const data = await this.chatRequest(payload);
+      const reply = data.reply;
+
+      // Track whether the server is awaiting a location follow-up
+      const weatherStatus = data?.meta?.weather?.status;
+      this._textWeatherPending = (weatherStatus === "needs_location" || weatherStatus === "needs_disambiguation");
+
+      this.setThinkingIndicator(false);
       const aiMsg = this.addMessage({ role: "assistant", channel: "text", text: reply, status: "final" });
       this.render();
 
       await this.persistMessage(aiMsg);
     } catch (e) {
       console.error(e);
-      if (shouldShowThinking) this.setThinkingIndicator(false);
+      this._textWeatherPending = false;
+      this.setThinkingIndicator(false);
       const errMsg = this.addMessage({ role: "assistant", channel: "text", text: `(${e.message})`, status: "final" });
       this.render();
       await this.persistMessage(errMsg);
     } finally {
       btn.disabled = false;
-      if (shouldShowThinking) this.setThinkingIndicator(false);
+      this.setThinkingIndicator(false);
       input.focus();
     }
   }

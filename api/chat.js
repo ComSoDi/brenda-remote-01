@@ -214,6 +214,177 @@ function isWeatherQuery(text, localeVariant = "en-US") {
   return list.some((k) => raw.includes(k));
 }
 
+// Country name (lowercase) → ISO 3166-1 alpha-2 code
+const COUNTRY_CODE_MAP = {
+  "españa": "ES", "spain": "ES",
+  "france": "FR", "francia": "FR",
+  "germany": "DE", "alemania": "DE",
+  "italy": "IT", "italia": "IT",
+  "portugal": "PT",
+  "united kingdom": "GB", "uk": "GB", "reino unido": "GB", "england": "GB", "gran bretaña": "GB",
+  "united states": "US", "usa": "US", "estados unidos": "US",
+  "argentina": "AR",
+  "mexico": "MX", "méxico": "MX",
+  "colombia": "CO",
+  "chile": "CL",
+  "peru": "PE", "perú": "PE",
+  "venezuela": "VE",
+  "brazil": "BR", "brasil": "BR",
+  "canada": "CA", "canadá": "CA",
+  "australia": "AU",
+  "netherlands": "NL", "holanda": "NL",
+  "belgium": "BE", "bélgica": "BE",
+  "switzerland": "CH", "suiza": "CH",
+  "austria": "AT",
+  "russia": "RU", "rusia": "RU",
+  "china": "CN",
+  "japan": "JP", "japón": "JP",
+};
+
+function countryNameToCode(name) {
+  if (!name) return null;
+  const n = name.trim().toLowerCase();
+  if (COUNTRY_CODE_MAP[n]) return COUNTRY_CODE_MAP[n];
+  // Accept bare ISO codes like "ES", "FR", "US"
+  if (/^[A-Za-z]{2}$/.test(n)) return n.toUpperCase();
+  return null;
+}
+
+// Split a raw city string that may contain country info.
+// "Madrid, España"  → { city: "Madrid", state: null, country: "ES" }
+// "Madrid España"   → { city: "Madrid", state: null, country: "ES" }
+// "Madrid, ES"      → { city: "Madrid", state: null, country: "ES" }
+// "Buenos Aires"    → { city: "Buenos Aires", state: null, country: null }
+function splitCityCountry(raw) {
+  const text = raw.trim();
+
+  // Comma-separated: "city, country" or "city, state, country"
+  if (text.includes(",")) {
+    const parts = text.split(",").map((s) => s.trim()).filter(Boolean);
+    const city = parts[0];
+    let state = null;
+    let country = null;
+    for (let i = 1; i < parts.length; i++) {
+      const code = countryNameToCode(parts[i]);
+      if (code) country = code;
+      else state = state || parts[i];
+    }
+    return { city, state, country };
+  }
+
+  // Space-separated: try last word(s) as a known country
+  const words = text.split(/\s+/);
+  if (words.length >= 2) {
+    const last = words[words.length - 1];
+    const code = countryNameToCode(last);
+    if (code) return { city: words.slice(0, -1).join(" "), state: null, country: code };
+    if (words.length >= 3) {
+      const lastTwo = words.slice(-2).join(" ");
+      const code2 = countryNameToCode(lastTwo);
+      if (code2) return { city: words.slice(0, -2).join(" "), state: null, country: code2 };
+    }
+  }
+
+  return { city: text, state: null, country: null };
+}
+
+// Extract city/country from a weather query message.
+// Returns { city, state, country } or null (null = use saved location).
+//
+// FOLLOW-UP path runs FIRST so that disambiguation responses like
+// "Madrid en España" / "Madrid, España" are handled before weather-keyword
+// patterns (which would otherwise grab "España" as the city via "en …").
+function parseWeatherCityFromMessage(text, lang, isFollowUp = false) {
+  if (!text) return null;
+  const trimmed = text.trim().replace(/[.,;!?]+$/, "").trim();
+
+  // ── FOLLOW-UP: user is answering "which city?" or "which Madrid?" ───────
+  // These patterns handle disambiguation responses before any keyword search.
+  if (isFollowUp) {
+    // "city, country" / "city, state, country"  — comma-separated
+    if (trimmed.includes(",")) return splitCityCountry(trimmed);
+
+    // "city en país" / "city in country"  — preposition before country name
+    const cityInCountry = lang === "es"
+      ? trimmed.match(/^(.+?)\s+(?:en|de)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s]*)$/i)
+      : trimmed.match(/^(.+?)\s+(?:in|from)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s]*)$/i);
+    if (cityInCountry) {
+      const city = cityInCountry[1].trim();
+      const country = countryNameToCode(cityInCountry[2].trim());
+      if (city) return { city, state: null, country };
+    }
+
+    // Short bare response — ≤4 words, only letters/spaces/commas → treat as city name
+    // (handles "Madrid", "Buenos Aires", "Madrid España" w/ implicit country)
+    const words = trimmed.split(/\s+/);
+    if (words.length <= 4 && /^[A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]+$/.test(trimmed)) {
+      return splitCityCountry(trimmed);
+    }
+  }
+
+  // ── INITIAL QUERY: extract city from a full weather sentence ────────────
+  // No catch-all patterns — they mis-fire on "city en country" follow-ups.
+  // Only match when a weather keyword anchors the extraction.
+  const enPatterns = [
+    /(?:weather|forecast|temperature|rain|snow|climate)(?:\s+\w+){0,3}?\s+(?:in|for|at)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)(?:\?|$|\.)/i,
+    /(?:in|for|at)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,20}?)\s+(?:weather|forecast|temperature|rain|snow)/i,
+    /what(?:'s| is)\s+(?:the\s+)?(?:weather|forecast|temperature)(?:\s+like)?\s+in\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)(?:\?|$|\.)/i,
+    /(?:going to rain|will it rain|will it snow)(?:\s+\w+){0,4}?\s+in\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)(?:\?|$)/i,
+    // "I want to know the weather in Paris" / "tell me the weather for London"
+    /\b(?:weather|forecast)\s+(?:in|for)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)\s*$/i,
+  ];
+
+  const esPatterns = [
+    /(?:tiempo|clima|temperatura|lluvia|nieve|pronóstico|pronostico)(?:\s+\w+){0,3}?\s+(?:en|de)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)(?:\?|$|\.)/i,
+    /(?:en|de)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,20}?)\s+(?:tiempo|clima|temperatura)/i,
+    /(?:va a llover|lloverá|nieva|nevará)(?:\s+\w+){0,4}?\s+en\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)(?:\?|$)/i,
+    // "quiero saber el pronóstico del tiempo en Madrid"
+    /\b(?:tiempo|clima|pronóstico|pronostico|lluvia|temperatura)\b.{0,40}?\ben\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)\s*$/i,
+    // "quiero consultarla en Madrid" / "quiero el tiempo en Madrid" — no weather keyword required
+    // Safe: only fires on initial queries (isFollowUp=false), and the extracted text
+    // is passed through splitCityCountry which will detect a trailing country name.
+    /\b(?:consultarl[ao]|saber|conocer|darme|decirme|ver)\b.{0,30}?\ben\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)\s*$/i,
+  ];
+
+  const patterns = lang === "es" ? esPatterns : enPatterns;
+  for (const pattern of patterns) {
+    const match = trimmed.match(pattern);
+    if (match?.[1]) {
+      const raw = match[1].trim().replace(/[.,;!?]+$/, "").trim();
+      return splitCityCountry(raw);
+    }
+  }
+
+  return null;
+}
+
+// Format a disambiguation candidate for display in a voice/text response.
+// When multiple candidates share the same city name in the same country,
+// label the first as "(capital)" and same-name states as "(comunidad/region)".
+function formatCandidateLabel(candidate, index, allCandidates, lang) {
+  const { city, state, country } = candidate;
+  const sameNameCount = allCandidates.filter(
+    (c) => c.city.toLowerCase() === city.toLowerCase() && c.country === country
+  ).length;
+
+  if (sameNameCount > 1) {
+    const stateLower = (state || "").toLowerCase();
+    const cityLower  = city.toLowerCase();
+    if (stateLower === cityLower || stateLower.startsWith(cityLower + " ")) {
+      // The state/community has the same name as the city → it is the region
+      const suffix = lang === "es" ? "comunidad" : "region";
+      return country ? `${city} (${suffix}), ${country}` : `${city} (${suffix})`;
+    }
+    if (index === 0) {
+      // First result from OWM is the most prominent — label as the capital/main city
+      const suffix = lang === "es" ? "capital" : "city";
+      return country ? `${city} (${suffix}), ${country}` : `${city} (${suffix})`;
+    }
+  }
+
+  return [city, state, country].filter(Boolean).join(", ");
+}
+
 export default async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -266,7 +437,7 @@ export default async function handler(req, res) {
     const system = brendaSystemPrompt(localeVariant);
     const lastUserText = [...inputMessages].reverse().find((m) => m.role === "user")?.content || "";
 
-    const weatherIntent = isWeatherQuery(lastUserText, localeVariant);
+    const weatherIntent = isWeatherQuery(lastUserText, localeVariant) || !!body.weatherPending;
     const timeIntent = detectTimeIntent(lastUserText, localeVariant);
     const userDoc = await db.collection("users").findOne(
       { userId: session.userId },
@@ -422,47 +593,134 @@ export default async function handler(req, res) {
       return json(res, 200, { reply });
     }
 
-    /*
-    let savedLocation = null;
+    // ────────────────────────────────────────────────────────────────────────
+    // DETERMINISTIC WEATHER BRANCH
+    // Bypass OpenAI tool-calling for weather — fetch directly, format once.
+    // This prevents the model from ever asking for a location it already has.
+    // ────────────────────────────────────────────────────────────────────────
     if (weatherIntent) {
-      const userDoc = await db.collection("users").findOne(
-        { userId: session.userId },
-        { projection: { "preferences.location": 1 } }
-      );
-      savedLocation = userDoc?.preferences?.location || null;
-    }
-    const hasSavedLocation = !!savedLocation?.city;
-    */
+      const isFollowUp = !!body.weatherPending;
+      const explicitLoc = parseWeatherCityFromMessage(lastUserText, lang, isFollowUp);
 
-    /* let savedLocation = null;
-    if (weatherIntent) {
-      const userDoc = await db.collection("users").findOne(
+      // Resolve which location to query.
+      // explicitLoc is { city, state, country } when the user named a city,
+      // or null when we should fall back to their saved location.
+      const hasExplicit = !!explicitLoc?.city;
+      let wCity    = hasExplicit ? explicitLoc.city    : (hasSavedLocation ? savedLocation.city    : null);
+      let wState   = hasExplicit ? (explicitLoc.state   || null) : (hasSavedLocation ? savedLocation.state   : null);
+      let wCountry = hasExplicit ? (explicitLoc.country || null) : (hasSavedLocation ? savedLocation.country : null);
+      // Use saved coordinates when querying the saved city to skip geocoding
+      let wLat = (!hasExplicit && hasSavedLocation) ? savedLocation.lat : null;
+      let wLon = (!hasExplicit && hasSavedLocation) ? savedLocation.lon : null;
+
+      if (!wCity && !wLat) {
+        // No location anywhere — ask the user
+        const askMsg = lang === "es"
+          ? "¿En qué ciudad quieres consultar el tiempo?"
+          : "Which city would you like the weather for?";
+        return json(res, 200, { reply: askMsg, meta: { weather: { status: "needs_location" } } });
+      }
+
+      const baseUrlW = req.headers.host?.startsWith("localhost")
+        ? `http://${req.headers.host}`
+        : `https://${req.headers.host}`;
+
+      const wResponse = await fetch(`${baseUrlW}/api/weather`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Cookie: req.headers.cookie || "" },
+        body: JSON.stringify({
+          action: "get_forecast",
+          city: wCity,
+          state: wState || "",
+          country: wCountry || "",
+          lat: wLat,
+          lon: wLon,
+          saveLocation: !hasSavedLocation && !!wCity,
+        }),
+      });
+
+      const wData = await wResponse.json().catch(() => ({}));
+
+      if (!wResponse.ok || !wData.ok) {
+        // Disambiguation: multiple cities with that name
+        if (wData.code === "multiple_locations") {
+          const candidates = wData.candidates || [];
+          const labels = candidates.map((c, i) => formatCandidateLabel(c, i, candidates, lang));
+          const first = labels[0] || "";
+          const rest  = labels.slice(1).join(", ");
+          const disambigMsg = lang === "es"
+            ? `Hay varios lugares con ese nombre. ¿Te refieres a ${first}${rest ? `, ${rest}` : ""}? ¿Cuál es el que te interesa?`
+            : `There are several places with that name. Did you mean ${first}${rest ? `, ${rest}` : ""}? Which one would you like?`;
+          return json(res, 200, {
+            reply: disambigMsg,
+            meta: { weather: { status: "needs_disambiguation", candidates: wData.candidates } },
+          });
+        }
+        if (wData.code === "city_not_found") {
+          const notFoundMsg = lang === "es"
+            ? "No encontré esa ciudad. ¿Puedes especificar mejor, por ejemplo con el país?"
+            : "I couldn't find that city. Could you be more specific, for example by adding the country?";
+          return json(res, 200, { reply: notFoundMsg, meta: { weather: { status: "needs_location" } } });
+        }
+        const errMsg = lang === "es"
+          ? "Lo siento, no pude obtener el tiempo ahora mismo."
+          : "Sorry, I couldn't get the weather right now.";
+        return json(res, 200, { reply: errMsg, meta: { weather: { status: "error" } } });
+      }
+
+      // One OpenAI call to format the weather data as natural language
+      const locationParts = [wData.location?.city, wData.location?.state, wData.location?.country].filter(Boolean);
+      const weatherFormatR = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        signal: AbortSignal.timeout(20000),
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: OPENAI_CHAT_MODEL,
+          messages: [
+            { role: "system", content: brendaSystemPrompt(localeVariant) },
+            ...historyMsgs,
+            ...inputMessages,
+            {
+              role: "system",
+              content:
+                `WEATHER DATA FOR ${locationParts.join(", ")} (already fetched — do NOT ask for a location): ` +
+                JSON.stringify(wData) +
+                `\n\nRespond with a natural, conversational weather report. ` +
+                `End with one brief friendly follow-up question.`,
+            },
+          ],
+          temperature: 0.7,
+        }),
+      });
+
+      const wFormatText = await weatherFormatR.text().catch(() => "{}");
+      let wFormatData;
+      try { wFormatData = JSON.parse(wFormatText); } catch { wFormatData = {}; }
+      const weatherReply = wFormatData.choices?.[0]?.message?.content ||
+        (lang === "es" ? "No pude obtener el tiempo." : "I couldn't get the weather.");
+
+      // Persist
+      const wMsgs = [
+        ...inputMessages.map((m) => ({
+          id: new ObjectId(), role: m.role, content: m.content,
+          timestamp: new Date(), fromChannel: "text",
+        })),
+        { id: new ObjectId(), role: "assistant", content: weatherReply, timestamp: new Date(), fromChannel: "text" },
+      ];
+      await db.collection("conversations").updateOne(
         { userId: session.userId },
-        { projection: { "preferences.location": 1 } }
+        {
+          $setOnInsert: { userId: session.userId, createdAt: new Date() },
+          $push: { messages: { $each: wMsgs } },
+          $set: { updatedAt: new Date() },
+        },
+        { upsert: true }
       );
-      savedLocation = userDoc?.preferences?.location || null;
+
+      return json(res, 200, { reply: weatherReply, meta: { weather: { status: "complete" } } });
     }
-    const hasSavedLocation = !!savedLocation?.city;
-    */
 
     const systemMessages = [{ role: "system", content: system }];
-    if (weatherIntent) {
-      if (hasSavedLocation) {
-        const parts = [savedLocation.city, savedLocation.state, savedLocation.country].filter(Boolean);
-        systemMessages.push({
-          role: "system",
-          content:
-            `Saved user location for weather: ${parts.join(", ")}. ` +
-            `If the user asks about weather and does not specify a location, use this saved location and call get_weather with it.` +
-            ` If the user asks about weather in a DIFFERENT city, call get_weather for that city but do NOT call set_home_location.`,
-        });
-      } else {
-        systemMessages.push({
-          role: "system",
-          content: "User has no saved location for weather.",
-        });
-      }
-    }
 
     // ────────────────────────────────────────────────────────────────────────
     // TOOLS — weather lookup + explicit home-location change
@@ -535,14 +793,14 @@ export default async function handler(req, res) {
       },
     ];
 
-    const toolChoice = weatherIntent
-      ? { type: "function", function: { name: "get_weather" } }
-      : "auto";
+    // Weather is handled above deterministically; only set_home_location reaches here.
+    const toolChoice = "auto";
 
     // Call OpenAI with function calling support
     console.log("📞 Calling OpenAI with tools enabled");
     const r = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
+      signal: AbortSignal.timeout(20000),
       headers: {
         Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
@@ -605,6 +863,7 @@ export default async function handler(req, res) {
       const finalizeWithTool = async ({ toolContent, fallbackReply, meta }) => {
         const secondR = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
+          signal: AbortSignal.timeout(20000),
           headers: {
             Authorization: `Bearer ${OPENAI_API_KEY}`,
             "Content-Type": "application/json",

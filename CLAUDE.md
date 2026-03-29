@@ -1,6 +1,6 @@
-# CLAUDE.md — aibrenda-gemini
+# iaBrenda Project
 
-## Project Overview
+## Overview
 
 **Soy iaBrenda** is a multilingual AI chat and voice assistant deployed on Vercel. The AI persona is named "Brenda". It supports text chat (via OpenAI) and real-time voice (via OpenAI Realtime API / WebRTC). The frontend is vanilla JS with no framework.
 
@@ -32,13 +32,15 @@ api/                        Vercel serverless handlers (export default async fun
     me.js                   Return current session info
   conversation/
     append.js               Append message to conversation
+  transcript/
+    correct.js              Transcript correction endpoint
   chat.js                   Main chat endpoint (OpenAI function calling, weather, time)
   greeting.js               Check-in / heartbeat for greeting logic
   history.js                Fetch conversation history
   subjects.js               User subjects/topics management
+  weather.js                Weather lookup (geocoding + Open-Meteo)
   voice/
     realtime-key.js         Issue ephemeral OpenAI Realtime client secret
-  weather.js                Weather lookup (geocoding + Open-Meteo or similar)
 
 lib/                        Shared utilities (bundled into Vercel functions via vercel.json)
   auth.js                   Session sign/verify/get/require + cookie helpers
@@ -54,7 +56,8 @@ public/                     Static frontend (served as SPA)
   transcriptRenderer.js     Transcript display
   i18n.js                   Translations and i18n helpers
   locale.js                 Locale detection and switching
-  config.js                 Client-side configuration constants
+  config.js                 Voice backend selection, locale-specific voice instructions,
+                            turn detection tuning, buildRealtimeInstructions()
   styles.css                All styles
   help-texts.html           Help overlay content
   privacy.html              Privacy policy page
@@ -96,8 +99,6 @@ On Vercel, set the same variables in the project environment settings.
 ```bash
 npm run dev           # Local dev with nodemon (requires server.js, which is gitignored)
 npm run vercel-dev    # Vercel dev server on port 3000
-npm run test:gemini-key   # Test Gemini API key
-npm run test:gemini-live  # Test Gemini Live connection
 ```
 
 > `server.js` is gitignored — it exists only in the local working directory for development.
@@ -113,52 +114,109 @@ npm run test:gemini-live  # Test Gemini Live connection
 
 ### Session Auth (`lib/auth.js`)
 - Sessions are HMAC-SHA256 signed tokens stored in an `HttpOnly` cookie named `brenda_session`.
-- Use `requireSession(req, res)` in protected handlers — returns session payload or sends 401 and returns `null`.
+- Use `requireSession(req, res)` in protected handlers — returns session payload or sends 401.
 - Cookie is set for 30 days; `AUTH_SESSION_SECRET` must be set in env.
+- Passwords are hashed with `bcryptjs` (see `api/auth/login.js`).
 
 ### MongoDB (`lib/mongo.js`)
 - Connection is cached on `globalThis.__brendaMongo` to survive warm Vercel function invocations.
 - Default DB name: `ai_chat` (override with `MONGODB_DB`).
-- DNS servers can be overridden via `DNS_SERVERS` env var (useful for Atlas SRV resolution).
 
 ### MongoDB Collections
 | Collection | Purpose |
 |---|---|
-| `users` | User accounts, preferences (including saved location), `lastSeen` |
+| `users` | User accounts, preferences (saved location), `lastSeen` |
 | `conversations` | Per-user message history (last 50 messages used as context) |
 | `gemini_voice_usage_events` | Individual voice response usage events (idempotent by `voiceSessionId`+`responseId`) |
 | `gemini_voice_usage_summary` | Rolling daily/weekly/monthly/total token+cost rollups per user+model |
 
+> The `gemini_` prefix is a legacy artifact — these collections now store OpenAI Realtime usage.
+
 ### Chat (`api/chat.js`)
-- Supports `{ message: "..." }` or `{ messages: [...] }` request body plus `localeVariant`.
-- Builds context from the last 50 messages in `conversations` collection.
-- **Time queries** are handled server-side (bypass OpenAI) using the weather API for timezone.
-- **Weather queries** use OpenAI function calling (`get_weather`, `set_home_location`).
+- Supports `{ message }` or `{ messages }` request body plus `localeVariant`.
+- Time queries handled server-side (bypass OpenAI) using the weather API for timezone.
+- Weather queries use OpenAI function calling (`get_weather`, `set_home_location`).
 - Saved location (`users.preferences.location`) is used automatically when no city is given.
 - Persists user + assistant messages to MongoDB after every response.
 
 ### Multilingual Support
 - Supported locales: `en-US`, `en-GB`, `es-ES`, `es-419`
 - Language is derived from `localeVariant` in requests.
-- Brenda's system prompt adapts per locale.
-- Spanish time is formatted as full natural language ("Son las tres y cuarto de la tarde").
+- **Temperature units**: `en-US` → Fahrenheit; all other locales → Celsius.
+  Enforced in both `api/chat.js` system prompts and `public/config.js`.
 
 ### Voice (`api/voice/realtime-key.js`)
 - Issues a short-lived `client_secret` from OpenAI Realtime API.
-- The frontend (`voiceAgent.js`) uses this secret for WebRTC directly with OpenAI.
-- Voice, model, and instructions are configurable via env vars.
-
-### Usage Tracking (`lib/usage.js`)
-- `recordVoiceUsage()` writes to `gemini_voice_usage_events` (idempotent) and updates `gemini_voice_usage_summary`.
-- Pricing table in `lib/usage.js` — update if model pricing changes.
+- Frontend (`voiceAgent.js`) uses this secret for WebRTC directly with OpenAI.
+- Active voice backend: `"openai-realtime"` (`Config.VOICE_BACKEND` in `public/config.js`).
+- A Gemini Live config block also exists in `public/config.js` but is **not** the active path.
 
 ---
 
-## Important Notes
+## Important Notes / Constraints ⚠️
 
 - **ESM only** — always use `import`/`export`, never `require()`.
 - **No build step** — frontend files are served as-is from `public/`.
-- **`server.js` is gitignored** — never commit it. It is the local Express dev wrapper.
+- **`server.js` is gitignored** — never commit it.
 - **`package-lock.json` is gitignored** — do not commit it.
-- Vercel deployment happens automatically on push to the connected branch.
-- Weather API fetches are internal (`/api/weather`) — `chat.js` calls weather as a sub-request using the same host and forwarding cookies.
+- **Vercel auto-deploys on push** — never suggest adding a bundler.
+- Error handling: never swallow exceptions silently.
+- Environment config via `.env` — never hardcode secrets.
+- Before modifying any file previously marked "accepted" or "working", flag it and wait for confirmation.
+
+---
+
+## Memory Architecture for this Project
+
+### Three-layer system:
+
+**Layer 1 — CLAUDE.md (this file)**
+Rules, conventions, constraints. Versioned in Git. Shared truth.
+
+**Layer 2 — Auto-memory** (`~/.claude/projects/<project>/memory/`)
+Claude's learned context: build quirks, debugging patterns, session decisions, style observations.
+- `MEMORY.md` = index (loaded every session)
+- Topic files = detail on demand
+
+**Layer 3 — Engram** (`D:\UsuariosD\enfor\.engram`)
+Cross-agent persistent knowledge. Survives DeepFreeze reboots.
+Source of truth for: accepted code contracts, architectural decisions, inter-agent handoff notes.
+
+### What goes in Engram vs auto-memory:
+| Engram | Auto-memory |
+|---|---|
+| Accepted code contracts | Build commands & shortcuts |
+| Architectural decisions | Debugging patterns observed |
+| Cross-agent handoff notes | Style preferences |
+| Stable module status registry | Session-specific context |
+| Bug patterns to avoid | Workflow habits |
+
+---
+
+## Engram Protocol
+
+### On session START:
+1. Query Engram for the `iabrenda` namespace
+2. Load: last known stable state, accepted modules, open issues, architectural decisions, handoff notes
+3. Cross-reference with auto-memory — if they conflict, flag it, don't assume
+
+### During a session:
+- Accepted working code → store in Engram immediately (module name, what, why, date)
+- Architectural decision made → store in Engram immediately
+- Bug fixed in previously working code → store fix pattern AND what broke
+
+### On session END:
+- Write session summary to Engram: built, accepted, open, warnings for next agent
+- Update auto-memory with tactical learnings
+
+### Engram write format:
+```
+namespace: iabrenda
+tags: [accepted|decision|bugfix|warning|handoff]
+module: <module or file name>
+status: accepted | in-progress | broken | deprecated
+summary: <one clear sentence>
+detail: <as needed>
+date: <session date>
+agent: claude-code
+```

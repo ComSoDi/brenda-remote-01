@@ -27,8 +27,10 @@
         <div class="header-title-block">
           <div class="header-top">
             <h1>Soy iaBrenda</h1>
-
-            <button id="accountBtn" class="account-btn" type="button"></button>
+            <div class="header-top-buttons">
+              <button id="locationBtn" class="location-btn" type="button"></button>
+              <button id="accountBtn" class="account-btn" type="button"></button>
+            </div>
           </div>
           <div class="header-actions">
             <button id="subjectsBtn" class="subjects-btn" type="button"></button>
@@ -255,6 +257,38 @@
         <div id="brendaContent" class="brenda-content"></div>
         
         <button id="brendaBottomCloseBtn" class="brenda-bottom-close" type="button"></button>
+      </div>
+    </div>
+
+    <!-- LOCATION OVERLAY -->
+    <div id="locationOverlay" class="subjects-overlay hidden" aria-hidden="true">
+      <div class="subjects-card" role="dialog" aria-modal="true" aria-labelledby="locationTitle">
+        <div class="subjects-card-header">
+          <h1 id="locationTitle"></h1>
+          <button id="locationCloseBtn" class="subjects-close-btn" type="button" aria-label="Close">×</button>
+        </div>
+        <h2 id="locationSubtitle" class="subjects-subtitle"></h2>
+
+        <form id="locationForm" class="subjects-form">
+          <label class="subject-field">
+            <span id="locationTownLabel" class="subject-label"></span>
+            <input id="locationTownInput" name="town" type="text" maxlength="100" autocomplete="address-level2" />
+          </label>
+          <label class="subject-field">
+            <span id="locationStateLabel" class="subject-label"></span>
+            <input id="locationStateInput" name="state" type="text" maxlength="100" autocomplete="address-level1" />
+          </label>
+          <label class="subject-field">
+            <span id="locationCountryLabel" class="subject-label"></span>
+            <input id="locationCountryInput" name="country" type="text" maxlength="100" autocomplete="country-name" />
+          </label>
+        </form>
+
+        <div class="subjects-actions">
+          <button id="locationCancelBtn" class="subjects-btn-cancel" type="button"></button>
+          <button id="locationSaveBtn" class="subjects-btn-save" type="button"></button>
+        </div>
+        <div id="locationStatus" class="subjects-status" role="status" aria-live="polite"></div>
       </div>
     </div>
 

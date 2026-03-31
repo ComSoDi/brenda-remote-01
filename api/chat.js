@@ -644,7 +644,79 @@ export default async function handler(req, res) {
       if (!wResponse.ok || !wData.ok) {
         // Disambiguation: multiple cities with that name
         if (wData.code === "multiple_locations") {
-          const candidates = wData.candidates || [];
+          let candidates = wData.candidates || [];
+
+          // If the user didn't supply a country but has a saved location,
+          // auto-filter by the saved country (e.g. "Valencia" → Valencia, ES).
+          // This avoids asking "which Valencia?" when the answer is obvious.
+          if (!wCountry && hasSavedLocation && savedLocation.country) {
+            const savedCountry = savedLocation.country.toUpperCase();
+            const filtered = candidates.filter(
+              (c) => String(c.country || "").toUpperCase() === savedCountry
+            );
+            // If filtering leaves exactly one match, use it directly.
+            if (filtered.length === 1) {
+              const auto = filtered[0];
+              const autoResponse = await fetch(`${baseUrlW}/api/weather`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Cookie: req.headers.cookie || "" },
+                body: JSON.stringify({
+                  action: "get_forecast",
+                  city: auto.city,
+                  state: auto.state || "",
+                  country: auto.country || "",
+                  saveLocation: false,   // never overwrite saved location for a different-city query
+                }),
+              });
+              const autoData = await autoResponse.json().catch(() => ({}));
+              if (autoResponse.ok && autoData.ok) {
+                // Fall through to the formatting step below by re-assigning wData
+                // We do this by returning the same formatting logic inline.
+                const autoParts = [autoData.location?.city, autoData.location?.state, autoData.location?.country].filter(Boolean);
+                const autoFormatR = await fetch("https://api.openai.com/v1/chat/completions", {
+                  method: "POST",
+                  signal: AbortSignal.timeout(20000),
+                  headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    model: OPENAI_CHAT_MODEL,
+                    messages: [
+                      { role: "system", content: brendaSystemPrompt(localeVariant) },
+                      ...historyMsgs,
+                      ...inputMessages,
+                      {
+                        role: "system",
+                        content:
+                          `WEATHER DATA FOR ${autoParts.join(", ")} (already fetched — do NOT ask for a location): ` +
+                          JSON.stringify(autoData) +
+                          `\n\nRespond with a natural, conversational weather report. ` +
+                          `End with one brief friendly follow-up question.`,
+                      },
+                    ],
+                    temperature: 0.7,
+                  }),
+                });
+                const autoFormatText = await autoFormatR.text().catch(() => "{}");
+                let autoFormatData;
+                try { autoFormatData = JSON.parse(autoFormatText); } catch { autoFormatData = {}; }
+                const autoReply = autoFormatData.choices?.[0]?.message?.content ||
+                  (lang === "es" ? "No pude obtener el tiempo." : "I couldn't get the weather.");
+                const autoMsgs = [
+                  ...inputMessages.map((m) => ({ id: new ObjectId(), role: m.role, content: m.content, timestamp: new Date(), fromChannel: "text" })),
+                  { id: new ObjectId(), role: "assistant", content: autoReply, timestamp: new Date(), fromChannel: "text" },
+                ];
+                await db.collection("conversations").updateOne(
+                  { userId: session.userId },
+                  { $setOnInsert: { userId: session.userId, createdAt: new Date() }, $push: { messages: { $each: autoMsgs } }, $set: { updatedAt: new Date() } },
+                  { upsert: true }
+                );
+                return json(res, 200, { reply: autoReply, meta: { weather: { status: "complete" } } });
+              }
+            }
+            // Multiple matches even after country filter — show only those
+            if (filtered.length > 1) candidates = filtered;
+            // Zero matches after filter — fall back to full candidate list
+          }
+
           const labels = candidates.map((c, i) => formatCandidateLabel(c, i, candidates, lang));
           const first = labels[0] || "";
           const rest  = labels.slice(1).join(", ");
@@ -653,7 +725,7 @@ export default async function handler(req, res) {
             : `There are several places with that name. Did you mean ${first}${rest ? `, ${rest}` : ""}? Which one would you like?`;
           return json(res, 200, {
             reply: disambigMsg,
-            meta: { weather: { status: "needs_disambiguation", candidates: wData.candidates } },
+            meta: { weather: { status: "needs_disambiguation", candidates } },
           });
         }
         if (wData.code === "city_not_found") {

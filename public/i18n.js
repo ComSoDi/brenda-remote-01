@@ -193,7 +193,7 @@ const STRINGS = {
     youLabel: "Tu",
     assistantLabel: "iaBrenda",
 
-    accountBtnAnonymous: "AnÃ³nimo",
+    accountBtnAnonymous: "Anónimo",
 
     authGreeting: "¡Hola! Soy iaBrenda",
     authExplain: "Crea tu cuenta para que nuestras conversaciones sean privadas y memorables",

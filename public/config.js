@@ -118,6 +118,10 @@ const Config = {
     // "far_field"   = open speaker / phone held at distance
     // "off"         = disable noise reduction
     NOISE_REDUCTION: "far_field",  // ← "near_field" for headsets, "off" to disable
+    // Transcription model — forces input audio to be transcribed only in the
+    // app's selected language (es or en). Prevents Russian/Chinese/etc. appearing.
+    // Options: "gpt-4o-mini-transcribe" | "gpt-4o-transcribe" | "whisper-1"
+    TRANSCRIPTION_MODEL: "gpt-4o-mini-transcribe",
   },
 
   buildInstructions: (localeVariant) => {

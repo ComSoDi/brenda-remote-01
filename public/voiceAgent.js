@@ -331,6 +331,12 @@
         session.input_audio_noise_reduction = { type: noiseReduction };
       }
 
+      // Force transcription to the app's selected language so background noise,
+      // other voices, or music are never transcribed as Russian, Chinese, etc.
+      const langCode = String(localeVariant || "en-US").toLowerCase().startsWith("es") ? "es" : "en";
+      const transcribeModel = String(cfg.TRANSCRIPTION_MODEL || "gpt-4o-mini-transcribe");
+      session.input_audio_transcription = { model: transcribeModel, language: langCode };
+
       this.sendOpenAIEvent({ type: "session.update", session });
     }
 

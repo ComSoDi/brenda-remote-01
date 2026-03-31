@@ -91,6 +91,7 @@ const Config = {
   },
 
   // Voice turn detection (silence/padding) can be tuned here.
+  // Used by the Gemini path.
   TURN_DETECTION: {
     THRESHOLD: 0.015, // RMS threshold for speech
     PREFIX_PADDING_MS: 200,
@@ -100,6 +101,23 @@ const Config = {
     INTERRUPT_ON_SPEECH: true,
     END_OF_TURN_SIGNAL: "realtime_input",
     CLIENT_VAD: false
+  },
+
+  // OpenAI Realtime audio + VAD settings sent via session.update on connect.
+  // Raise THRESHOLD if Brenda hears herself (echo from phone speaker).
+  // Use NOISE_REDUCTION "near_field" for headsets, "far_field" for open speakers/phones.
+  OPENAI_REALTIME: {
+    // Server-side VAD — controls when OpenAI considers a turn complete.
+    // threshold: 0.0–1.0. Default 0.5. Higher = less sensitive (helps with echo).
+    VAD_THRESHOLD: 0.6,  // Raise this if Brenda hears herself (echo from phone speaker)
+    // ms of audio captured before detected speech (default 300)
+    VAD_PREFIX_PADDING_MS: 300,
+    // ms of silence before the turn ends (default 500; raise to avoid cutting off)
+    VAD_SILENCE_DURATION_MS: 600,
+    // "near_field"  = headset / earphones
+    // "far_field"   = open speaker / phone held at distance
+    // "off"         = disable noise reduction
+    NOISE_REDUCTION: "far_field",  // ← "near_field" for headsets, "off" to disable
   },
 
   buildInstructions: (localeVariant) => {

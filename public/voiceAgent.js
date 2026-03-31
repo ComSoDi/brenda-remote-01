@@ -311,10 +311,27 @@
     sendOpenAISessionUpdate(localeVariant) {
       const instructions = this.buildOpenAIInstructions(localeVariant);
       if (!instructions) return;
-      this.sendOpenAIEvent({
-        type: "session.update",
-        session: { instructions },
-      });
+
+      const cfg = window?.Config?.OPENAI_REALTIME || {};
+
+      const session = {
+        instructions,
+        turn_detection: {
+          type: "server_vad",
+          threshold:            Number(cfg.VAD_THRESHOLD           ?? 0.6),
+          prefix_padding_ms:    Number(cfg.VAD_PREFIX_PADDING_MS   ?? 300),
+          silence_duration_ms:  Number(cfg.VAD_SILENCE_DURATION_MS ?? 600),
+          create_response: true,
+        },
+      };
+
+      // Add noise reduction only when explicitly enabled (not "off")
+      const noiseReduction = String(cfg.NOISE_REDUCTION || "far_field").toLowerCase();
+      if (noiseReduction !== "off") {
+        session.input_audio_noise_reduction = { type: noiseReduction };
+      }
+
+      this.sendOpenAIEvent({ type: "session.update", session });
     }
 
 

@@ -39,10 +39,11 @@
       if (this.onStatusChange) this.onStatusChange(s);
     }
 
-    async connect(userId = "anon", localeVariant = "es-ES") {
+    async connect(userId = "anon", localeVariant = "es-ES", gender = null) {
       if (this.isConnected) return;
       this.updateStatus("connecting");
       this._lastLocale = localeVariant || "en-US";
+      this._lastGender = gender || null;
 
       const backendPref = String(window?.Config?.VOICE_BACKEND || "auto").toLowerCase();
       const allowBrowserFallback = window?.Config?.VOICE_ALLOW_BROWSER_FALLBACK !== false;
@@ -281,15 +282,23 @@
       return clientSecret;
     }
 
-    buildOpenAIInstructions(localeVariant) {
-      const realtime = (window?.Config && typeof window.Config.buildRealtimeInstructions === "function")
-        ? String(window.Config.buildRealtimeInstructions(localeVariant) || "").trim()
+    async buildOpenAIInstructions(localeVariant, options = {}) {
+      const realtimeRaw = (window?.Config && typeof window.Config.buildRealtimeInstructions === "function")
+        ? window.Config.buildRealtimeInstructions(localeVariant, options)
         : "";
+      const realtimeResolved = (realtimeRaw && typeof realtimeRaw.then === "function")
+        ? await realtimeRaw
+        : realtimeRaw;
+      const realtime = String(realtimeResolved || "").trim();
       if (realtime) return realtime;
 
-      const base = (window?.Config && typeof window.Config.buildInstructions === "function")
-        ? String(window.Config.buildInstructions(localeVariant) || "").trim()
+      const baseRaw = (window?.Config && typeof window.Config.buildInstructions === "function")
+        ? window.Config.buildInstructions(localeVariant, options)
         : "";
+      const baseResolved = (baseRaw && typeof baseRaw.then === "function")
+        ? await baseRaw
+        : baseRaw;
+      const base = String(baseResolved || "").trim();
       const internal =
         "CRITICAL: Your text output must match your spoken audio exactly. " +
         "If the user message contains [INTERNAL_INSTRUCTION: ...], follow it exactly and do not mention it.";
@@ -308,8 +317,12 @@
       }
     }
 
-    sendOpenAISessionUpdate(localeVariant) {
-      const instructions = this.buildOpenAIInstructions(localeVariant);
+    async sendOpenAISessionUpdate(localeVariant, gender = null) {
+      const resolvedLocaleVariant =
+        (window?.Config && typeof window.Config.resolveLocaleVariant === "function")
+          ? await window.Config.resolveLocaleVariant(localeVariant)
+          : localeVariant;
+      const instructions = await this.buildOpenAIInstructions(resolvedLocaleVariant, { skipDbCheck: true, gender });
       if (!instructions) return;
 
       const cfg = window?.Config?.OPENAI_REALTIME || {};
@@ -333,7 +346,7 @@
 
       // Force transcription to the app's selected language so background noise,
       // other voices, or music are never transcribed as Russian, Chinese, etc.
-      const langCode = String(localeVariant || "en-US").toLowerCase().startsWith("es") ? "es" : "en";
+      const langCode = String(resolvedLocaleVariant || "en-US").toLowerCase().startsWith("es") ? "es" : "en";
       const transcribeModel = String(cfg.TRANSCRIPTION_MODEL || "gpt-4o-mini-transcribe");
       session.input_audio_transcription = { model: transcribeModel, language: langCode };
 
@@ -471,7 +484,9 @@
       dc.onmessage = (event) => this.handleOpenAIEvent(event.data);
       dc.onopen = () => {
         this._openaiReady = true;
-        this.sendOpenAISessionUpdate(localeVariant);
+        this.sendOpenAISessionUpdate(localeVariant, this._lastGender).catch((e) => {
+          console.warn("OpenAI session.update failed:", e?.message || e);
+        });
       };
       dc.onerror = (e) => {
         if (this.onError) this.onError(e);

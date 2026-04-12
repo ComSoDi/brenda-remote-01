@@ -15,6 +15,7 @@ export default async function handler(req, res) {
 
     const model = process.env.OPENAI_REALTIME_MODEL || "gpt-4o-mini-realtime-preview";
     const voice = process.env.OPENAI_VOICE || "alloy";
+    
     const instructions = process.env.OPENAI_REALTIME_INSTRUCTIONS || "";
     const transcribeModel = process.env.OPENAI_REALTIME_TRANSCRIBE_MODEL || "gpt-4o-mini-transcribe";
 

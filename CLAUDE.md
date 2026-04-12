@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Soy iaBrenda** is a multilingual AI chat and voice assistant deployed on Vercel. The AI persona is named "Brenda". It supports text chat (via OpenAI) and real-time voice (via OpenAI Realtime API / WebRTC). The frontend is vanilla JS with no framework.
+**Soy iaBrenda** is a multilingual AI chat and voice assistant deployed on Vercel. The AI persona is named "Brenda". It supports text chat (via Gemini) and real-time voice (via Gemini Live). The frontend is vanilla JS with no framework.
 
 ---
 
@@ -14,8 +14,8 @@
 | Deployment | Vercel (serverless functions) |
 | Local dev | Express + nodemon via `server.js` (gitignored) |
 | Database | MongoDB Atlas |
-| Chat AI | OpenAI (gpt-4o-mini by default) |
-| Voice AI | OpenAI Realtime API (gpt-4o-mini-realtime-preview) |
+| Chat AI | Gemini (gemini-2.5-flash by default) |
+| Voice AI | Gemini Live (gemini-2.5-flash-preview-native-audio-dialog) |
 | Auth | Custom HMAC-SHA256 signed session cookies |
 | Frontend | Vanilla JS, HTML, CSS |
 
@@ -34,30 +34,32 @@ api/                        Vercel serverless handlers (export default async fun
     append.js               Append message to conversation
   transcript/
     correct.js              Transcript correction endpoint
-  chat.js                   Main chat endpoint (OpenAI function calling, weather, time)
+  chat.js                   Main chat endpoint (Gemini function calling, deterministic weather/time)
   greeting.js               Check-in / heartbeat for greeting logic
   history.js                Fetch conversation history
   subjects.js               User subjects/topics management
-  weather.js                Weather lookup (geocoding + Open-Meteo)
+  weather.js                Weather lookup (geocoding + Open-Meteo), saved location management
   voice/
-    realtime-key.js         Issue ephemeral OpenAI Realtime client secret
+    realtime-key.js         Issue ephemeral OpenAI Realtime client secret (fallback path)
 
 lib/                        Shared utilities (bundled into Vercel functions via vercel.json)
   auth.js                   Session sign/verify/get/require + cookie helpers
+  gemini-voice-proxy.js     WebSocket proxy for Gemini Live voice sessions
   mongo.js                  MongoDB connection (cached on globalThis.__brendaMongo)
   usage.js                  Voice token usage normalization, cost calculation, DB rollups
 
 public/                     Static frontend (served as SPA)
   index.html                Main app shell ("Soy iaBrenda")
   app.js                    Core application logic
-  voiceAgent.js             WebRTC / OpenAI Realtime voice agent
+  voiceAgent.js             Gemini Live voice agent (WebSocket + PCM audio)
   pcm-processor.js          AudioWorklet PCM processor (Web Audio API)
   conversationContent.js    Conversation rendering logic
   transcriptRenderer.js     Transcript display
   i18n.js                   Translations and i18n helpers
   locale.js                 Locale detection and switching
-  config.js                 Voice backend selection, locale-specific voice instructions,
-                            turn detection tuning, buildRealtimeInstructions()
+  config.js                 Voice backend selection (VOICE_BACKEND), locale-specific voice
+                            instructions, Gemini + OpenAI Realtime VAD tuning,
+                            genderAddressLine(), resolveLocaleVariant(), buildRealtimeInstructions()
   styles.css                All styles
   help-texts.html           Help overlay content
   privacy.html              Privacy policy page
@@ -71,9 +73,12 @@ public/                     Static frontend (served as SPA)
 Create a `.env` file (gitignored) for local dev:
 
 ```
-# OpenAI
+# Gemini (chat + voice)
+GEMINI_API_KEY=
+GEMINI_CHAT_MODEL=gemini-2.5-flash
+
+# OpenAI (Realtime voice fallback path only)
 OPENAI_API_KEY=
-OPENAI_CHAT_MODEL=gpt-4o-mini
 OPENAI_REALTIME_MODEL=gpt-4o-mini-realtime-preview
 OPENAI_VOICE=alloy
 OPENAI_REALTIME_TRANSCRIBE_MODEL=gpt-4o-mini-transcribe
@@ -125,18 +130,22 @@ npm run vercel-dev    # Vercel dev server on port 3000
 ### MongoDB Collections
 | Collection | Purpose |
 |---|---|
-| `users` | User accounts, preferences (saved location), `lastSeen` |
+| `users` | User accounts, preferences (saved location, gender), `lastSeen` |
 | `conversations` | Per-user message history (last 50 messages used as context) |
 | `gemini_voice_usage_events` | Individual voice response usage events (idempotent by `voiceSessionId`+`responseId`) |
 | `gemini_voice_usage_summary` | Rolling daily/weekly/monthly/total token+cost rollups per user+model |
 
-> The `gemini_` prefix is a legacy artifact — these collections now store OpenAI Realtime usage.
+> The `gemini_` prefix matches the active Gemini Live voice backend.
 
 ### Chat (`api/chat.js`)
+- Uses Gemini (`GEMINI_API_KEY` / `GEMINI_CHAT_MODEL`). Message history is converted via `toGeminiContents()`.
 - Supports `{ message }` or `{ messages }` request body plus `localeVariant`.
-- Time queries handled server-side (bypass OpenAI) using the weather API for timezone.
-- Weather queries use OpenAI function calling (`get_weather`, `set_home_location`).
-- Saved location (`users.preferences.location`) is used automatically when no city is given.
+- **Deterministic weather branch**: weather and time queries bypass Gemini tool-calling — handled server-side via `/api/weather`, then formatted directly. Prevents the model from re-asking for location it already has.
+- **Gemini function declarations** (`GEMINI_TOOLS`): `get_weather` and `set_home_location` — only used for requests that slip past the deterministic branch.
+- **City disambiguation**: `parseWeatherCityFromMessage()` extracts city/country from natural language; ambiguous names trigger a clarification turn.
+- **Location change detection**: `parseLocationChangeRequest()` detects "set my location to X" patterns and triggers `set_home_location`.
+- Saved location (`users.preferences.location`) is used automatically when no city is given; saved coordinates bypass geocoding.
+- Gender-aware system prompt: reads `users.preferences.gender` for Spanish locale address form.
 - Persists user + assistant messages to MongoDB after every response.
 
 ### Multilingual Support
@@ -145,11 +154,14 @@ npm run vercel-dev    # Vercel dev server on port 3000
 - **Temperature units**: `en-US` → Fahrenheit; all other locales → Celsius.
   Enforced in both `api/chat.js` system prompts and `public/config.js`.
 
-### Voice (`api/voice/realtime-key.js`)
-- Issues a short-lived `client_secret` from OpenAI Realtime API.
-- Frontend (`voiceAgent.js`) uses this secret for WebRTC directly with OpenAI.
-- Active voice backend: `"openai-realtime"` (`Config.VOICE_BACKEND` in `public/config.js`).
-- A Gemini Live config block also exists in `public/config.js` but is **not** the active path.
+### Voice
+- **Active backend**: `"gemini-proxy"` (`Config.VOICE_BACKEND` in `public/config.js`).
+- Frontend (`voiceAgent.js`) connects via `lib/gemini-voice-proxy.js` (WebSocket proxy to Gemini Live).
+- Voice model: `gemini-2.5-flash-preview-native-audio-dialog`. Voices: `Vindemiatrix` (Spanish), `Aoede` (English).
+- VAD / turn detection tuned via `Config.TURN_DETECTION` (Gemini path) in `public/config.js`.
+- Transcription language is locked to the app locale to prevent misdetection.
+- `api/voice/realtime-key.js` remains for the OpenAI Realtime fallback path (`"openai-realtime"`); not active by default.
+- OpenAI Realtime VAD and noise reduction settings live in `Config.OPENAI_REALTIME` in `public/config.js`.
 
 ---
 

@@ -153,7 +153,114 @@ async function readJson(req) {
   });
 }
 
-function brendaSystemPrompt(localeVariant = "en-US") {
+// ── Gemini API helpers ────────────────────────────────────────────────────
+
+/** Map OpenAI-style history (role: assistant) to Gemini contents (role: model). */
+function toGeminiContents(messages) {
+  return messages.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: String(m.content || "") }],
+  }));
+}
+
+/**
+ * Call Gemini generateContent.
+ * Returns the raw Response so callers can check r.ok before parsing.
+ */
+async function geminiGenerate(apiKey, model, { systemPrompt, contents, tools, temperature = 0.7 }) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const body = {
+    generationConfig: { temperature },
+    contents,
+  };
+  if (systemPrompt) body.systemInstruction = { parts: [{ text: systemPrompt }] };
+  if (tools?.length)  body.tools = tools;
+
+  return fetch(url, {
+    method: "POST",
+    signal: AbortSignal.timeout(20000),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+/**
+ * Extract text or functionCall from a Gemini generateContent response body.
+ * Returns { text, functionCall, contentObj } where contentObj is the model turn
+ * (for appending to contents in a multi-turn call).
+ */
+function extractGemini(data) {
+  const content = data?.candidates?.[0]?.content;
+  if (!content) return { text: null, functionCall: null, contentObj: null };
+  const parts   = content.parts || [];
+  const textPart = parts.find((p) => typeof p.text === "string");
+  const fnPart   = parts.find((p) => p.functionCall);
+  return {
+    text:         textPart?.text  ?? null,
+    functionCall: fnPart?.functionCall ?? null,
+    contentObj:   content,
+  };
+}
+
+// ── Gemini function declarations (replaces OpenAI tools format) ────────────
+
+const GEMINI_TOOLS = [
+  {
+    functionDeclarations: [
+      {
+        name: "get_weather",
+        description:
+          "Get current weather and forecast. If the user doesn't specify a city, use their saved location preference. " +
+          "Use this when the user asks about weather, temperature, rain, or atmospheric conditions. " +
+          "Also use this to get the timezone when the user asks what time it is.",
+        parameters: {
+          type: "object",
+          properties: {
+            city:    { type: "string",  description: "The city name, e.g. 'Madrid'. Optional — uses saved location if omitted." },
+            state:   { type: "string",  description: "Optional state/region for disambiguation, e.g. 'Texas'." },
+            country: { type: "string",  description: "Optional 2-letter country code, e.g. 'ES'." },
+            lat:     { type: "number",  description: "Optional latitude for precise lookup." },
+            lon:     { type: "number",  description: "Optional longitude for precise lookup." },
+          },
+          required: [],
+        },
+      },
+      {
+        name: "set_home_location",
+        description:
+          "Save or update the user's default home location for future weather and time queries. " +
+          "Call ONLY when the user explicitly asks to change or set their default location. " +
+          "Do NOT call this when the user just asks about weather in a different city.",
+        parameters: {
+          type: "object",
+          properties: {
+            city:    { type: "string", description: "City to save as new default, e.g. 'Málaga'." },
+            state:   { type: "string", description: "Optional state or region." },
+            country: { type: "string", description: "Optional 2-letter country code." },
+          },
+          required: ["city"],
+        },
+      },
+    ],
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function genderAddressLine(localeVariant, gender) {
+  if (!gender || !localeVariant.startsWith("es")) return "";
+  if (localeVariant === "es-ES") {
+    if (gender === "Woman") return "\nForma de dirigirte al usuario: usa términos afectuosos femeninos como \"maja\" o \"guapa\". Usa la forma femenina en los adjetivos cuando te refieras al usuario.";
+    if (gender === "Man")   return "\nForma de dirigirte al usuario: usa términos afectuosos masculinos como \"majo\" o \"guapo\". Usa la forma masculina en los adjetivos cuando te refieras al usuario.";
+    return "\nForma de dirigirte al usuario: usa un lenguaje neutro e inclusivo, sin asumir género.";
+  }
+  // es-419
+  if (gender === "Woman") return "\nForma de dirigirte a la usuaria: usa términos cariñosos femeninos como \"linda\" o \"querida\". Usa la forma femenina en los adjetivos cuando te refieras a ella.";
+  if (gender === "Man")   return "\nForma de dirigirte al usuario: usa términos cariñosos masculinos como \"lindo\", \"querido\" o \"amigo\". Usa la forma masculina en los adjetivos cuando te refieras a él.";
+  return "\nForma de dirigirte al usuario: usa un lenguaje neutro e inclusivo, sin asumir género.";
+}
+
+function brendaSystemPrompt(localeVariant = "en-US", gender = null) {
   const baseInstructions = `You are Brenda, a helpful AI assistant with access to real-time weather information.
 
 When users ask about weather:
@@ -187,10 +294,10 @@ When users explicitly ask to CHANGE their default/home location (e.g., "set my l
 Always be warm, clear, and concise in your responses.`;
 
   if (localeVariant === "es-ES") {
-    return baseInstructions + "\n\nResponde en español de España (castellano peninsular).";
+    return baseInstructions + "\n\nResponde en español de España (castellano peninsular)." + genderAddressLine(localeVariant, gender);
   }
   if (localeVariant === "es-419") {
-    return baseInstructions + "\n\nResponde en español latinoamericano neutro.";
+    return baseInstructions + "\n\nResponde en español latinoamericano neutro." + genderAddressLine(localeVariant, gender);
   }
   if (localeVariant === "en-GB") {
     return baseInstructions + "\n\nReply in British English.";
@@ -395,9 +502,9 @@ export default async function handler(req, res) {
     const session = requireSession(req, res);
     if (!session) return;
 
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-    const OPENAI_CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || "gpt-4o-mini";
-    if (!OPENAI_API_KEY) return json(res, 500, { error: "OPENAI_API_KEY not set" });
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const GEMINI_CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash";
+    if (!GEMINI_API_KEY) return json(res, 500, { error: "GEMINI_API_KEY not set" });
 
     const body = await readJson(req);
     /*
@@ -434,22 +541,37 @@ export default async function handler(req, res) {
       .filter((m) => m && (m.role === "user" || m.role === "assistant"))
       .map((m) => ({ role: m.role, content: String(m.content || "") }));
 
-    const system = brendaSystemPrompt(localeVariant);
+    // Load user preferences (gender + location) once — used for system prompt and weather
+    const userPrefsDoc = await db.collection("users").findOne(
+      { userId: session.userId },
+      { projection: { "preferences.gender": 1, "preferences.location": 1 } }
+    );
+    const userGender = userPrefsDoc?.preferences?.gender || null;
+
+    const system = brendaSystemPrompt(localeVariant, userGender);
     const lastUserText = [...inputMessages].reverse().find((m) => m.role === "user")?.content || "";
 
     const weatherIntent = isWeatherQuery(lastUserText, localeVariant) || !!body.weatherPending;
     const timeIntent = detectTimeIntent(lastUserText, localeVariant);
-    const userDoc = await db.collection("users").findOne(
-      { userId: session.userId },
-      { projection: { "preferences.location": 1 } }
-    );
-    const savedLocation = userDoc?.preferences?.location || null;
-    const hasSavedLocation = !!savedLocation?.city;
+    let savedLocation = userPrefsDoc?.preferences?.location || null;
+    let hasSavedLocation = !!savedLocation?.city;
+    let savedLocationLoaded = true;
+    const loadSavedLocation = async () => {
+      if (savedLocationLoaded) return;
+      const userDoc = await db.collection("users").findOne(
+        { userId: session.userId },
+        { projection: { "preferences.location": 1 } }
+      );
+      savedLocation = userDoc?.preferences?.location || null;
+      hasSavedLocation = !!savedLocation?.city;
+      savedLocationLoaded = true;
+    };
 
     // ────────────────────────────────────────────────────────────────────────
     // TIME QUERY BRANCH — bypass OpenAI for simple clock lookups
     // ────────────────────────────────────────────────────────────────────────
     if (timeIntent) {
+      await loadSavedLocation();
       const explicitLocation = parseLocationFromTimeRequest(lastUserText);
       const targetLocation = explicitLocation || (savedLocation?.city ? savedLocation.city : null);
 
@@ -606,6 +728,10 @@ export default async function handler(req, res) {
       // explicitLoc is { city, state, country } when the user named a city,
       // or null when we should fall back to their saved location.
       const hasExplicit = !!explicitLoc?.city;
+      const skipSavedLocation = hasExplicit && !isFollowUp;
+      if (!skipSavedLocation) {
+        await loadSavedLocation();
+      }
       let wCity    = hasExplicit ? explicitLoc.city    : (hasSavedLocation ? savedLocation.city    : null);
       let wState   = hasExplicit ? (explicitLoc.state   || null) : (hasSavedLocation ? savedLocation.state   : null);
       let wCountry = hasExplicit ? (explicitLoc.country || null) : (hasSavedLocation ? savedLocation.country : null);
@@ -625,6 +751,7 @@ export default async function handler(req, res) {
         ? `http://${req.headers.host}`
         : `https://${req.headers.host}`;
 
+      const shouldSaveLocation = !hasSavedLocation && !!wCity && !skipSavedLocation;
       const wResponse = await fetch(`${baseUrlW}/api/weather`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Cookie: req.headers.cookie || "" },
@@ -635,7 +762,8 @@ export default async function handler(req, res) {
           country: wCountry || "",
           lat: wLat,
           lon: wLon,
-          saveLocation: !hasSavedLocation && !!wCity,
+          saveLocation: shouldSaveLocation,
+          skipSavedLocation: skipSavedLocation,
         }),
       });
 
@@ -673,33 +801,27 @@ export default async function handler(req, res) {
                 // Fall through to the formatting step below by re-assigning wData
                 // We do this by returning the same formatting logic inline.
                 const autoParts = [autoData.location?.city, autoData.location?.state, autoData.location?.country].filter(Boolean);
-                const autoFormatR = await fetch("https://api.openai.com/v1/chat/completions", {
-                  method: "POST",
-                  signal: AbortSignal.timeout(20000),
-                  headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    model: OPENAI_CHAT_MODEL,
-                    messages: [
-                      { role: "system", content: brendaSystemPrompt(localeVariant) },
-                      ...historyMsgs,
-                      ...inputMessages,
-                      {
-                        role: "system",
-                        content:
+                const autoFormatR = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
+                  systemPrompt: brendaSystemPrompt(localeVariant, userGender),
+                  contents: [
+                    ...toGeminiContents([...historyMsgs, ...inputMessages]),
+                    {
+                      role: "user",
+                      parts: [{
+                        text:
                           `WEATHER DATA FOR ${autoParts.join(", ")} (already fetched — do NOT ask for a location): ` +
                           JSON.stringify(autoData) +
                           `\n\nRespond with a natural, conversational weather report. ` +
                           `End with one brief friendly follow-up question.`,
-                      },
-                    ],
-                    temperature: 0.7,
-                  }),
+                      }],
+                    },
+                  ],
                 });
                 const autoFormatText = await autoFormatR.text().catch(() => "{}");
                 let autoFormatData;
                 try { autoFormatData = JSON.parse(autoFormatText); } catch { autoFormatData = {}; }
-                const autoReply = autoFormatData.choices?.[0]?.message?.content ||
-                  (lang === "es" ? "No pude obtener el tiempo." : "I couldn't get the weather.");
+                const { text: autoReplyText } = extractGemini(autoFormatData);
+                const autoReply = autoReplyText || (lang === "es" ? "No pude obtener el tiempo." : "I couldn't get the weather.");
                 const autoMsgs = [
                   ...inputMessages.map((m) => ({ id: new ObjectId(), role: m.role, content: m.content, timestamp: new Date(), fromChannel: "text" })),
                   { id: new ObjectId(), role: "assistant", content: autoReply, timestamp: new Date(), fromChannel: "text" },
@@ -740,36 +862,30 @@ export default async function handler(req, res) {
         return json(res, 200, { reply: errMsg, meta: { weather: { status: "error" } } });
       }
 
-      // One OpenAI call to format the weather data as natural language
+      // One Gemini call to format the weather data as natural language
       const locationParts = [wData.location?.city, wData.location?.state, wData.location?.country].filter(Boolean);
-      const weatherFormatR = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        signal: AbortSignal.timeout(20000),
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: OPENAI_CHAT_MODEL,
-          messages: [
-            { role: "system", content: brendaSystemPrompt(localeVariant) },
-            ...historyMsgs,
-            ...inputMessages,
-            {
-              role: "system",
-              content:
+      const weatherFormatR = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
+        systemPrompt: brendaSystemPrompt(localeVariant, userGender),
+        contents: [
+          ...toGeminiContents([...historyMsgs, ...inputMessages]),
+          {
+            role: "user",
+            parts: [{
+              text:
                 `WEATHER DATA FOR ${locationParts.join(", ")} (already fetched — do NOT ask for a location): ` +
                 JSON.stringify(wData) +
                 `\n\nRespond with a natural, conversational weather report. ` +
                 `End with one brief friendly follow-up question.`,
-            },
-          ],
-          temperature: 0.7,
-        }),
+            }],
+          },
+        ],
       });
 
       const wFormatText = await weatherFormatR.text().catch(() => "{}");
       let wFormatData;
       try { wFormatData = JSON.parse(wFormatText); } catch { wFormatData = {}; }
-      const weatherReply = wFormatData.choices?.[0]?.message?.content ||
-        (lang === "es" ? "No pude obtener el tiempo." : "I couldn't get the weather.");
+      const { text: weatherReplyText } = extractGemini(wFormatData);
+      const weatherReply = weatherReplyText || (lang === "es" ? "No pude obtener el tiempo." : "I couldn't get the weather.");
 
       // Persist
       const wMsgs = [
@@ -792,110 +908,20 @@ export default async function handler(req, res) {
       return json(res, 200, { reply: weatherReply, meta: { weather: { status: "complete" } } });
     }
 
-    const systemMessages = [{ role: "system", content: system }];
-
-    // ────────────────────────────────────────────────────────────────────────
-    // TOOLS — weather lookup + explicit home-location change
-    // ────────────────────────────────────────────────────────────────────────
-    const tools = [
-      {
-        type: "function",
-        function: {
-          name: "get_weather",
-          description:
-            "Get current weather and forecast. If the user doesn't specify a city, use their saved location preference. " +
-            "Use this when the user asks about weather, temperature, rain, or atmospheric conditions. " +
-            "Also use this to get the timezone when the user asks what time it is.",
-          parameters: {
-            type: "object",
-            properties: {
-              city: {
-                type: "string",
-                description: "The city name, e.g. 'Madrid', 'London', 'New York'. Optional — if not provided, use the user's saved location.",
-              },
-              state: {
-                type: "string",
-                description: "Optional state/region for disambiguation, e.g. 'Texas' or 'CA'.",
-              },
-              country: {
-                type: "string",
-                description: "Optional 2-letter country code, e.g. 'ES', 'GB', 'US'",
-              },
-              lat: {
-                type: "number",
-                description: "Optional latitude for more precise weather lookup",
-              },
-              lon: {
-                type: "number",
-                description: "Optional longitude for more precise weather lookup",
-              },
-            },
-            required: [],
-          },
-        },
-      },
-      {
-        type: "function",
-        function: {
-          name: "set_home_location",
-          description:
-            "Save or update the user's default home location for all future weather and time queries. " +
-            "Call this ONLY when the user explicitly asks to change or set their default location " +
-            "(e.g., 'set my location to Málaga', 'cambia mi ubicación a Sevilla', 'de ahora en adelante fija mi ciudad en Barcelona', 'I moved to London'). " +
-            "Do NOT call this when the user just asks about weather or time in a different city.",
-          parameters: {
-            type: "object",
-            properties: {
-              city: {
-                type: "string",
-                description: "The city to save as the user's new default, e.g. 'Málaga', 'London'",
-              },
-              state: {
-                type: "string",
-                description: "Optional state or region, e.g. 'Andalucía', 'Texas'",
-              },
-              country: {
-                type: "string",
-                description: "Optional 2-letter country code, e.g. 'ES', 'US', 'GB'",
-              },
-            },
-            required: ["city"],
-          },
-        },
-      },
-    ];
-
-    // Weather is handled above deterministically; only set_home_location reaches here.
-    const toolChoice = "auto";
-
-    // Call OpenAI with function calling support
-    console.log("📞 Calling OpenAI with tools enabled");
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      signal: AbortSignal.timeout(20000),
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: OPENAI_CHAT_MODEL,
-        messages: [
-          ...systemMessages,
-          ...historyMsgs,
-          ...inputMessages,
-        ],
-        tools: tools,
-        tool_choice: toolChoice,
-        temperature: 0.7,
-      }),
+    // Call Gemini with function calling support
+    console.log("📞 Calling Gemini with tools enabled");
+    const r = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
+      systemPrompt: system,
+      contents: toGeminiContents([...historyMsgs, ...inputMessages]),
+      tools: GEMINI_TOOLS,
     });
 
     const raw = await r.text();
 
     if (!r.ok) {
-      console.error("OpenAI error:", raw);
+      console.error("Gemini error:", raw);
       return json(res, 502, {
-        error: "OpenAI chat request failed",
+        error: "Gemini chat request failed",
         status: r.status,
         detail: raw.slice(0, 2000),
       });
@@ -905,56 +931,41 @@ export default async function handler(req, res) {
     try {
       data = JSON.parse(raw);
     } catch {
-      return json(res, 502, { error: "Bad JSON from OpenAI", detail: raw.slice(0, 2000) });
+      return json(res, 502, { error: "Bad JSON from Gemini", detail: raw.slice(0, 2000) });
     }
 
-    const message = data.choices?.[0]?.message;
-    if (!message) {
-      return json(res, 502, { error: "No message in response", detail: data });
+    const { text: geminiReplyText, functionCall, contentObj } = extractGemini(data);
+    if (!contentObj) {
+      return json(res, 502, { error: "No content in Gemini response", detail: data });
     }
 
-    console.log("✅ OpenAI response received");
-    if (message.tool_calls) {
-      console.log("🎯 FUNCTION CALL DETECTED:", message.tool_calls[0]?.function?.name);
+    console.log("✅ Gemini response received");
+    if (functionCall) {
+      console.log("🎯 FUNCTION CALL DETECTED:", functionCall.name);
     }
 
     // ────────────────────────────────────────────────────────────────────────
     // TOOL CALL HANDLING
     // ────────────────────────────────────────────────────────────────────────
-    if (message.tool_calls && message.tool_calls.length > 0) {
-      const toolCall = message.tool_calls[0];
-      const functionName = toolCall.function.name;
-      let functionArgs = {};
-      try {
-        functionArgs = JSON.parse(toolCall.function.arguments || "{}");
-      } catch {
-        return json(res, 400, { error: "Invalid tool arguments" });
-      }
+    if (functionCall) {
+      const functionName = functionCall.name;
+      const functionArgs = functionCall.args || {};
 
-      // Shared finalizer — sends tool result back to OpenAI and streams reply to client
+      // Shared finalizer — sends tool result back to Gemini and returns reply to client
       const finalizeWithTool = async ({ toolContent, fallbackReply, meta }) => {
-        const secondR = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          signal: AbortSignal.timeout(20000),
-          headers: {
-            Authorization: `Bearer ${OPENAI_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: OPENAI_CHAT_MODEL,
-            messages: [
-              ...systemMessages,
-              ...historyMsgs,
-              ...inputMessages,
-              message,
-              {
-                role: "tool",
-                tool_call_id: toolCall.id,
-                content: toolContent,
-              },
-            ],
-            temperature: 0.7,
-          }),
+        let toolResponse;
+        try { toolResponse = JSON.parse(toolContent); } catch { toolResponse = { result: toolContent }; }
+
+        const secondR = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
+          systemPrompt: system,
+          contents: [
+            ...toGeminiContents([...historyMsgs, ...inputMessages]),
+            contentObj,  // model turn that made the function call
+            {
+              role: "user",
+              parts: [{ functionResponse: { name: functionName, response: toolResponse } }],
+            },
+          ],
         });
 
         const secondText = await secondR.text();
@@ -964,7 +975,8 @@ export default async function handler(req, res) {
         } catch {
           secondData = {};
         }
-        const reply = secondData.choices?.[0]?.message?.content || fallbackReply;
+        const { text: secondReplyText } = extractGemini(secondData);
+        const reply = secondReplyText || fallbackReply;
 
         // Persist messages
         const newMessages = [
@@ -1206,7 +1218,7 @@ export default async function handler(req, res) {
     // ────────────────────────────────────────────────────────────────────────
     // NORMAL (non-tool) response
     // ────────────────────────────────────────────────────────────────────────
-    const reply = message.content || "";
+    const reply = geminiReplyText || "";
 
     if (!reply) return json(res, 502, { error: "No reply content", detail: data });
 

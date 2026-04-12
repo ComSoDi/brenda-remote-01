@@ -42,6 +42,12 @@ const STRINGS = {
     authPrivacy: "Personal Privacy Policy",
     authErrorBadNick: "Nickname must be 4-20 characters: letters, numbers, underscores only.",
     authErrorBadPin: "PIN must be exactly 4 digits.",
+    authGenderLabel: "Gender",
+    authGenderDefault: "Select...",
+    authGenderWoman: "I am a woman",
+    authGenderMan: "I am a man",
+    authGenderOther: "Another",
+    authErrorNoGender: "Please select a gender.",
 
     // Subjects modal
     subjectsButton: "My Topics",
@@ -112,6 +118,7 @@ const STRINGS = {
     youLabel: "You",
     assistantLabel: "aiBrenda",
 
+    // Account button
     accountBtnAnonymous: "Anonymous",
 
     authGreeting: "Hi! I'm aiBrenda",
@@ -126,6 +133,12 @@ const STRINGS = {
     authPrivacy: "Personal Privacy Policy",
     authErrorBadNick: "Nickname must be 4-20 characters: letters, numbers, underscores only.",
     authErrorBadPin: "PIN must be exactly 4 digits.",
+    authGenderLabel: "Gender",
+    authGenderDefault: "Select...",
+    authGenderWoman: "I am a woman",
+    authGenderMan: "I am a man",
+    authGenderOther: "Another",
+    authErrorNoGender: "Please select a gender.",
 
     subjectsButton: "My topics",
     subjectsTitle: "My topics",
@@ -207,6 +220,12 @@ const STRINGS = {
     authPrivacy: "Politica de privacidad personal",
     authErrorBadNick: "El apodo debe tener 4-20 caracteres: solo letras, numeros y guiones bajos.",
     authErrorBadPin: "El PIN debe tener exactamente 4 digitos.",
+    authGenderLabel: "Género",
+    authGenderDefault: "Selecciona...",
+    authGenderWoman: "Soy mujer",
+    authGenderMan: "Soy hombre",
+    authGenderOther: "Otro",
+    authErrorNoGender: "Por favor selecciona un género.",
 
     subjectsButton: "Mis temas",
     subjectsTitle: "Mis temas",
@@ -289,6 +308,12 @@ const STRINGS = {
     authPrivacy: "Politica de privacidad personal",
     authErrorBadNick: "El apodo debe tener 4-20 caracteres: solo letras, numeros y guiones bajos.",
     authErrorBadPin: "El PIN debe tener exactamente 4 digitos.",
+    authGenderLabel: "Género",
+    authGenderDefault: "Selecciona...",
+    authGenderWoman: "Soy mujer",
+    authGenderMan: "Soy hombre",
+    authGenderOther: "Otro",
+    authErrorNoGender: "Por favor selecciona un género.",
 
     subjectsButton: "Mis temas",
     subjectsTitle: "Mis temas",

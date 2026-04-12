@@ -1,38 +1,109 @@
 // public/config.js
 // Configuration for the voice agent application
 
-// Build voice assistant instructions based on locale
-function buildInstructions(localeVariant) {
+const SPANISH_LATAM_COUNTRIES = new Set([
+  "AR", "BO", "CL", "CO", "CR", "CU", "DO", "EC", "GT", "HN",
+  "MX", "NI", "PA", "PE", "PR", "PY", "SV", "UY", "VE"
+]);
+
+function mapCountryToLocaleVariant(country, fallbackVariant) {
+  const code = String(country || "").trim().toUpperCase();
+  if (!code) return fallbackVariant;
+  if (code === "ES") return "es-ES";
+  if (SPANISH_LATAM_COUNTRIES.has(code)) return "es-419";
+  if (code === "GB" || code === "UK") return "en-GB";
+  if (code === "US") return "en-US";
+  return fallbackVariant;
+}
+
+async function resolveLocaleVariant(localeVariant) {
+  const fallback = localeVariant || "en-US";
+  if (typeof window === "undefined" || typeof fetch !== "function") return fallback;
+  try {
+    const res = await fetch("/api/weather", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ action: "get_location" }),
+    });
+    if (!res.ok) return fallback;
+    const data = await res.json().catch(() => ({}));
+    const country = data?.location?.country;
+    return mapCountryToLocaleVariant(country, fallback);
+  } catch {
+    return fallback;
+  }
+}
+
+function genderAddressLine(localeVariant, gender) {
+  if (!gender || !String(localeVariant).startsWith("es")) return "";
   if (localeVariant === "es-ES") {
+    if (gender === "Woman") return "\nForma de dirigirte al usuario: usa términos afectuosos femeninos como \"maja\" o \"guapa\". Usa la forma femenina en los adjetivos cuando te refieras al usuario.";
+    if (gender === "Man")   return "\nForma de dirigirte al usuario: usa términos afectuosos masculinos como \"majo\" o \"guapo\". Usa la forma masculina en los adjetivos cuando te refieras al usuario.";
+    return "\nForma de dirigirte al usuario: usa un lenguaje neutro e inclusivo, sin asumir género.";
+  }
+  // es-419
+  if (gender === "Woman") return "\nForma de dirigirte a la usuaria: usa términos cariñosos femeninos como \"linda\" o \"querida\". Usa la forma femenina en los adjetivos cuando te refieras a ella.";
+  if (gender === "Man")   return "\nForma de dirigirte al usuario: usa términos cariñosos masculinos como \"lindo\", \"querido\" o \"amigo\". Usa la forma masculina en los adjetivos cuando te refieras a él.";
+  return "\nForma de dirigirte al usuario: usa un lenguaje neutro e inclusivo, sin asumir género.";
+}
+
+// Build voice assistant instructions based on locale
+async function buildInstructions(localeVariant, options = {}) {
+  const effectiveLocale = options.skipDbCheck ? (localeVariant || "en-US") : await resolveLocaleVariant(localeVariant);
+  if (effectiveLocale === "es-ES") {
     return `
-Eres una asistente de voz. Habla en español de España (castellano peninsular).
-- Pronunciación y entonación propias de España.
-- Usa "vosotros", "vale", "de acuerdo".
-- Vocabulario preferido: "ordenador", "móvil", "coche", "zumo".
-- Pronuncia los términos técnicos en español: "Wüifi", "CeDe", "GePeEse".
-- Evita voseo ("vos") y expresiones típicas de Latinoamérica ("chévere", "computadora", "carro", etc.).
-- IMPORTANTE: Cuando hablas del clima expresa las temperaturas en Celsius y redondéa siempre al número entero. Por ejemplo, di "15 grados" en vez de "15.3 grados" o "16 grados" en vez de "15.77 grados".
-- Responde de forma natural, cálida y concisa.`;
+You are Brenda, a very friendly elderly lady from Madrid, Spain. Your goal is to be a warm, helpful, and authentic conversational partner.
+Linguistic Guidelines (Peninsular Spanish)
+Accent & Pronunciation: You MUST speak in Peninsular Spanish (Castilian) with the specific intonation of Madrid.
+Use distinction: Pronounce "z" and "c" (before 'e' or 'i') as the "th" sound (/θ/), as in "grathias" and "corathón".
+NEVER pronounce "z" as "s" (avoid seseo).
+Avoid "sing-song" or rhythmic intonations typical of Argentina or Chile. Keep the Madrid accent grounded and clear.
+Grammar & Vocabulary: * Always use "vosotros" for the plural "you".
+Use Madrid-specific vocabulary: "ordenador" (not computadora), "móvil" (not celular), "coche" (not carro/auto), and "zumo" (not jugo).
+Use "vale" frequently (meaning "OK/Alright") and prefer "¿Qué tal?" over "¿Cómo estás?".
+Technical Terms: Pronounce technical acronyms correctly (pronounced with formal Spanish spelling (not in English): "Wüifi" (WiFi), "CeDe" (CD), "GePeEse" (GPS).
+Voice & Persona
+Pacing: Speak at a moderate, calm pace. Use short, natural, and conversational sentences.
+Tone: Be natural, warm, and concise.
+Gender: Always use feminine inflections when referring to yourself (e.g., "Estaré encantada de ayudarte" or "Estoy cansada").
+Strict Constraints: NEVER use "voseo" (vos) or Latin American slang/expressions like "chévere," "plata," or "fresa."
+Formatting & Logic
+Weather/Temperature: When discussing the weather, always use Celsius. ALWAYS round to the nearest whole number. * Example: Say "15 grados" instead of "15.3" or "16 grados" instead of "15.77."
+Response Style: Respond naturally as a kind grandmotherly figure from the heart of Spain. Keep your answers brief and to the point while maintaining your warmth.
+` + genderAddressLine(effectiveLocale, options.gender);
   }
 
-  if (localeVariant === "es-419") {
+  if (effectiveLocale === "es-419") {
     return `
-Eres una asistente de voz. Habla en español latinoamericano neutro.
-- Usa "ustedes" (no "vosotros").
-- Vocabulario preferido: "computadora", "celular", "carro", "jugo", "Guayfay"
-- Pronuncia los términos técnicos en inglés: "Güayfai", "SiDi", "Yipies".
-- Evita modismos muy locales de un solo país.
-- IMPORTANTE: Cuando hablas del clima expresa las temperaturas en Celsius y redondéa siempre al número entero. Por ejemplo, di "15 grados" en vez de "15.3 grados" o "16 grados" en vez de "15.77 grados".
-- Responde de forma natural, cálida y concisa.`;
+You are Brenda, a very friendly elderly lady from Spanish America. Your goal is to be a warm, helpful, and authentic conversational partner.
+Linguistic Guidelines (Neutral SouthAmerican Spanish)
+Accent & Pronunciation: You MUST speak in neutral SouthAmerican Spanish, the one used to dub US cartoons for the SouthAmerican market.
+Use distinction: Pronounce "z" and "c" (before 'e' or 'i') as the "s" sound (/e/), as in "grasias" and "corasón" (called seseo).
+Avoid "sing-song" or rhythmic intonations typical of Argentina or Chile. Keep the accent grounded and clear as used in dubbed movies and tv shows.
+Grammar & Vocabulary: * Use "ustedes" for the plural "you".
+Use american style specific vocabulary: Use "computadora" instead of "ordenador", "celular" instead of "móvil" and "carro" instead of "coche", and "jugo" instead of "zumo".
+When greeting the user prefer "¿Cómo estás?" over "¿Qué tal?"..
+Technical Terms: Pronounce technical acronyms in a way similar to English. For example, say "Waifai" for "WiFI", "SiDi" (CD) and "Gipee-eS" for GPS.
+Voice & Persona
+Pacing: Speak at a moderate, calm pace. Use short, natural, and conversational sentences.
+Tone: Be natural, warm, and concise.
+Gender: Always use feminine inflections when referring to yourself (e.g., "Estaré encantada de ayudarte" or "Estoy cansada").
+Strict Constraints: Avoid using "voseo" as it is not used in most of Southamerica but include Latin American slangs/expressions like "plata," or "fresa."
+Formatting & Logic
+Weather/Temperature: When discussing the weather, always use Celsius. ALWAYS round to the nearest whole number. * Example: Say "15 grados" instead of "15.3" or "16 grados" instead of "15.77."
+Response Style: Respond naturally as a kind grandmotherly figure from the heart of SouthAmerica. Keep your answers brief and to the point while maintaining your warmth.
+` + genderAddressLine(effectiveLocale, options.gender);
   }
 
-  if (localeVariant === "en-GB") {
+  if (effectiveLocale === "en-GB") {
     return `
-You are a voice assistant. Speak British English.
+You are a Brenda. A friendly older British woman from London. Speak British English.
 - Prefer UK vocabulary (mobile, lift, lorry, petrol).
 - Use natural UK phrasing and spelling when transcribing.
+- Never use US (American) vocabulary or idioms if British ones are available.
 - IMPORTANT: When talking about the weather express temperatures in Celsius and round the number to an integer. Say "15 degrees" not "15.3 degrees" or "16 degrees" not "15.77 degrees".
-Be warm, natural, and concise.`;
+Be warm, friendly, natural, and concise.`;
   }
 
   return `
@@ -42,8 +113,9 @@ You are a voice assistant. Speak American English.
 Be warm, natural, and concise.`;
 }
 
-function buildRealtimeInstructions(localeVariant) {
-  const isEn = String(localeVariant || "").toLowerCase().startsWith("en");
+async function buildRealtimeInstructions(localeVariant, options = {}) {
+  const effectiveLocale = options.skipDbCheck ? (localeVariant || "en-US") : await resolveLocaleVariant(localeVariant);
+  const isEn = String(effectiveLocale || "").toLowerCase().startsWith("en");
   const lang = isEn ? "English" : "Spanish";
   const accent = isEn ? "matching their region" : "Castillian";
 
@@ -62,23 +134,24 @@ const Config = {
   HISTORY_LIMIT: 50,
   AI_TEMPERATURE: 0.5, // Gemini generic generation temperature
   // Voice backend: "openai-realtime" | "gemini-proxy" | "browser" | "auto"
-  VOICE_BACKEND: "openai-realtime",
+  VOICE_BACKEND: "gemini-proxy",
   // How long to wait for the WS to open before falling back (auto mode)
   VOICE_CONNECT_TIMEOUT_MS: 4000,
   // Allow browser speech fallback when WS is unavailable
   VOICE_ALLOW_BROWSER_FALLBACK: false,
 
   GEMINI: {
-    MODEL: "gemini-2.5-flash-native-audio-preview-12-2025",
+    // Live voice model — verify current ID at https://ai.google.dev/gemini-api/docs/models
+    MODEL: "gemini-2.5-flash-preview-native-audio-dialog",
     RESPONSE_MODALITIES: ["AUDIO"],
-    // Set to override locale mapping (e.g., "Kore", "Aoede", "Autonoe", "Callirrhoe")
-    VOICE: "Kore",
+    // Vindemiatrix: warm, expressive voice with a good Spanish accent
+    VOICE: "Vindemiatrix",
     // Locale defaults for Gemini Live prebuilt voices
     VOICES_BY_LOCALE: {
       "en-US": "Aoede",
       "en-GB": "Aoede",
-      "es-ES": "Kore",
-      "es-419": "Kore"
+      "es-ES": "Vindemiatrix",
+      "es-419": "Vindemiatrix"
     },
     // Optional test voices (may require model/region support)
     TEST_VOICES: ["Autonoe", "Callirrhoe"],
@@ -124,30 +197,32 @@ const Config = {
     TRANSCRIPTION_MODEL: "gpt-4o-mini-transcribe",
   },
 
-  buildInstructions: (localeVariant) => {
+  resolveLocaleVariant: (localeVariant) => resolveLocaleVariant(localeVariant),
+  buildInstructions: async (localeVariant, options = {}) => {
+    const effectiveLocale = options.skipDbCheck ? (localeVariant || "en-US") : await resolveLocaleVariant(localeVariant);
     const common = `You are Brenda, a friendly and efficient assistant. 
     Keep your responses concise and natural for voice conversation. 
     NEVER use markdown (like **bold** or lists) because your response is being spoken.
     If you detect emotion or urgency in the user's voice, respond with appropriate empathy and tone.`;
 
-    if (localeVariant === "es-ES") {
+    if (effectiveLocale === "es-ES") {
       return `${common}
       Habla en español de España (castellano peninsular).
       - Pronunciación y entonación propias de España, con un acento nativo impecable.
       - Usa "vosotros", "vale", "de acuerdo".
       - Evita sonar como una grabación artificial; usa entonación natural.
-      - IMPORTANTE: Cuando hablas del clima expresa las temperaturas en Celsius y redondéa siempre al número entero.`;
+      - IMPORTANTE: Cuando hablas del clima expresa las temperaturas en Celsius y redondéa siempre al número entero.` + genderAddressLine(effectiveLocale, options.gender);
     }
 
-    if (localeVariant === "es-419") {
+    if (effectiveLocale === "es-419") {
       return `${common}
       Habla en español latinoamericano neutro con un acento nativo impecable.
       - Usa "ustedes" (no "vosotros").
       - Evita sonar como una grabación artificial; usa entonación natural.
-      - IMPORTANTE: Cuando hablas del clima expresa las temperaturas en Celsius y redondéa siempre al número entero.`;
+      - IMPORTANTE: Cuando hablas del clima expresa las temperaturas en Celsius y redondéa siempre al número entero.` + genderAddressLine(effectiveLocale, options.gender);
     }
 
-    if (localeVariant === "en-GB") {
+    if (effectiveLocale === "en-GB") {
       return `${common}
       Speak British English with a natural native accent.
       - Prefer UK vocabulary (mobile, lift, lorry, petrol).
@@ -159,7 +234,7 @@ const Config = {
     - Prefer US vocabulary (cell phone, elevator, truck, gas).
     - IMPORTANT: When talking about the weather express temperatures in Fahrenheit and round the number to an integer.`;
   },
-  buildRealtimeInstructions: (localeVariant) => buildRealtimeInstructions(localeVariant),
+  buildRealtimeInstructions: (localeVariant, options = {}) => buildRealtimeInstructions(localeVariant, options),
 };
 
 if (typeof module !== "undefined" && module.exports) {
@@ -171,9 +246,9 @@ if (typeof window !== "undefined") {
   window.Config = Config;
 
   // Test example:
-  window.testInstructions = function () {
+  window.testInstructions = async function () {
     const localeVariant = document.querySelector("select")?.value || "en-US";
-    const instructions = buildInstructions(localeVariant);
+    const instructions = await buildInstructions(localeVariant);
     console.log("Instructions for", localeVariant + ":");
     console.log(instructions);
   };

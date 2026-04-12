@@ -183,6 +183,14 @@
             maxlength="4" />
           <div class="auth-help" id="authPinHelp"></div>
 
+          <label class="auth-label" for="authGender" id="authGenderLabel"></label>
+          <select id="authGender" class="auth-input auth-select">
+            <option value="" id="authGenderDefault" style="display:none"></option>
+            <option value="Woman" id="authGenderWoman"></option>
+            <option value="Man" id="authGenderMan"></option>
+            <option value="Other" id="authGenderOther"></option>
+          </select>
+
           <button id="authContinueBtn" class="auth-continue" type="button"></button>
 
           <div class="auth-error" id="authError" role="alert" aria-live="polite"></div>

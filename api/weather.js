@@ -80,7 +80,7 @@ export default async function handler(req, res) {
 
   try {
     const body = await readBody(req);
-    const { action, city, state, country, lat, lon } = body;
+    const { action, city, state, country, lat, lon, skipSavedLocation } = body;
 
     const db = await getDb();
 
@@ -111,8 +111,9 @@ export default async function handler(req, res) {
 
     // ACTION: Get weather forecast
     if (action === "get_forecast") {
-      const existingLocation = await getUserLocation(db, s.userId);
+      const existingLocation = skipSavedLocation ? null : await getUserLocation(db, s.userId);
       const { saveLocation } = body;
+      const effectiveSaveLocation = !skipSavedLocation && !!saveLocation;
 
       let weatherLat = lat;
       let weatherLon = lon;
@@ -235,7 +236,7 @@ export default async function handler(req, res) {
         coordinatesMatch(existingLocation, Number(weatherLat), Number(weatherLon));
 
       const shouldPersistLocation =
-        (saveLocation && weatherCity && weatherLat && weatherLon) || needsCountryUpdate;
+        (effectiveSaveLocation && weatherCity && weatherLat && weatherLon) || needsCountryUpdate;
 
       if (shouldPersistLocation) {
         console.log(

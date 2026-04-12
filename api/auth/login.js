@@ -31,10 +31,11 @@ export default async function handler(req, res) {
 
   try {
     // Express req.body
-    const { username, pin } = req.body || {};
+    const { username, pin, gender } = req.body || {};
 
     if (!isValidUsername(username)) return json(res, 400, { error: "Invalid username" });
     if (!isValidPin(pin)) return json(res, 400, { error: "Invalid PIN" });
+    if (!["Woman", "Man", "Other"].includes(gender)) return json(res, 400, { error: "Invalid gender" });
 
     const db = await getDb();
     const users = db.collection("users");
@@ -56,13 +57,14 @@ export default async function handler(req, res) {
           username,
           userId,
           pinHash,
+          preferences: { gender },
           createdAt: now,
           lastLogin: now,
         };
         await users.insertOne(user);
         await db.collection("conversations").insertOne({ userId, createdAt: now, updatedAt: now, messages: [] });
       } else {
-        await users.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
+        await users.updateOne({ _id: user._id }, { $set: { lastLogin: new Date(), "preferences.gender": gender } });
       }
     } else {
       const pinHash = await bcrypt.hash(pin, 10);
@@ -71,6 +73,7 @@ export default async function handler(req, res) {
         username,
         userId: baseUserId,
         pinHash,
+        preferences: { gender },
         createdAt: now,
         lastLogin: now,
       };
@@ -82,6 +85,7 @@ export default async function handler(req, res) {
       userId: user.userId,
       username: user.username,
       isAnonymous: false,
+      gender: gender,
       iat: Date.now(),
     });
 
@@ -90,6 +94,7 @@ export default async function handler(req, res) {
       username: user.username,
       displayName: user.username,
       isAnonymous: false,
+      gender,
     });
   } catch (e) {
     console.error("Login error:", e);

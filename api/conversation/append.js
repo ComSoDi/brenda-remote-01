@@ -35,7 +35,7 @@ async function processBody(parsed, s, res) {
     await db.collection("conversations").updateOne(
       { userId: s.userId },
       {
-        $setOnInsert: { userId: s.userId, createdAt: now, messages: [] },
+        $setOnInsert: { userId: s.userId, createdAt: now },
         $set: { updatedAt: now },
         $push: { messages: { $each: messages } },
       },

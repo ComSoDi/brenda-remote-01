@@ -117,6 +117,12 @@ class BrendaApp {
       authPinHelp: document.getElementById("authPinHelp"),
       authNick: document.getElementById("authNick"),
       authPin: document.getElementById("authPin"),
+      authGender: document.getElementById("authGender"),
+      authGenderLabel: document.getElementById("authGenderLabel"),
+      authGenderDefault: document.getElementById("authGenderDefault"),
+      authGenderWoman: document.getElementById("authGenderWoman"),
+      authGenderMan: document.getElementById("authGenderMan"),
+      authGenderOther: document.getElementById("authGenderOther"),
       authContinueBtn: document.getElementById("authContinueBtn"),
       authAnonBtn: document.getElementById("authAnonBtn"),
       authPrivacyLink: document.getElementById("authPrivacyLink"),
@@ -329,6 +335,11 @@ class BrendaApp {
     if (this.elements.authNickHelp) this.elements.authNickHelp.textContent = t(v, "authNickHelp");
     if (this.elements.authPinLabel) this.elements.authPinLabel.textContent = t(v, "authPinLabel");
     if (this.elements.authPinHelp) this.elements.authPinHelp.textContent = t(v, "authPinHelp");
+    if (this.elements.authGenderLabel) this.elements.authGenderLabel.textContent = t(v, "authGenderLabel");
+    if (this.elements.authGenderDefault) this.elements.authGenderDefault.textContent = t(v, "authGenderDefault");
+    if (this.elements.authGenderWoman) this.elements.authGenderWoman.textContent = t(v, "authGenderWoman");
+    if (this.elements.authGenderMan) this.elements.authGenderMan.textContent = t(v, "authGenderMan");
+    if (this.elements.authGenderOther) this.elements.authGenderOther.textContent = t(v, "authGenderOther");
     if (this.elements.authContinueBtn) this.elements.authContinueBtn.textContent = t(v, "authContinue");
 
     // âœ… Ensure Anonymous link exists + is visible + has label
@@ -404,10 +415,33 @@ class BrendaApp {
     // âœ… Always clear errors
     if (this.elements.authError) this.elements.authError.textContent = "";
 
-    // âœ… When opened from account button (or forced overlay), clear fields so placeholders show
+    // Pre-fill with current user data if logged in, otherwise clear
     if (resetFields) {
-      if (this.elements.authNick) this.elements.authNick.value = "";
-      if (this.elements.authPin) this.elements.authPin.value = "";
+      if (this.user && !this.user.isAnonymous) {
+        if (this.elements.authNick) this.elements.authNick.value = this.user.username || "";
+        if (this.elements.authPin) this.elements.authPin.value = "";
+        // Show current gender via the hidden first option
+        if (this.elements.authGender && this.elements.authGenderDefault) {
+          const genderKey = { Woman: "authGenderWoman", Man: "authGenderMan", Other: "authGenderOther" }[this.user.gender];
+          if (genderKey) {
+            this.elements.authGenderDefault.value = this.user.gender;
+            this.elements.authGenderDefault.textContent = t(this.locale.variant, genderKey);
+            this.elements.authGender.value = this.user.gender;
+          } else {
+            this.elements.authGenderDefault.value = "";
+            this.elements.authGenderDefault.textContent = t(this.locale.variant, "authGenderDefault");
+            this.elements.authGender.value = "";
+          }
+        }
+      } else {
+        if (this.elements.authNick) this.elements.authNick.value = "";
+        if (this.elements.authPin) this.elements.authPin.value = "";
+        if (this.elements.authGender && this.elements.authGenderDefault) {
+          this.elements.authGenderDefault.value = "";
+          this.elements.authGenderDefault.textContent = t(this.locale.variant, "authGenderDefault");
+          this.elements.authGender.value = "";
+        }
+      }
     }
 
     o.classList.remove("hidden");
@@ -437,6 +471,7 @@ class BrendaApp {
         username: meOrNull.username || meOrNull.userId || "",
         displayName: nameToShow,
         isAnonymous: !!meOrNull.isAnonymous,
+        gender: meOrNull.gender || null,
       }
       : null;
 
@@ -469,6 +504,7 @@ class BrendaApp {
     if (this.elements.authAnonBtn) this.elements.authAnonBtn.disabled = isBusy;
     if (this.elements.authNick) this.elements.authNick.disabled = isBusy;
     if (this.elements.authPin) this.elements.authPin.disabled = isBusy;
+    if (this.elements.authGender) this.elements.authGender.disabled = isBusy;
     if (this.elements.authContinueBtn && isBusy) {
       this.elements.authContinueBtn.textContent = t(this.locale.variant, "authLoading");
     } else if (this.elements.authContinueBtn) {
@@ -480,6 +516,7 @@ class BrendaApp {
     const v = this.locale.variant;
     const nick = (this.elements.authNick?.value || "").trim();
     const pin = (this.elements.authPin?.value || "").trim();
+    const gender = (this.elements.authGender?.value || "").trim();
 
     if (!this.validateNick(nick)) {
       if (this.elements.authError) this.elements.authError.textContent = t(v, "authErrorBadNick");
@@ -489,12 +526,16 @@ class BrendaApp {
       if (this.elements.authError) this.elements.authError.textContent = t(v, "authErrorBadPin");
       return;
     }
+    if (!gender) {
+      if (this.elements.authError) this.elements.authError.textContent = t(v, "authErrorNoGender");
+      return;
+    }
 
     this.setAuthBusy(true);
     try {
       const me = await this.apiJSON("/api/auth/login", {
         method: "POST",
-        body: { username: nick, pin },
+        body: { username: nick, pin, gender },
       });
 
       await this.setUser(me);
@@ -1140,7 +1181,7 @@ class BrendaApp {
       }
 
       const userId = this.user?.userId || "anon";
-      await this.agent.connect(userId, this.locale.variant);
+      await this.agent.connect(userId, this.locale.variant, this.user?.gender || null);
     } catch (e) {
       console.error(e);
       alert("Voice connect failed: " + e.message);

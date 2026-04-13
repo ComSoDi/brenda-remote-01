@@ -1095,7 +1095,7 @@ class BrendaApp {
     return `${prefix}_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
   }
 
-  addMessage({ role, channel, text, status = "final", id = null, ts = null, skipRender = false }) {
+  addMessage({ role, channel, text, status = "final", id = null, ts = null, skipRender = false, forceNewDateSeparator = false }) {
     // Map channel to fromChannel for storage
     const fromChannel = channel === "voice" ? "voice" : (channel === "video" ? "video" : "text");
 
@@ -1106,6 +1106,7 @@ class BrendaApp {
       text: String(text ?? ""),
       status,
       skipRender: !!skipRender,
+      forceNewDateSeparator: !!forceNewDateSeparator,
       ts: ts ?? Date.now(),
     };
     this.messages.push(msg);
@@ -1852,7 +1853,7 @@ class BrendaApp {
       if (this.mode === "talk" && this._lastVoiceStatus !== "disconnected" && typeof this.agent?.speakText === "function") {
         await this.agent.speakText(greetingText, true);
       } else {
-        await this.emitAssistantLine({ text: greetingText, channel: "voice" });
+        await this.emitAssistantLine({ text: greetingText, channel: "voice", forceNewDateSeparator: true });
       }
     } catch (e) {
       console.warn("[greeting] Voice greeting failed:", e);
@@ -1945,11 +1946,11 @@ class BrendaApp {
     }
   }
 
-  async emitAssistantLine({ text, channel }) {
+  async emitAssistantLine({ text, channel, forceNewDateSeparator = false }) {
     const cleaned = (text || "").trim();
     if (!cleaned) return;
 
-    const msg = this.addMessage({ role: "assistant", channel, text: cleaned, status: "final" });
+    const msg = this.addMessage({ role: "assistant", channel, text: cleaned, status: "final", forceNewDateSeparator });
     this.render();
     await this.persistMessage(msg);
 
@@ -2302,7 +2303,7 @@ class BrendaApp {
       // Voice mode: stored above; scheduleVoiceGreeting() will pick it up.
       if (this.mode === "text" && this._greetingText) {
         this._greetingShown = true;
-        await this.emitAssistantLine({ text: this._greetingText, channel: "text" });
+        await this.emitAssistantLine({ text: this._greetingText, channel: "text", forceNewDateSeparator: true });
       }
     } catch (e) {
       // Non-fatal: app continues normally without a greeting.

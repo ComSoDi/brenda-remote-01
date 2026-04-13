@@ -47,7 +47,7 @@ export function renderTranscript({
     .filter((m) => !m?.skipRender)
     .forEach((m) => {
       const dateKey = toDateKey(m.ts);
-      if (dateKey !== lastDateKey) {
+      if (dateKey !== lastDateKey || m.forceNewDateSeparator) {
         lastDateKey = dateKey;
         const label = esc(formatDateSeparator(m.ts, localeVariant));
         parts.push(

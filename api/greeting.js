@@ -7,7 +7,7 @@
 import { getDb } from "../lib/mongo.js";
 import { requireSession } from "../lib/auth.js";
 
-const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
+const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
 /**
  * Returns true when two Date objects fall on the same calendar day (local time).
@@ -62,7 +62,7 @@ export async function greetingCheckin(req, res) {
       if (!isSameCalendarDay(now, lastSeen)) {
         // Crossed midnight → welcome back with a full greeting regardless of gap.
         greetingType = "full";
-      } else if (gapMs >= EIGHT_HOURS_MS) {
+      } else if (gapMs >= TWELVE_HOURS_MS) {
         // Same calendar day but been away 8+ hours → brief "welcome back".
         greetingType = "short";
       }

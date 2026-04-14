@@ -398,6 +398,14 @@ function splitCityCountry(raw) {
   return { city: text, state: null, country: null };
 }
 
+// Words that are never city names when they appear as the first token of a
+// disambiguation response (common Spanish/English function words & interjections).
+const NON_CITY_WORDS = new Set([
+  "no", "si", "sí", "vale", "ok", "okay", "oye", "oiga", "bueno",
+  "yo", "me", "te", "se", "le", "lo", "la", "los", "las",
+  "un", "una", "el", "the", "a", "i",
+]);
+
 // Extract city/country from a weather query message.
 // Returns { city, state, country } or null (null = use saved location).
 //
@@ -408,28 +416,51 @@ function parseWeatherCityFromMessage(text, lang, isFollowUp = false) {
   if (!text) return null;
   const trimmed = text.trim().replace(/[.,;!?]+$/, "").trim();
 
+  // "aquí", "acá", "here" always means the saved location — never geocode these.
+  if (/\b(aqu[ií]|ac[aá]|here)\b/i.test(trimmed)) return null;
+
   // ── FOLLOW-UP: user is answering "which city?" or "which Madrid?" ───────
   // These patterns handle disambiguation responses before any keyword search.
   if (isFollowUp) {
-    // "city, country" / "city, state, country"  — comma-separated
-    if (trimmed.includes(",")) return splitCityCountry(trimmed);
+    // Long messages are new questions, not disambiguation responses.
+    // Skip short-response heuristics and fall through to the initial-query patterns.
+    const wordCount = trimmed.split(/\s+/).length;
+    if (wordCount <= 8) {
+      // "city, country" / "city, state, country" — comma-separated
+      // Guard: skip if the first token is a common non-city word (e.g. "sí", "no", "vale").
+      if (trimmed.includes(",")) {
+        const parts    = trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+        const firstWord = parts[0].split(/\s+/)[0].toLowerCase();
+        if (parts.length <= 3 && !NON_CITY_WORDS.has(firstWord)) {
+          return splitCityCountry(trimmed);
+        }
+      }
 
-    // "city en país" / "city in country"  — preposition before country name
-    const cityInCountry = lang === "es"
-      ? trimmed.match(/^(.+?)\s+(?:en|de)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s]*)$/i)
-      : trimmed.match(/^(.+?)\s+(?:in|from)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s]*)$/i);
-    if (cityInCountry) {
-      const city = cityInCountry[1].trim();
-      const country = countryNameToCode(cityInCountry[2].trim());
-      if (city) return { city, state: null, country };
-    }
+      // "city en país" / "city in country"
+      // Guard: only return when the country is recognised AND the city part is short.
+      const cityInCountry = lang === "es"
+        ? trimmed.match(/^(.+?)\s+(?:en|de)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s]*)$/i)
+        : trimmed.match(/^(.+?)\s+(?:in|from)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s]*)$/i);
+      if (cityInCountry) {
+        const city    = cityInCountry[1].trim();
+        const country = countryNameToCode(cityInCountry[2].trim());
+        if (city && country && city.split(/\s+/).length <= 4) {
+          return { city, state: null, country };
+        }
+      }
 
-    // Short bare response — ≤4 words, only letters/spaces/commas → treat as city name
-    // (handles "Madrid", "Buenos Aires", "Madrid España" w/ implicit country)
-    const words = trimmed.split(/\s+/);
-    if (words.length <= 4 && /^[A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]+$/.test(trimmed)) {
-      return splitCityCountry(trimmed);
+      // Short bare response — ≤4 words, only letters/spaces/commas → treat as city name
+      // (handles "Madrid", "Buenos Aires", "Madrid España" w/ implicit country)
+      const words    = trimmed.split(/\s+/);
+      const firstWord = words[0].toLowerCase();
+      if (words.length <= 4
+          && /^[A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]+$/.test(trimmed)
+          && !NON_CITY_WORDS.has(firstWord)) {
+        return splitCityCountry(trimmed);
+      }
     }
+    // wordCount > 8, or no short-response pattern matched → fall through to
+    // the initial-query patterns below (handles "va a llover en Madrid" etc.)
   }
 
   // ── INITIAL QUERY: extract city from a full weather sentence ────────────

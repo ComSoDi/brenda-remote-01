@@ -114,7 +114,8 @@ class BrendaApp {
       authNickLabel: document.getElementById("authNickLabel"),
       authNickHelp: document.getElementById("authNickHelp"),
       authPinLabel: document.getElementById("authPinLabel"),
-      authPinHelp: document.getElementById("authPinHelp"),
+      authPinHelp01: document.getElementById("authPinHelp01"),
+      authPinHelp02: document.getElementById("authPinHelp02"),
       authNick: document.getElementById("authNick"),
       authPin: document.getElementById("authPin"),
       authContinueBtn: document.getElementById("authContinueBtn"),
@@ -334,7 +335,8 @@ class BrendaApp {
     if (this.elements.authNickLabel) this.elements.authNickLabel.textContent = t(v, "authNickLabel");
     if (this.elements.authNickHelp) this.elements.authNickHelp.textContent = t(v, "authNickHelp");
     if (this.elements.authPinLabel) this.elements.authPinLabel.textContent = t(v, "authPinLabel");
-    if (this.elements.authPinHelp) this.elements.authPinHelp.textContent = t(v, "authPinHelp");
+    if (this.elements.authPinHelp01) this.elements.authPinHelp01.textContent = t(v, "authPinHelp01");
+    if (this.elements.authPinHelp02) this.elements.authPinHelp02.textContent = t(v, "authPinHelp02");
     if (this.elements.authContinueBtn) this.elements.authContinueBtn.textContent = t(v, "authContinue");
 
     // âœ… Ensure Anonymous link exists + is visible + has label

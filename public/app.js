@@ -117,12 +117,6 @@ class BrendaApp {
       authPinHelp: document.getElementById("authPinHelp"),
       authNick: document.getElementById("authNick"),
       authPin: document.getElementById("authPin"),
-      authGender: document.getElementById("authGender"),
-      authGenderLabel: document.getElementById("authGenderLabel"),
-      authGenderDefault: document.getElementById("authGenderDefault"),
-      authGenderWoman: document.getElementById("authGenderWoman"),
-      authGenderMan: document.getElementById("authGenderMan"),
-      authGenderOther: document.getElementById("authGenderOther"),
       authContinueBtn: document.getElementById("authContinueBtn"),
       authAnonBtn: document.getElementById("authAnonBtn"),
       authPrivacyLink: document.getElementById("authPrivacyLink"),
@@ -181,6 +175,12 @@ class BrendaApp {
       locationCancelBtn: document.getElementById("locationCancelBtn"),
       locationSaveBtn: document.getElementById("locationSaveBtn"),
       locationStatus: document.getElementById("locationStatus"),
+      locationGender: document.getElementById("locationGender"),
+      locationGenderLabel: document.getElementById("locationGenderLabel"),
+      locationGenderDefault: document.getElementById("locationGenderDefault"),
+      locationGenderWoman: document.getElementById("locationGenderWoman"),
+      locationGenderMan: document.getElementById("locationGenderMan"),
+      locationGenderOther: document.getElementById("locationGenderOther"),
 
       // Help UI
       helpBtn: document.getElementById("helpBtn"),
@@ -335,11 +335,6 @@ class BrendaApp {
     if (this.elements.authNickHelp) this.elements.authNickHelp.textContent = t(v, "authNickHelp");
     if (this.elements.authPinLabel) this.elements.authPinLabel.textContent = t(v, "authPinLabel");
     if (this.elements.authPinHelp) this.elements.authPinHelp.textContent = t(v, "authPinHelp");
-    if (this.elements.authGenderLabel) this.elements.authGenderLabel.textContent = t(v, "authGenderLabel");
-    if (this.elements.authGenderDefault) this.elements.authGenderDefault.textContent = t(v, "authGenderDefault");
-    if (this.elements.authGenderWoman) this.elements.authGenderWoman.textContent = t(v, "authGenderWoman");
-    if (this.elements.authGenderMan) this.elements.authGenderMan.textContent = t(v, "authGenderMan");
-    if (this.elements.authGenderOther) this.elements.authGenderOther.textContent = t(v, "authGenderOther");
     if (this.elements.authContinueBtn) this.elements.authContinueBtn.textContent = t(v, "authContinue");
 
     // âœ… Ensure Anonymous link exists + is visible + has label
@@ -420,27 +415,9 @@ class BrendaApp {
       if (this.user && !this.user.isAnonymous) {
         if (this.elements.authNick) this.elements.authNick.value = this.user.username || "";
         if (this.elements.authPin) this.elements.authPin.value = "";
-        // Show current gender via the hidden first option
-        if (this.elements.authGender && this.elements.authGenderDefault) {
-          const genderKey = { Woman: "authGenderWoman", Man: "authGenderMan", Other: "authGenderOther" }[this.user.gender];
-          if (genderKey) {
-            this.elements.authGenderDefault.value = this.user.gender;
-            this.elements.authGenderDefault.textContent = t(this.locale.variant, genderKey);
-            this.elements.authGender.value = this.user.gender;
-          } else {
-            this.elements.authGenderDefault.value = "";
-            this.elements.authGenderDefault.textContent = t(this.locale.variant, "authGenderDefault");
-            this.elements.authGender.value = "";
-          }
-        }
       } else {
         if (this.elements.authNick) this.elements.authNick.value = "";
         if (this.elements.authPin) this.elements.authPin.value = "";
-        if (this.elements.authGender && this.elements.authGenderDefault) {
-          this.elements.authGenderDefault.value = "";
-          this.elements.authGenderDefault.textContent = t(this.locale.variant, "authGenderDefault");
-          this.elements.authGender.value = "";
-        }
       }
     }
 
@@ -504,7 +481,6 @@ class BrendaApp {
     if (this.elements.authAnonBtn) this.elements.authAnonBtn.disabled = isBusy;
     if (this.elements.authNick) this.elements.authNick.disabled = isBusy;
     if (this.elements.authPin) this.elements.authPin.disabled = isBusy;
-    if (this.elements.authGender) this.elements.authGender.disabled = isBusy;
     if (this.elements.authContinueBtn && isBusy) {
       this.elements.authContinueBtn.textContent = t(this.locale.variant, "authLoading");
     } else if (this.elements.authContinueBtn) {
@@ -516,7 +492,6 @@ class BrendaApp {
     const v = this.locale.variant;
     const nick = (this.elements.authNick?.value || "").trim();
     const pin = (this.elements.authPin?.value || "").trim();
-    const gender = (this.elements.authGender?.value || "").trim();
 
     if (!this.validateNick(nick)) {
       if (this.elements.authError) this.elements.authError.textContent = t(v, "authErrorBadNick");
@@ -526,16 +501,12 @@ class BrendaApp {
       if (this.elements.authError) this.elements.authError.textContent = t(v, "authErrorBadPin");
       return;
     }
-    if (!gender) {
-      if (this.elements.authError) this.elements.authError.textContent = t(v, "authErrorNoGender");
-      return;
-    }
 
     this.setAuthBusy(true);
     try {
       const me = await this.apiJSON("/api/auth/login", {
         method: "POST",
-        body: { username: nick, pin, gender },
+        body: { username: nick, pin },
       });
 
       await this.setUser(me);
@@ -720,6 +691,11 @@ class BrendaApp {
     if (this.elements.locationTownLabel) this.elements.locationTownLabel.textContent = t(v, "locationTown");
     if (this.elements.locationStateLabel) this.elements.locationStateLabel.textContent = t(v, "locationState");
     if (this.elements.locationCountryLabel) this.elements.locationCountryLabel.textContent = t(v, "locationCountry");
+    if (this.elements.locationGenderLabel) this.elements.locationGenderLabel.textContent = t(v, "authGenderLabel");
+    if (this.elements.locationGenderDefault) this.elements.locationGenderDefault.textContent = t(v, "authGenderDefault");
+    if (this.elements.locationGenderWoman) this.elements.locationGenderWoman.textContent = t(v, "authGenderWoman");
+    if (this.elements.locationGenderMan) this.elements.locationGenderMan.textContent = t(v, "authGenderMan");
+    if (this.elements.locationGenderOther) this.elements.locationGenderOther.textContent = t(v, "authGenderOther");
     if (this.elements.locationSaveBtn) this.elements.locationSaveBtn.textContent = t(v, "locationSave");
     if (this.elements.locationCancelBtn) this.elements.locationCancelBtn.textContent = t(v, "locationCancel");
   }
@@ -732,7 +708,7 @@ class BrendaApp {
   }
 
   setLocationBusy(isBusy) {
-    [this.elements.locationTownInput, this.elements.locationStateInput, this.elements.locationCountryInput].forEach((el) => {
+    [this.elements.locationTownInput, this.elements.locationStateInput, this.elements.locationCountryInput, this.elements.locationGender].forEach((el) => {
       if (el) el.disabled = isBusy;
     });
     if (this.elements.locationSaveBtn) this.elements.locationSaveBtn.disabled = isBusy;
@@ -759,6 +735,16 @@ class BrendaApp {
     } catch {
       // ignore — form stays empty
     }
+    // Pre-fill gender from in-memory user state (no extra API call needed)
+    if (this.elements.locationGender) {
+      const g = this.user.gender;
+      const genderKey = { Woman: "authGenderWoman", Man: "authGenderMan", Other: "authGenderOther" }[g];
+      if (genderKey && this.elements.locationGenderDefault) {
+        this.elements.locationGenderDefault.value = g;
+        this.elements.locationGenderDefault.textContent = t(this.locale.variant, genderKey);
+        this.elements.locationGender.value = g;
+      }
+    }
   }
 
   async openLocationOverlay() {
@@ -769,6 +755,7 @@ class BrendaApp {
     if (this.elements.locationTownInput) this.elements.locationTownInput.value = "";
     if (this.elements.locationStateInput) this.elements.locationStateInput.value = "";
     if (this.elements.locationCountryInput) this.elements.locationCountryInput.value = "";
+    if (this.elements.locationGender) this.elements.locationGender.value = "";
     o.classList.remove("hidden");
     o.setAttribute("aria-hidden", "false");
     await this.populateLocationForm();
@@ -800,6 +787,7 @@ class BrendaApp {
     const city = (this.elements.locationTownInput?.value || "").trim();
     const state = (this.elements.locationStateInput?.value || "").trim();
     const country = (this.elements.locationCountryInput?.value || "").trim();
+    const gender = (this.elements.locationGender?.value || "").trim();
     const v = this.locale.variant;
 
     if (!city) {
@@ -812,6 +800,23 @@ class BrendaApp {
     this.setLocationStatus("");
 
     try {
+      // Save gender if provided and user is not anonymous
+      if (gender && !this.user.isAnonymous) {
+        const gRes = await fetch("/api/auth/me", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ gender }),
+        });
+        if (!gRes.ok) {
+          const gData = await gRes.json().catch(() => ({}));
+          this.setLocationStatus(gData.error || t(v, "locationSaveError"), true);
+          return;
+        }
+        this.user.gender = gender;
+      }
+
+      // Save location
       const res = await fetch("/api/weather", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

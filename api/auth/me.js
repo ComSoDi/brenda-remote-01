@@ -1,5 +1,5 @@
 // api/auth/me.js
-import { getSession } from "../../lib/auth.js";
+import { getSession, setSessionCookie } from "../../lib/auth.js";
 import { getDb } from "../../lib/mongo.js";
 
 function json(res, status, body) {
@@ -10,6 +10,28 @@ function json(res, status, body) {
 
 export default async function handler(req, res) {
   const s = getSession(req);
+
+  // PATCH — update gender preference
+  if (req.method === "PATCH") {
+    if (!s?.userId || s.isAnonymous) return json(res, 401, { error: "Unauthorized" });
+    const { gender } = req.body || {};
+    if (!["Woman", "Man", "Other"].includes(gender)) return json(res, 400, { error: "Invalid gender" });
+    try {
+      const db = await getDb();
+      await db.collection("users").updateOne(
+        { userId: s.userId },
+        { $set: { "preferences.gender": gender } }
+      );
+      setSessionCookie(res, { ...s, gender, iat: Date.now() });
+      return json(res, 200, { ok: true, gender });
+    } catch (e) {
+      console.error("[auth/me PATCH]", e.message);
+      return json(res, 500, { error: e.message });
+    }
+  }
+
+  if (req.method !== "GET") return json(res, 405, { error: "Method not allowed" });
+
   if (!s?.userId) return json(res, 200, { userId: null });
 
   // Fetch gender from DB (session cookies pre-dating this field won't have it)

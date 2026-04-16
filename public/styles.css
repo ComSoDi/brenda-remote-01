@@ -1559,6 +1559,19 @@ body {
   background: #fff;
 }
 
+.subject-field select {
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #0f172a;
+  background: #fff;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 .subjects-actions {
   display: flex;
   gap: 10px;

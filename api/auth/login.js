@@ -31,11 +31,11 @@ export default async function handler(req, res) {
 
   try {
     // Express req.body
-    const { username, pin, gender } = req.body || {};
+    const { username, pin, gender: rawGender } = req.body || {};
+    const gender = ["Woman", "Man", "Other"].includes(rawGender) ? rawGender : null;
 
     if (!isValidUsername(username)) return json(res, 400, { error: "Invalid username" });
     if (!isValidPin(pin)) return json(res, 400, { error: "Invalid PIN" });
-    if (!["Woman", "Man", "Other"].includes(gender)) return json(res, 400, { error: "Invalid gender" });
 
     const db = await getDb();
     const users = db.collection("users");
@@ -57,14 +57,18 @@ export default async function handler(req, res) {
           username,
           userId,
           pinHash,
-          preferences: { gender },
+          preferences: { gender: gender || null },
           createdAt: now,
           lastLogin: now,
         };
         await users.insertOne(user);
         await db.collection("conversations").insertOne({ userId, createdAt: now, updatedAt: now, messages: [] });
       } else {
-        await users.updateOne({ _id: user._id }, { $set: { lastLogin: new Date(), "preferences.gender": gender } });
+        const updateFields = { lastLogin: new Date() };
+        if (gender) updateFields["preferences.gender"] = gender;
+        await users.updateOne({ _id: user._id }, { $set: updateFields });
+        // Resolve effective gender: sent value or existing in DB
+        if (!gender) user = await users.findOne({ userId: user.userId });
       }
     } else {
       const pinHash = await bcrypt.hash(pin, 10);
@@ -81,11 +85,13 @@ export default async function handler(req, res) {
       await db.collection("conversations").insertOne({ userId: baseUserId, createdAt: now, updatedAt: now, messages: [] });
     }
 
+    const effectiveGender = gender || user.preferences?.gender || null;
+
     setSessionCookie(res, {
       userId: user.userId,
       username: user.username,
       isAnonymous: false,
-      gender: gender,
+      gender: effectiveGender,
       iat: Date.now(),
     });
 
@@ -94,7 +100,7 @@ export default async function handler(req, res) {
       username: user.username,
       displayName: user.username,
       isAnonymous: false,
-      gender,
+      gender: effectiveGender,
     });
   } catch (e) {
     console.error("Login error:", e);

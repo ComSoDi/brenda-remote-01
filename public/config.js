@@ -136,7 +136,7 @@ const Config = {
   // Voice backend: "openai-realtime" | "gemini-proxy" | "browser" | "auto"
   VOICE_BACKEND: "gemini-proxy",
   // How long to wait for the WS to open before falling back (auto mode)
-  VOICE_CONNECT_TIMEOUT_MS: 4000,
+  VOICE_CONNECT_TIMEOUT_MS: 8000,
   // Allow browser speech fallback when WS is unavailable
   VOICE_ALLOW_BROWSER_FALLBACK: false,
 

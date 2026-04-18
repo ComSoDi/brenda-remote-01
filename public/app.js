@@ -1273,8 +1273,10 @@ class BrendaApp {
       if (status === "connected" && (prevStatus === "disconnected" || prevStatus === "connecting") && !this._voiceGreetingSent) {
         this.scheduleVoiceGreeting();
       }
-    } else if (status === "connecting") {
+    } else if (status === "connecting" || status === "warming") {
       this.setTalkButtonState({ connected: false, disabled: true });
+      if (this.elements.callConnectingLabel)
+        this.elements.callConnectingLabel.textContent = t(this.locale.variant, status === "warming" ? "warming" : "connecting");
       this.setConnectingIndicator(true);
       this.clearVoiceCountdown();
       this.clearVoiceGreetingTimer();

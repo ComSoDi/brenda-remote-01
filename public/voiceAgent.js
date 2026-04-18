@@ -153,10 +153,23 @@
       this._onPcmChunk = null;
 
       const proto = window.location.protocol === "https:" ? "wss" : "ws";
-      const proxyBase = window.Config?.VOICE_PROXY_WS_URL
-        ? window.Config.VOICE_PROXY_WS_URL.replace(/^http/, "ws").replace(/\/$/, "")
+      const externalProxy = window.Config?.VOICE_PROXY_WS_URL
+        ? window.Config.VOICE_PROXY_WS_URL.replace(/\/$/, "")
+        : null;
+      const proxyBase = externalProxy
+        ? externalProxy.replace(/^http/, "ws")
         : `${proto}://${window.location.host}`;
       const url = `${proxyBase}/api/voice/stream?locale=${encodeURIComponent(localeVariant)}`;
+
+      // Pre-warm external proxy (e.g. Render free tier) — HTTP ping wakes the service
+      // before we open the WebSocket, so the WS connect itself is always fast.
+      if (externalProxy) {
+        this.updateStatus("warming");
+        try {
+          await fetch(`${externalProxy}/health`, { signal: AbortSignal.timeout(33000) });
+        } catch { /* non-fatal — proceed to WS anyway */ }
+      }
+
       const ws = new WebSocket(url);
       this.socket = ws;
       ws.binaryType = "arraybuffer";

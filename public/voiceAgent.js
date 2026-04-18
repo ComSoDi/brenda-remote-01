@@ -153,8 +153,10 @@
       this._onPcmChunk = null;
 
       const proto = window.location.protocol === "https:" ? "wss" : "ws";
-      const host = window.location.host;
-      const url = `${proto}://${host}/api/voice/stream?locale=${encodeURIComponent(localeVariant)}`;
+      const proxyBase = window.Config?.VOICE_PROXY_WS_URL
+        ? window.Config.VOICE_PROXY_WS_URL.replace(/^http/, "ws").replace(/\/$/, "")
+        : `${proto}://${window.location.host}`;
+      const url = `${proxyBase}/api/voice/stream?locale=${encodeURIComponent(localeVariant)}`;
       const ws = new WebSocket(url);
       this.socket = ws;
       ws.binaryType = "arraybuffer";

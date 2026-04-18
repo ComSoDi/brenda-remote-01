@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: brenda-voice-proxy
+    env: node
+    rootDir: voice-proxy
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: AUTH_SESSION_SECRET
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: ai_chat

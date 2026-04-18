@@ -55,5 +55,6 @@ export default async function handler(req, res) {
     displayName: s.isAnonymous ? "anonymous" : (s.username || ""),
     isAnonymous: !!s.isAnonymous,
     gender,
+    voiceProxyUrl: process.env.VOICE_PROXY_WS_URL || null,
   });
 }

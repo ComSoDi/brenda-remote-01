@@ -378,6 +378,7 @@ class BrendaApp {
   async bootstrapAuth() {
     try {
       const me = await this.apiJSON("/api/auth/me", { method: "GET" });
+      if (me?.voiceProxyUrl && window.Config) window.Config.VOICE_PROXY_WS_URL = me.voiceProxyUrl;
       if (me?.userId) {
         await this.setUser(me);
         this.closeAuthOverlay();

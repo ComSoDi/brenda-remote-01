@@ -189,6 +189,11 @@ async function createGeminiVoiceProxy(browserWs, req) {
 // ── HTTP + WebSocket server ────────────────────────────────────────────────
 
 const app = express();
+app.use((_, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  next();
+});
 app.get("/health", (_, res) => res.json({ ok: true }));
 
 const server = createServer(app);

@@ -47,7 +47,6 @@ server.js
 CLAUDE.local.md
 
 # Ignored Dead files
-greeting.js
 realtime-key.js
 
 # Voice proxy local deps

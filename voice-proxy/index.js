@@ -205,3 +205,151 @@ wss.on("connection", (ws, req) => {
 
 const PORT = process.env.PORT || 3002;
 server.listen(PORT, () => console.log(`[brenda-voice-proxy] listening on port ${PORT}`));
+
+// ── Medication reminder scheduler ─────────────────────────────────────────
+
+async function startScheduler() {
+  if (!process.env.MONGODB_URI) {
+    console.log("[scheduler] MONGODB_URI not set — medication reminders disabled");
+    return;
+  }
+
+  const { default: Agenda } = await import("agenda");
+
+  const agenda = new Agenda({
+    db: { address: process.env.MONGODB_URI, collection: "agendaJobs" },
+    processEvery: "1 minute",
+  });
+
+  // ── helper: current time parts in a given IANA timezone ─────────────────
+  function tzParts(timezone) {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone:  timezone || "UTC",
+      hour:      "2-digit", minute: "2-digit", hour12: false,
+      weekday:   "long",
+      year:      "numeric", month: "2-digit", day: "2-digit",
+    }).formatToParts(now);
+    const get = t => parts.find(p => p.type === t)?.value ?? "";
+    const hh = get("hour").padStart(2, "0");
+    const mm = get("minute").padStart(2, "0");
+    return {
+      hhmm:    `${hh}:${mm}`,
+      weekday: get("weekday").toLowerCase(),
+      date:    `${get("year")}-${get("month")}-${get("day")}`,
+    };
+  }
+
+  // ── helper: is a medication due right now? ───────────────────────────────
+  function isDue(med) {
+    const { type, times, daysOfWeek, nextDue } = med.recurrence || {};
+    if (!times?.length) return null;
+
+    const { hhmm, weekday, date } = tzParts(med.timezone);
+    const startDate = med.startDate || "1970-01-01";
+    if (date < startDate) return null;
+    if (med.endDate && date > med.endDate) return null;
+
+    const timeMatch = times.find(t => t === hhmm);
+    if (!timeMatch) return null;
+
+    if (type === "daily") return "standard";
+    if (type === "weekly") {
+      const days = (daysOfWeek || []).map(d => d.toLowerCase());
+      return days.includes(weekday) ? "standard" : null;
+    }
+    if (type === "interval") {
+      if (!nextDue) return null;
+      return date >= nextDue.slice(0, 10) ? "standard" : null;
+    }
+    return null;
+  }
+
+  // ── helper: is a limited-course med ending tomorrow? ────────────────────
+  function isCourseEndingTomorrow(med) {
+    if (!med.endDate) return false;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+    return med.endDate === tomorrowStr;
+  }
+
+  // ── main check job ───────────────────────────────────────────────────────
+  agenda.define("check-medication-reminders", async () => {
+    const db = await getDb();
+    if (!db) return;
+
+    const meds = await db.collection("medications").find({ active: true }).toArray();
+
+    for (const med of meds) {
+      // Course-ending-tomorrow check (independent of time match)
+      if (isCourseEndingTomorrow(med)) {
+        const { date } = tzParts(med.timezone);
+        const alreadySent = await db.collection("medication_reminders").findOne({
+          medicationId: med.id,
+          reminderType: "course-ending",
+          dueAt: { $gte: new Date(date + "T00:00:00Z") },
+        });
+        if (!alreadySent) {
+          await db.collection("medication_reminders").insertOne({
+            userId: med.userId, medicationId: med.id, medicationName: med.name,
+            reminderType: "course-ending", dueAt: new Date(),
+            delivered: false, createdAt: new Date(),
+          });
+        }
+      }
+
+      const reminderType = isDue(med);
+      if (!reminderType) continue;
+
+      // Deduplicate: don't fire twice in the same 10-minute window
+      const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000);
+      const recent = await db.collection("medication_reminders").findOne({
+        medicationId: med.id,
+        reminderType: { $ne: "course-ending" },
+        dueAt: { $gte: tenMinAgo },
+      });
+      if (recent) continue;
+
+      const type = med.endDate ? "limited-course" : "standard";
+
+      await db.collection("medication_reminders").insertOne({
+        userId: med.userId, medicationId: med.id, medicationName: med.name,
+        reminderType: type, dueAt: new Date(),
+        delivered: false, createdAt: new Date(),
+      });
+
+      // Advance nextDue for interval meds
+      if (med.recurrence?.type === "interval") {
+        const next = new Date();
+        next.setDate(next.getDate() + (med.recurrence.intervalDays || 1));
+        await db.collection("medications").updateOne(
+          { id: med.id },
+          { $set: { "recurrence.nextDue": next.toISOString().slice(0, 10) } }
+        );
+      }
+
+      // Deactivate if past endDate
+      if (med.endDate) {
+        const { date } = tzParts(med.timezone);
+        if (date >= med.endDate) {
+          await db.collection("medications").updateOne(
+            { id: med.id }, { $set: { active: false } }
+          );
+        }
+      }
+    }
+
+    // Process schedule sync queue (new/rescheduled/cancelled meds)
+    await db.collection("medication_schedule_sync").updateMany(
+      { processedAt: null },
+      { $set: { processedAt: new Date() } }
+    );
+  });
+
+  await agenda.start();
+  await agenda.every("1 minute", "check-medication-reminders");
+  console.log("[scheduler] Medication reminder scheduler started");
+}
+
+startScheduler().catch(e => console.error("[scheduler] Failed to start:", e.message));

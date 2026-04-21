@@ -15,6 +15,7 @@
     rel="stylesheet" />
 
   <link rel="stylesheet" href="styles.css?GAGv22A" />
+  <link rel="stylesheet" href="med-styles.css?v=1" />
 </head>
 
 <body>
@@ -35,6 +36,7 @@
           <div class="header-actions">
             <button id="subjectsBtn" class="subjects-btn" type="button"></button>
             <button id="startBtn" class="start-btn" type="button"></button>
+            <button id="medBtn" class="med-btn" type="button"></button>
             <button id="helpBtn" class="help-btn" type="button" aria-label="Help">?</button>
 
           </div>
@@ -299,6 +301,159 @@
           <button id="locationSaveBtn" class="subjects-btn-save" type="button"></button>
         </div>
         <div id="locationStatus" class="subjects-status" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <!-- MEDICATION OVERLAY -->
+    <div id="medOverlay" class="med-overlay hidden" aria-hidden="true">
+      <div class="med-card" role="dialog" aria-modal="true">
+
+        <!-- ── DISCLAIMER PANEL ── -->
+        <div id="medDisclaimer" class="med-panel" style="display:none">
+          <h2 id="medDisclaimerTitle" class="med-panel-title"></h2>
+          <p  id="medDisclaimerText"  class="med-disclaimer-text"></p>
+          <button id="medDisclaimerBtn" class="med-primary-btn" type="button"></button>
+        </div>
+
+        <!-- ── MAIN LIST PANEL ── -->
+        <div id="medMain" class="med-panel" style="display:none">
+          <div class="med-panel-header">
+            <h2 id="medMainTitle" class="med-panel-title"></h2>
+            <button id="medCloseBtn" class="med-close-btn" type="button" aria-label="Close">×</button>
+          </div>
+          <p id="medPersistentNote" class="med-persistent-note"></p>
+          <div id="medList" class="med-list"></div>
+          <div class="med-main-actions">
+            <button id="medAddBtn"          class="med-primary-btn"   type="button"></button>
+            <button id="medViewScheduleBtn" class="med-secondary-btn" type="button"></button>
+          </div>
+        </div>
+
+        <!-- ── FORM PANEL ── -->
+        <div id="medForm" class="med-panel med-form-panel" style="display:none">
+          <div class="med-panel-header">
+            <h2 id="medFormTitle" class="med-panel-title"></h2>
+          </div>
+
+          <!-- Correct / Record-change toggle (only when editing) -->
+          <div id="medToggleRow" class="med-toggle-row hidden">
+            <span id="medToggleCorrectLbl" class="med-toggle-lbl"></span>
+            <label class="med-toggle-switch">
+              <input id="medToggle" type="checkbox" />
+              <span class="med-toggle-slider"></span>
+            </label>
+            <span id="medToggleChangeLbl" class="med-toggle-lbl"></span>
+          </div>
+
+          <form id="medFormEl" class="med-form-fields" autocomplete="off" onsubmit="return false">
+
+            <label class="med-field">
+              <span id="medNameLabel" class="med-field-label"></span>
+              <input id="medNameInput" class="med-input" type="text" maxlength="120" required />
+            </label>
+
+            <label class="med-field">
+              <span id="medDoseLabel" class="med-field-label"></span>
+              <input id="medDoseInput" class="med-input" type="text" maxlength="80" />
+            </label>
+
+            <div class="med-field">
+              <span id="medFreqLabel" class="med-field-label"></span>
+              <select id="medFreqSelect" class="med-select">
+                <option value="daily"></option>
+                <option value="weekly"></option>
+                <option value="interval"></option>
+              </select>
+            </div>
+
+            <!-- Weekly days (hidden unless weekly) -->
+            <div id="medDaysRow" class="med-field hidden">
+              <span id="medDaysLabel" class="med-field-label"></span>
+              <div class="med-days-grid">
+                <label class="med-day-check"><input id="medDayCb0" type="checkbox" value="sunday" />    <span id="medDaySunLbl"></span></label>
+                <label class="med-day-check"><input id="medDayCb1" type="checkbox" value="monday" />   <span id="medDayMonLbl"></span></label>
+                <label class="med-day-check"><input id="medDayCb2" type="checkbox" value="tuesday" />  <span id="medDayTueLbl"></span></label>
+                <label class="med-day-check"><input id="medDayCb3" type="checkbox" value="wednesday" /><span id="medDayWedLbl"></span></label>
+                <label class="med-day-check"><input id="medDayCb4" type="checkbox" value="thursday" /> <span id="medDayThuLbl"></span></label>
+                <label class="med-day-check"><input id="medDayCb5" type="checkbox" value="friday" />   <span id="medDayFriLbl"></span></label>
+                <label class="med-day-check"><input id="medDayCb6" type="checkbox" value="saturday" /> <span id="medDaySatLbl"></span></label>
+              </div>
+            </div>
+
+            <!-- Interval days (hidden unless interval) -->
+            <div id="medIntervalRow" class="med-field hidden">
+              <span id="medIntervalLabel" class="med-field-label"></span>
+              <input id="medIntervalInput" class="med-input med-input-short" type="number" min="1" max="365" value="1" />
+            </div>
+
+            <!-- Times -->
+            <div class="med-field">
+              <span id="medTimesLabel" class="med-field-label"></span>
+              <div id="medTimesContainer" class="med-times-container"></div>
+              <button id="medAddTimeBtn" class="med-link-btn" type="button"></button>
+            </div>
+
+            <label class="med-field">
+              <span id="medStartLabel" class="med-field-label"></span>
+              <input id="medStartInput" class="med-input med-input-date" type="date" />
+            </label>
+
+            <!-- Limited course checkbox -->
+            <div class="med-field med-field-inline">
+              <input id="medLimitedCheck" type="checkbox" class="med-checkbox" />
+              <span id="medLimitedLabel" class="med-field-label"></span>
+            </div>
+
+            <!-- End date (hidden unless limited) -->
+            <div id="medEndRow" class="med-field hidden">
+              <span id="medEndLabel" class="med-field-label"></span>
+              <input id="medEndInput" class="med-input med-input-date" type="date" />
+            </div>
+
+            <label class="med-field">
+              <span id="medNotesLabel" class="med-field-label"></span>
+              <textarea id="medNotesInput" class="med-input med-textarea" rows="2" maxlength="300"></textarea>
+            </label>
+
+            <label class="med-field">
+              <span id="medEnteredByLabel" class="med-field-label"></span>
+              <input id="medEnteredByInput" class="med-input" type="text" maxlength="80" />
+            </label>
+
+            <!-- Change reason (hidden unless toggle = "change") -->
+            <div id="medChangeReasonRow" class="med-field hidden">
+              <span id="medChangeReasonLabel" class="med-field-label"></span>
+              <input id="medChangeReasonInput" class="med-input" type="text" maxlength="200" />
+            </div>
+
+            <label class="med-field">
+              <span id="medTimezoneLabel" class="med-field-label"></span>
+              <input id="medTimezoneInput" class="med-input" type="text" maxlength="60" />
+            </label>
+
+          </form>
+
+          <div class="med-form-status" id="medFormStatus" role="status" aria-live="polite"></div>
+
+          <div class="med-form-actions">
+            <button id="medFormCancelBtn"   class="med-secondary-btn" type="button"></button>
+            <button id="medFormScheduleBtn" class="med-link-btn"      type="button"></button>
+            <button id="medFormSaveBtn"     class="med-primary-btn"   type="button"></button>
+          </div>
+        </div>
+
+        <!-- ── SCHEDULE PANEL ── -->
+        <div id="medSchedule" class="med-panel med-schedule-panel" style="display:none">
+          <div class="med-panel-header">
+            <h2 id="medScheduleTitle" class="med-panel-title"></h2>
+          </div>
+          <div id="medScheduleContent" class="med-schedule-content"></div>
+          <div class="med-form-actions">
+            <button id="medScheduleBackBtn"  class="med-secondary-btn" type="button"></button>
+            <button id="medSchedulePrintBtn" class="med-primary-btn"   type="button"></button>
+          </div>
+        </div>
+
       </div>
     </div>
 

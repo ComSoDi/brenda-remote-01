@@ -3,6 +3,7 @@ import { detectLocale } from "./locale.js";
 import { t } from "./i18n.js";
 import { renderTranscript, wireAutoScroll } from "./transcriptRenderer.js";
 import { getConversationContent } from "./conversationContent.js";
+import { MedicationManager } from "./medicationManager.js";
 
 class BrendaApp {
   constructor() {
@@ -125,6 +126,7 @@ class BrendaApp {
 
       // Subjects UI
       startBtn: document.getElementById("startBtn"),
+      medBtn: document.getElementById("medBtn"),
       subjectsBtn: document.getElementById("subjectsBtn"),
 
       // I am Brenda Overlay
@@ -196,6 +198,9 @@ class BrendaApp {
     this.canvasCtx = this.elements.canvas.getContext("2d");
     this.audioData = new Float32Array(128);
 
+    // Medication manager
+    this.medicationManager = new MedicationManager(this);
+
     this.init();
   }
 
@@ -243,6 +248,9 @@ class BrendaApp {
     if (this.elements.startBtn) {
       this.elements.startBtn.textContent = t(this.locale.variant, "startButton");
     }
+    if (this.elements.medBtn) {
+      this.elements.medBtn.textContent = t(this.locale.variant, "medBtn");
+    }
     if (this.elements.helpTitle) {
       this.elements.helpTitle.textContent = t(this.locale.variant, "helpTitle");
     }
@@ -251,6 +259,7 @@ class BrendaApp {
     this.elements.toggleBtnTalk.addEventListener("click", () => this.onTalkButton());
     this.elements.toggleBtnText.addEventListener("click", () => this.onTextButton());
     this.elements.startBtn?.addEventListener("click", () => this.startConversation());
+    this.elements.medBtn?.addEventListener("click", () => this.medicationManager.open());
 
     // Text send
     this.elements.chatSendBtn.addEventListener("click", () => this.sendTextMessage());
@@ -2287,11 +2296,19 @@ class BrendaApp {
     if (!this.user) return;
 
     try {
-      const data = await this.apiJSON("/api/greeting/checkin", { method: "GET" });
+      const data = await this.apiJSON("/api/greeting", { method: "GET" });
       const greetingType = data?.greetingType || "none";
 
       this._greetingType  = greetingType;
       this._greetingShown = false;
+
+      // Deliver pending medication reminders (non-fatal)
+      if (data?.pendingReminders?.length) {
+        const displayName = this.user.isAnonymous
+          ? ""
+          : (this.user.displayName || this.user.username || "").trim();
+        this.medicationManager.deliverReminders(data.pendingReminders, displayName, this.locale.variant);
+      }
 
       if (greetingType === "none") {
         this._greetingText = null;
@@ -2426,7 +2443,7 @@ class BrendaApp {
    */
   _sendHeartbeat(useBeacon = false) {
     if (!this.user) return;
-    const url = "/api/greeting/heartbeat";
+    const url = "/api/greeting";
 
     if (useBeacon && typeof navigator?.sendBeacon === "function") {
       // sendBeacon survives page unload; cookie is sent automatically.

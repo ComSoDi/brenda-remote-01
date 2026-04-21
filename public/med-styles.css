@@ -86,6 +86,37 @@
   border: 1px solid #fde68a;
 }
 
+/* OS notification permission prompt */
+.med-notif-prompt {
+  align-items: center;
+  justify-content: space-between;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 8px 12px;
+  gap: 10px;
+}
+
+.med-notif-text {
+  font-size: 13px;
+  color: #1d4ed8;
+  flex: 1;
+}
+
+.med-notif-enable-btn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.med-notif-enable-btn:hover { background: #1d4ed8; }
+
 /* Persistent note */
 .med-persistent-note {
   font-size: 12px;

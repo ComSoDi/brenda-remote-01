@@ -30,6 +30,9 @@ export class MedicationManager {
       addBtn:            document.getElementById("medAddBtn"),
       viewScheduleBtn:   document.getElementById("medViewScheduleBtn"),
       closeBtn:          document.getElementById("medCloseBtn"),
+      notifPrompt:       document.getElementById("medNotifPrompt"),
+      notifPromptText:   document.getElementById("medNotifPromptText"),
+      notifBtn:          document.getElementById("medNotifBtn"),
       // form
       form:              document.getElementById("medForm"),
       formTitle:         document.getElementById("medFormTitle"),
@@ -94,6 +97,7 @@ export class MedicationManager {
         try {
           await this.app.emitAssistantLine({ text: msg, channel: "text" });
         } catch { /* non-fatal */ }
+        this._showOsNotification(r, msg);
       }
     }
   }
@@ -147,6 +151,8 @@ export class MedicationManager {
 
     this._els.toggleCorrectLbl.textContent = s("medToggleCorrect");
     this._els.toggleChangeLbl.textContent  = s("medToggleChange");
+    if (this._els.notifPromptText) this._els.notifPromptText.textContent = s("medNotifPrompt");
+    if (this._els.notifBtn)        this._els.notifBtn.textContent        = s("medNotifBtn");
     this._els.addTimeBtn.textContent       = s("medAddTime");
     this._els.formCancelBtn.textContent    = s("medCancelBtn");
     this._els.formScheduleBtn.textContent  = s("medShowScheduleBtn");
@@ -180,6 +186,37 @@ export class MedicationManager {
       const el = this._els[p];
       if (el) el.style.display = p === name ? "flex" : "none";
     });
+    if (name === "main") this._renderNotifPrompt();
+  }
+
+  // ── OS notifications ──────────────────────────────────────────────────────
+
+  _notifSupported() {
+    return typeof window !== "undefined" && "Notification" in window;
+  }
+
+  _renderNotifPrompt() {
+    const el = this._els.notifPrompt;
+    if (!el) return;
+    const show = this._notifSupported() && Notification.permission === "default";
+    el.style.display = show ? "flex" : "none";
+  }
+
+  async _requestNotifPermission() {
+    if (!this._notifSupported()) return;
+    await Notification.requestPermission();
+    this._renderNotifPrompt();
+  }
+
+  _showOsNotification(reminder, msg) {
+    if (!this._notifSupported() || Notification.permission !== "granted") return;
+    try {
+      new Notification(reminder.medicationName || this._t("medNotifTitle"), {
+        body: msg,
+        icon: "/images/brenda-avatar.png",
+        tag:  `med-${reminder.medicationName || "reminder"}`,
+      });
+    } catch { /* non-fatal */ }
   }
 
   // ── list rendering ────────────────────────────────────────────────────────
@@ -482,6 +519,7 @@ export class MedicationManager {
     this._els.closeBtn?.addEventListener("click", () => this.close());
     this._els.addBtn?.addEventListener("click", () => this._openForm(null));
     this._els.viewScheduleBtn?.addEventListener("click", () => this._openSchedule());
+    this._els.notifBtn?.addEventListener("click", () => this._requestNotifPermission());
 
     // Form
     this._els.toggleInput?.addEventListener("change", () => {

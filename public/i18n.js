@@ -160,6 +160,9 @@ const STRINGS = {
     medReminderCourseEnding: "{name}, just a heads up — looks like your current medication course may be finishing tomorrow. Worth checking in with your doctor or pharmacist if you have any questions!",
     medReminderCourseEndingAnon: "Just a heads up — looks like your current medication course may be finishing tomorrow. Worth checking in with your doctor or pharmacist if you have any questions!",
     medTimezone: "Timezone",
+    medNotifTitle: "Medication Reminder",
+    medNotifPrompt: "Get OS notifications for medication reminders",
+    medNotifBtn: "Enable",
   },
 
   "en-GB": {
@@ -311,6 +314,9 @@ const STRINGS = {
     medReminderCourseEnding: "{name}, just a heads up — looks like your current medication course may be finishing tomorrow. Worth checking in with your doctor or pharmacist if you have any questions!",
     medReminderCourseEndingAnon: "Just a heads up — looks like your current medication course may be finishing tomorrow. Worth checking in with your doctor or pharmacist if you have any questions!",
     medTimezone: "Timezone",
+    medNotifTitle: "Medication Reminder",
+    medNotifPrompt: "Get OS notifications for medication reminders",
+    medNotifBtn: "Enable",
   },
 
   "es-ES": {
@@ -403,7 +409,7 @@ const STRINGS = {
     brendaClose: "Cerrar",
 
     // Módulo de medicamentos
-    medBtn: "Meds",
+    medBtn: "Medicamentos",
     medDisclaimerTitle: "Recordatorios de medicamentos",
     medDisclaimerText: "Los recordatorios de medicamentos de Brenda son solo avisos amistosos, no consejos médicos. Sigue siempre las instrucciones de tu médico o farmacéutico. Brenda no puede garantizar que los recordatorios se entreguen siempre (problemas de red, ajustes del dispositivo u otros factores pueden impedirlo). No dependas únicamente de Brenda para medicamentos críticos.",
     medDisclaimerConfirm: "Lo entiendo",
@@ -462,6 +468,9 @@ const STRINGS = {
     medReminderCourseEnding: "{name}, que sepas que tu tratamiento actual parece que termina mañana. Si tienes alguna duda, merece la pena consultar a tu médico o farmacéutico.",
     medReminderCourseEndingAnon: "Que sepas que tu tratamiento actual parece que termina mañana. Si tienes alguna duda, merece la pena consultar a tu médico o farmacéutico.",
     medTimezone: "Zona horaria",
+    medNotifTitle: "Recordatorio de medicamento",
+    medNotifPrompt: "Recibir notificaciones del sistema para los recordatorios",
+    medNotifBtn: "Activar",
   },
 
   "es-419": {
@@ -555,7 +564,7 @@ const STRINGS = {
     brendaClose: "Cerrar",
 
     // Módulo de medicamentos
-    medBtn: "Meds",
+    medBtn: "Medicamentos",
     medDisclaimerTitle: "Recordatorios de medicamentos",
     medDisclaimerText: "Los recordatorios de medicamentos de Brenda son solo avisos amistosos, no consejos médicos. Sigue siempre las instrucciones de tu médico o farmacéutico. Brenda no puede garantizar que los recordatorios se entreguen siempre (problemas de red, ajustes del dispositivo u otros factores pueden impedirlo). No dependas únicamente de Brenda para medicamentos críticos.",
     medDisclaimerConfirm: "Lo entiendo",
@@ -614,6 +623,9 @@ const STRINGS = {
     medReminderCourseEnding: "{name}, que sepas que tu tratamiento actual parece que termina mañana. Si tienes alguna duda, vale la pena consultar a tu médico o farmacéutico.",
     medReminderCourseEndingAnon: "Que sepas que tu tratamiento actual parece que termina mañana. Si tienes alguna duda, vale la pena consultar a tu médico o farmacéutico.",
     medTimezone: "Zona horaria",
+    medNotifTitle: "Recordatorio de medicamento",
+    medNotifPrompt: "Recibir notificaciones del sistema para los recordatorios",
+    medNotifBtn: "Activar",
   }
 };
 

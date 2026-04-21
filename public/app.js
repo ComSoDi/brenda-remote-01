@@ -2307,7 +2307,7 @@ class BrendaApp {
         const displayName = this.user.isAnonymous
           ? ""
           : (this.user.displayName || this.user.username || "").trim();
-        this.medicationManager.deliverReminders(data.pendingReminders, displayName, this.locale.variant);
+        await this.medicationManager.deliverReminders(data.pendingReminders, displayName, this.locale.variant);
       }
 
       if (greetingType === "none") {

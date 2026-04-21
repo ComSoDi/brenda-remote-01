@@ -86,11 +86,15 @@ export class MedicationManager {
   }
 
   // Called by app.js after checkin with pending reminders
-  deliverReminders(reminders, displayName, locale) {
+  async deliverReminders(reminders, displayName, locale) {
     if (!reminders?.length) return;
     for (const r of reminders) {
       const msg = this._buildReminderText(r, displayName, locale);
-      if (msg) this.app.emitAssistantLine({ text: msg, channel: "text" });
+      if (msg) {
+        try {
+          await this.app.emitAssistantLine({ text: msg, channel: "text" });
+        } catch { /* non-fatal */ }
+      }
     }
   }
 
@@ -136,7 +140,7 @@ export class MedicationManager {
     this._els.freqSelect.options[2].text = s("medFreqInterval");
 
     // Day checkboxes
-    DAYS_KEYS.forEach((k, i) => {
+    DAYS_KEYS.forEach((k) => {
       const lbl = document.getElementById(`medDay${k}Lbl`);
       if (lbl) lbl.textContent = s(`medDay${k}`);
     });
@@ -159,8 +163,6 @@ export class MedicationManager {
       this.medications = [];
     }
 
-    // Check disclaimer
-    const needsDisclaimer = !this.medications.some(m => m.disclaimerAcknowledged);
     if (this.medications.length === 0) {
       // First time: show disclaimer
       this._showPanel("disclaimer");
@@ -411,7 +413,7 @@ export class MedicationManager {
   _openSchedule() {
     const v    = this._v();
     const name = this.app.user?.displayName || this.app.user?.username || "User";
-    const now  = new Date().toLocaleDateString(v.replace("-", "_"), { dateStyle: "long" });
+    const now  = new Date().toLocaleDateString(v, { dateStyle: "long" });
 
     const header = t(v, "medScheduleHeader").replace("{name}", name);
 

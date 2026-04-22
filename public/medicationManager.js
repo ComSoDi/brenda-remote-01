@@ -120,7 +120,7 @@ export class MedicationManager {
     this._els.persistentNote.textContent   = s("medPersistentNote");
     this._els.addBtn.textContent           = s("medAddBtn");
     this._els.viewScheduleBtn.textContent  = s("medViewSchedule");
-    this._els.scheduleTitle.textContent    = s("medScheduleTitle");
+    if (this._els.scheduleTitle) this._els.scheduleTitle.textContent = s("medScheduleTitle");
     this._els.scheduleBackBtn.textContent  = s("medScheduleBack");
     this._els.schedulePrintBtn.textContent = s("medSchedulePrint");
 

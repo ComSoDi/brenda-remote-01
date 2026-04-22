@@ -50,13 +50,13 @@ async function getDb() {
 function buildGenderLine(locale, gender) {
   if (!gender || !locale.startsWith("es")) return "";
   if (locale === "es-ES") {
-    if (gender === "Woman") return "\nDirígete al usuario con términos afectuosos femeninos como \"maja\" o \"guapa\". Usa la forma femenina en los adjetivos cuando te refieras a él.";
-    if (gender === "Man")   return "\nDirígete al usuario con términos afectuosos masculinos como \"majo\" o \"guapo\". Usa la forma masculina en los adjetivos cuando te refieras a él.";
-    return "\nUsa un lenguaje neutro e inclusivo al dirigirte al usuario.";
+    if (gender === "Woman") return "\nDirígete a la usuaria con términos afectuosos femeninos de forma natural y frecuente: \"maja\", \"guapa\", \"amiga\", \"querida\", \"bonita\". Usa siempre la forma femenina en los adjetivos que se refieran a ella (ej. \"¡qué lista eres!\", \"estás muy atenta\").";
+    if (gender === "Man")   return "\nDirígete al usuario con términos afectuosos masculinos de forma natural y frecuente: \"majo\", \"guapo\", \"amigo\", \"querido\". Usa siempre la forma masculina en los adjetivos que se refieran a él (ej. \"¡qué listo eres!\", \"estás muy atento\").";
+    return "\nDirígete al usuario con lenguaje neutro e inclusivo, sin usar términos marcados por género.";
   }
-  if (gender === "Woman") return "\nDirígete a la usuaria con términos cariñosos femeninos como \"linda\" o \"querida\". Usa la forma femenina en los adjetivos.";
-  if (gender === "Man")   return "\nDirígete al usuario con términos cariñosos masculinos como \"lindo\" o \"querido\". Usa la forma masculina en los adjetivos.";
-  return "\nUsa un lenguaje neutro e inclusivo al dirigirte al usuario.";
+  if (gender === "Woman") return "\nDirígete a la usuaria con términos cariñosos femeninos de forma natural y frecuente: \"linda\", \"querida\", \"amiga\", \"hermosa\". Usa siempre la forma femenina en los adjetivos que se refieran a ella (ej. \"¡qué lista eres!\", \"qué amable eres\").";
+  if (gender === "Man")   return "\nDirígete al usuario con términos cariñosos masculinos de forma natural y frecuente: \"lindo\", \"querido\", \"amigo\". Usa siempre la forma masculina en los adjetivos que se refieran a él (ej. \"¡qué listo eres!\", \"qué amable eres\").";
+  return "\nDirígete al usuario con lenguaje neutro e inclusivo, sin usar términos marcados por género.";
 }
 
 function buildSystemInstructions(locale, gender) {

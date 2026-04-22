@@ -250,14 +250,14 @@ const GEMINI_TOOLS = [
 function genderAddressLine(localeVariant, gender) {
   if (!gender || !localeVariant.startsWith("es")) return "";
   if (localeVariant === "es-ES") {
-    if (gender === "Woman") return "\nForma de dirigirte al usuario: usa términos afectuosos femeninos como \"maja\" o \"guapa\". Usa la forma femenina en los adjetivos cuando te refieras al usuario.";
-    if (gender === "Man")   return "\nForma de dirigirte al usuario: usa términos afectuosos masculinos como \"majo\" o \"guapo\". Usa la forma masculina en los adjetivos cuando te refieras al usuario.";
-    return "\nForma de dirigirte al usuario: usa un lenguaje neutro e inclusivo, sin asumir género.";
+    if (gender === "Woman") return "\nDirígete a la usuaria con términos afectuosos femeninos de forma natural y frecuente: \"maja\", \"guapa\", \"amiga\", \"querida\", \"bonita\". Usa siempre la forma femenina en los adjetivos que se refieran a ella (ej. \"¡qué lista eres!\", \"estás muy atenta\", \"qué amable eres\").";
+    if (gender === "Man")   return "\nDirígete al usuario con términos afectuosos masculinos de forma natural y frecuente: \"majo\", \"guapo\", \"amigo\", \"querido\". Usa siempre la forma masculina en los adjetivos que se refieran a él (ej. \"¡qué listo eres!\", \"estás muy atento\", \"qué amable eres\").";
+    return "\nDirígete al usuario con lenguaje neutro e inclusivo, sin usar términos marcados por género. Evita adjetivos con forma masculina o femenina cuando sea posible.";
   }
   // es-419
-  if (gender === "Woman") return "\nForma de dirigirte a la usuaria: usa términos cariñosos femeninos como \"linda\" o \"querida\". Usa la forma femenina en los adjetivos cuando te refieras a ella.";
-  if (gender === "Man")   return "\nForma de dirigirte al usuario: usa términos cariñosos masculinos como \"lindo\", \"querido\" o \"amigo\". Usa la forma masculina en los adjetivos cuando te refieras a él.";
-  return "\nForma de dirigirte al usuario: usa un lenguaje neutro e inclusivo, sin asumir género.";
+  if (gender === "Woman") return "\nDirígete a la usuaria con términos cariñosos femeninos de forma natural y frecuente: \"linda\", \"querida\", \"amiga\", \"hermosa\". Usa siempre la forma femenina en los adjetivos que se refieran a ella (ej. \"¡qué lista eres!\", \"qué amable eres\").";
+  if (gender === "Man")   return "\nDirígete al usuario con términos cariñosos masculinos de forma natural y frecuente: \"lindo\", \"querido\", \"amigo\". Usa siempre la forma masculina en los adjetivos que se refieran a él (ej. \"¡qué listo eres!\", \"qué amable eres\").";
+  return "\nDirígete al usuario con lenguaje neutro e inclusivo, sin usar términos marcados por género. Evita adjetivos con forma masculina o femenina cuando sea posible.";
 }
 
 function brendaSystemPrompt(localeVariant = "en-US", gender = null) {

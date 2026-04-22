@@ -17,6 +17,7 @@ export class MedicationManager {
 
     this._els = {
       overlay:           document.getElementById("medOverlay"),
+      card:              document.getElementById("medCard"),
       // disclaimer
       disclaimer:        document.getElementById("medDisclaimer"),
       disclaimerTitle:   document.getElementById("medDisclaimerTitle"),
@@ -186,6 +187,7 @@ export class MedicationManager {
       const el = this._els[p];
       if (el) el.style.display = p === name ? "flex" : "none";
     });
+    this._els.card?.classList.toggle("med-card--schedule", name === "schedule");
     if (name === "main") this._renderNotifPrompt();
   }
 

@@ -67,6 +67,50 @@ function buildSystemInstructions(locale, gender) {
   return "You are Brenda, a helpful and friendly AI voice assistant. Speak American English with a natural native accent. Prefer US vocabulary (cell phone, elevator, truck, gas). Be warm, brief, and conversational. Never use markdown or lists. Your text must match your spoken audio exactly. When discussing weather, always use Fahrenheit and round to the nearest whole number.";
 }
 
+// ── medication schedule for system prompt ─────────────────────────────────
+
+function formatVoiceMedTime(hhmm, locale) {
+  const [hStr, mStr] = String(hhmm || "").split(":");
+  const h = parseInt(hStr, 10);
+  const m = parseInt(mStr || "0", 10);
+  if (isNaN(h)) return hhmm;
+  if (locale.startsWith("es")) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  const period = h < 12 ? "am" : "pm";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return m === 0 ? `${h12}:00 ${period}` : `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+function buildMedSystemBlock(meds, locale) {
+  if (!meds || !meds.length) return "";
+  const isEs = locale.startsWith("es");
+  const lines = meds.map((med) => {
+    const times = (med.recurrence?.times || []).map((t) => formatVoiceMedTime(t, locale));
+    return times.length
+      ? `- ${med.name}: ${times.join(", ")}`
+      : `- ${med.name}`;
+  });
+  if (isEs) {
+    return (
+      "\n\nMEDICAMENTOS DEL USUARIO (guardados en el sistema):\n" +
+      lines.join("\n") +
+      "\n\nCuando el usuario pregunte por sus medicamentos:\n" +
+      "1. Confirma con entusiasmo que puedes ayudar.\n" +
+      "2. Avisa brevemente que puedes cometer errores y que siempre es mejor confirmar con la receta médica oficial o con el farmacéutico de confianza.\n" +
+      "3. Lee cada medicamento con su horario en formato 24 horas.\n" +
+      "4. Termina siempre con: «No olvides confirmar siempre con la receta médica oficial.»"
+    );
+  }
+  return (
+    "\n\nUSER MEDICATIONS (saved in system):\n" +
+    lines.join("\n") +
+    "\n\nWhen the user asks about their medications:\n" +
+    "1. Warmly confirm you can help.\n" +
+    "2. Add a brief disclaimer: you can make mistakes and they should always confirm with the doctor's prescription or pharmacist.\n" +
+    "3. List each medication with its scheduled times.\n" +
+    "4. Always end with: 'Remember to always confirm with the official medical prescription.'"
+  );
+}
+
 // ── message format conversion ──────────────────────────────────────────────
 
 function browserToGemini(msg) {
@@ -108,20 +152,26 @@ async function createGeminiVoiceProxy(browserWs, req) {
   const urlParams = new URL(req.url, "http://localhost").searchParams;
   const locale = urlParams.get("locale") || "en-US";
 
-  // Gender lookup from session + DB (non-fatal)
+  // Gender + medication lookup from session + DB (non-fatal)
   let gender = null;
+  let activeMeds = [];
   try {
     const session = getSession(req);
     if (session?.gender) {
       gender = session.gender;
-    } else if (session?.userId && !session.isAnonymous) {
+    }
+    if (session?.userId && !session.isAnonymous) {
       const db = await getDb();
       if (db) {
-        const userDoc = await db.collection("users").findOne(
-          { userId: session.userId },
-          { projection: { "preferences.gender": 1 } }
-        );
-        gender = userDoc?.preferences?.gender || null;
+        const [userDoc, meds] = await Promise.all([
+          db.collection("users").findOne(
+            { userId: session.userId },
+            { projection: { "preferences.gender": 1 } }
+          ),
+          db.collection("medications").find({ userId: session.userId, active: true }).sort({ name: 1 }).toArray(),
+        ]);
+        if (!gender) gender = userDoc?.preferences?.gender || null;
+        activeMeds = meds || [];
       }
     }
   } catch {
@@ -130,7 +180,7 @@ async function createGeminiVoiceProxy(browserWs, req) {
 
   const voice = process.env.GEMINI_LIVE_VOICE || VOICE_MAP[locale] || "Vindemiatrix";
   const model = process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-12-2025";
-  const systemText = buildSystemInstructions(locale, gender);
+  const systemText = buildSystemInstructions(locale, gender) + buildMedSystemBlock(activeMeds, locale);
 
   const geminiWs = new WebSocket(`${GEMINI_LIVE_URL}?key=${GEMINI_API_KEY}`);
 

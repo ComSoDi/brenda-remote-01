@@ -308,6 +308,94 @@ HOME LOCATION (when the user explicitly asks to change or set their default loca
   return baseInstructions + "\n\nReply in American English.";
 }
 
+// ── Medication query detection & formatting ────────────────────────────────
+
+function isMedicationQuery(text, locale) {
+  const lower = String(text || "").toLowerCase();
+  const esWords = [
+    "medicamento", "medicina", "pastilla", "medicaci", "remedio",
+    "píldora", "pildora", "comprimido", "dosis", "mis medic",
+  ];
+  const enWords = [
+    "medication", "medicine", "pill", "pills", "meds", "tablet",
+    "tablets", "prescription", "my meds", "my med",
+  ];
+  const words = locale.startsWith("es") ? esWords : enWords;
+  if (words.some((w) => lower.includes(w))) return true;
+  // "when/what do I need to take" patterns (catches "take XXXX" without med noun)
+  const esPhrases = ["tengo que tomar", "debo tomar", "que tomar", "cuando tomo", "cuándo tomo", "cuándo tengo que", "cuando tengo que"];
+  const enPhrases = ["need to take", "have to take", "supposed to take", "should i take", "when do i take", "what do i take"];
+  return (locale.startsWith("es") ? esPhrases : enPhrases).some((p) => lower.includes(p));
+}
+
+function formatMedTime(hhmm, locale) {
+  const [hStr, mStr] = String(hhmm || "").split(":");
+  const h = parseInt(hStr, 10);
+  const m = parseInt(mStr || "0", 10);
+  if (isNaN(h)) return hhmm;
+  if (locale.startsWith("es")) return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  const period = h < 12 ? "am" : "pm";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return m === 0 ? `${h12}:00 ${period}` : `${h12}:${String(m).padStart(2, "0")} ${period}`;
+}
+
+function buildMedReplyParts(meds, locale) {
+  const isEs = locale.startsWith("es");
+
+  // Expand meds to sorted {name, time} entries
+  const entries = [];
+  for (const med of meds) {
+    const times = med.recurrence?.times || [];
+    if (times.length) {
+      for (const t of times) entries.push({ name: med.name, time: t });
+    } else {
+      entries.push({ name: med.name, time: null });
+    }
+  }
+  entries.sort((a, b) => {
+    if (!a.time && !b.time) return 0;
+    if (!a.time) return 1;
+    if (!b.time) return -1;
+    return a.time.localeCompare(b.time);
+  });
+
+  let listText = null;
+  if (entries.length) {
+    const parts = entries.map((e) => {
+      if (!e.time) return e.name;
+      const tf = formatMedTime(e.time, locale);
+      return isEs ? `${e.name} a las ${tf}` : `${e.name} at ${tf}`;
+    });
+    if (parts.length === 1) {
+      listText = parts[0];
+    } else {
+      const last = parts.pop();
+      listText = parts.join(", ") + (isEs ? " y " : " and ") + last;
+    }
+  }
+
+  if (isEs) {
+    return [
+      "¡Claro, con mucho gusto!",
+      "Recuerda que puedo cometer errores. Lo ideal es que consultes siempre la receta médica oficial o a tu farmacéutico de confianza.",
+      listText
+        ? `Lo que veo en tu lista es: ${listText}.`
+        : "No parece que tenga medicamentos guardados para ti. Por favor, usa el botón «Medicamentos» en el menú superior.",
+      "No olvides confirmar SIEMPRE con la receta médica oficial.",
+    ];
+  }
+  return [
+    "Sure, I'd love to help!",
+    "Just remember — I can make mistakes or forget important information. Ideally you should consult the doctor's prescription or your trusted pharmacist.",
+    listText
+      ? `What I can see is: ${listText}.`
+      : "I don't seem to have any medications saved for you. Please check the Medications button in the top menu.",
+    "Remember to always confirm with the official medical prescription.",
+  ];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 function isWeatherQuery(text, localeVariant = "en-US") {
   const raw = String(text || "").toLowerCase();
   if (!raw) return false;
@@ -587,6 +675,7 @@ export default async function handler(req, res) {
 
     const weatherIntent = isWeatherQuery(lastUserText, localeVariant) || !!body.weatherPending;
     const timeIntent = detectTimeIntent(lastUserText, localeVariant);
+    const medicationIntent = !session.isAnonymous && isMedicationQuery(lastUserText, localeVariant);
     let savedLocation = userPrefsDoc?.preferences?.location || null;
     let hasSavedLocation = !!savedLocation?.city;
     let savedLocationLoaded = true;
@@ -747,6 +836,41 @@ export default async function handler(req, res) {
       );
 
       return json(res, 200, { reply });
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // MEDICATION QUERY BRANCH — deterministic, no Gemini needed
+    // ────────────────────────────────────────────────────────────────────────
+    if (medicationIntent) {
+      const activeMeds = await db.collection("medications")
+        .find({ userId: session.userId, active: true })
+        .sort({ name: 1 })
+        .toArray();
+
+      const parts = buildMedReplyParts(activeMeds, localeVariant);
+      const combinedReply = parts.join(" ");
+
+      await db.collection("conversations").updateOne(
+        { userId: session.userId },
+        {
+          $setOnInsert: { userId: session.userId, createdAt: new Date() },
+          $push: {
+            messages: {
+              $each: [
+                ...inputMessages.map((m) => ({
+                  id: new ObjectId(), role: m.role, content: m.content,
+                  timestamp: new Date(), fromChannel: "text",
+                })),
+                { id: new ObjectId(), role: "assistant", content: combinedReply, timestamp: new Date(), fromChannel: "text" },
+              ],
+            },
+          },
+          $set: { updatedAt: new Date() },
+        },
+        { upsert: true }
+      );
+
+      return json(res, 200, { reply: combinedReply, replyParts: parts });
     }
 
     // ────────────────────────────────────────────────────────────────────────

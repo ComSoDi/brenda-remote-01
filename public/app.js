@@ -1584,9 +1584,17 @@ class BrendaApp {
       const reply = data.reply;
       this.setThinkingIndicator(false);
 
-      const msg = this.addMessage({ role: "assistant", channel: "voice", text: reply, status: "final" });
-      this.render();
-      await this.persistMessage(msg);
+      if (Array.isArray(data.replyParts) && data.replyParts.length > 1) {
+        for (const part of data.replyParts) {
+          const msg = this.addMessage({ role: "assistant", channel: "voice", text: part, status: "final" });
+          this.render();
+          await this.persistMessage(msg);
+        }
+      } else {
+        const msg = this.addMessage({ role: "assistant", channel: "voice", text: reply, status: "final" });
+        this.render();
+        await this.persistMessage(msg);
+      }
 
       await this.speakText(reply);
     } catch (e) {
@@ -1679,10 +1687,17 @@ class BrendaApp {
       this._textWeatherPending = (weatherStatus === "needs_location" || weatherStatus === "needs_disambiguation");
 
       this.setThinkingIndicator(false);
-      const aiMsg = this.addMessage({ role: "assistant", channel: "text", text: reply, status: "final" });
-      this.render();
-
-      await this.persistMessage(aiMsg);
+      if (Array.isArray(data.replyParts) && data.replyParts.length > 1) {
+        for (const part of data.replyParts) {
+          const msg = this.addMessage({ role: "assistant", channel: "text", text: part, status: "final" });
+          this.render();
+          await this.persistMessage(msg);
+        }
+      } else {
+        const aiMsg = this.addMessage({ role: "assistant", channel: "text", text: reply, status: "final" });
+        this.render();
+        await this.persistMessage(aiMsg);
+      }
     } catch (e) {
       console.error(e);
       this._textWeatherPending = false;

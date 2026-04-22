@@ -47,12 +47,12 @@ export default async function handler(req, res) {
   // ── POST — create ─────────────────────────────────────────────────────────
   if (req.method === "POST") {
     const body = await parseBody(req);
-    const { name, dose, recurrence, startDate, endDate, timezone, notes, enteredBy, disclaimerAcknowledged } = body;
+    const { name, dose, directions, recurrence, startDate, endDate, timezone, notes, enteredBy, disclaimerAcknowledged } = body;
 
-    if (!name?.trim())       return json(res, 400, { error: "name required" });
-    if (!recurrence?.type)   return json(res, 400, { error: "recurrence required" });
-    if (!recurrence.times?.length) return json(res, 400, { error: "at least one time required" });
-    if (!timezone)           return json(res, 400, { error: "timezone required" });
+    if (!name?.trim())     return json(res, 400, { error: "name required" });
+    if (!recurrence?.type) return json(res, 400, { error: "recurrence required" });
+    if (!directions?.trim() && !recurrence.times?.length) return json(res, 400, { error: "at least one time required (or set directions)" });
+    if (!timezone)         return json(res, 400, { error: "timezone required" });
 
     const now = new Date();
     const med = {
@@ -60,6 +60,7 @@ export default async function handler(req, res) {
       userId:                session.userId,
       name:                  name.trim(),
       dose:                  dose?.trim() || null,
+      directions:            directions?.trim().slice(0, 30) || null,
       recurrence,
       startDate:             startDate || now.toISOString().slice(0, 10),
       endDate:               endDate   || null,
@@ -90,33 +91,34 @@ export default async function handler(req, res) {
     if (!id) return json(res, 400, { error: "id required" });
 
     const body = await parseBody(req);
-    const { mode, name, dose, recurrence, startDate, endDate, timezone, notes, enteredBy, changeReason, active } = body;
+    const { mode, name, dose, directions, recurrence, startDate, endDate, timezone, notes, enteredBy, changeReason, active } = body;
 
     const existing = await db.collection("medications").findOne({ id, userId: session.userId });
     if (!existing) return json(res, 404, { error: "Not found" });
 
     const now = new Date();
     const $set = { updatedAt: now };
-    if (name      !== undefined) $set.name      = name.trim();
-    if (dose      !== undefined) $set.dose      = dose?.trim()      || null;
+    if (name       !== undefined) $set.name       = name.trim();
+    if (dose       !== undefined) $set.dose       = dose?.trim()                        || null;
+    if (directions !== undefined) $set.directions = directions?.trim().slice(0, 30)     || null;
     if (recurrence !== undefined) $set.recurrence = recurrence;
-    if (startDate !== undefined) $set.startDate = startDate;
-    if (endDate   !== undefined) $set.endDate   = endDate || null;
-    if (timezone  !== undefined) $set.timezone  = timezone;
-    if (notes     !== undefined) $set.notes     = notes?.trim()     || null;
-    if (enteredBy !== undefined) $set.enteredBy = enteredBy?.trim() || null;
-    if (active    !== undefined) $set.active    = active;
+    if (startDate  !== undefined) $set.startDate  = startDate;
+    if (endDate    !== undefined) $set.endDate    = endDate || null;
+    if (timezone   !== undefined) $set.timezone   = timezone;
+    if (notes      !== undefined) $set.notes      = notes?.trim()                       || null;
+    if (enteredBy  !== undefined) $set.enteredBy  = enteredBy?.trim()                   || null;
+    if (active     !== undefined) $set.active     = active;
 
     const updateOp = { $set };
 
     if (mode === "change") {
-      // Snapshot current state into history before overwriting
       updateOp.$push = {
         history: {
           snapshotAt:  now.toISOString(),
           reason:      changeReason?.trim() || null,
           name:        existing.name,
           dose:        existing.dose,
+          directions:  existing.directions,
           recurrence:  existing.recurrence,
           startDate:   existing.startDate,
           endDate:     existing.endDate,

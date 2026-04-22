@@ -48,6 +48,7 @@ export class MedicationManager {
       daysRow:           document.getElementById("medDaysRow"),
       intervalRow:       document.getElementById("medIntervalRow"),
       intervalInput:     document.getElementById("medIntervalInput"),
+      directionsInput:   document.getElementById("medDirectionsInput"),
       timesContainer:    document.getElementById("medTimesContainer"),
       addTimeBtn:        document.getElementById("medAddTimeBtn"),
       startInput:        document.getElementById("medStartInput"),
@@ -130,6 +131,7 @@ export class MedicationManager {
     document.getElementById("medFreqLabel").textContent        = s("medFreqLabel");
     document.getElementById("medDaysLabel").textContent        = s("medDaysLabel");
     document.getElementById("medIntervalLabel").textContent    = s("medIntervalLabel");
+    document.getElementById("medDirectionsLabel").textContent  = s("medDirectionsLabel");
     document.getElementById("medTimesLabel").textContent       = s("medTimesLabel");
     document.getElementById("medStartLabel").textContent       = s("medStartLabel");
     document.getElementById("medLimitedLabel").textContent     = s("medLimitedLabel");
@@ -307,10 +309,12 @@ export class MedicationManager {
     this._els.formTitle.textContent   = med ? this._t("medFormTitleEdit") : this._t("medFormTitleAdd");
     this._els.nameInput.value         = med?.name         || "";
     this._els.doseInput.value         = med?.dose         || "";
+    this._els.directionsInput.value   = med?.directions   || "";
     this._els.notesInput.value        = med?.notes        || "";
     this._els.enteredByInput.value    = med?.enteredBy    || "";
     this._els.changeReasonInput.value = "";
     this._els.formStatus.textContent  = "";
+    this._updateTimesLabel();
 
     // Dates
     this._els.startInput.value = med?.startDate || new Date().toISOString().slice(0, 10);
@@ -348,6 +352,12 @@ export class MedicationManager {
     this._showPanel("form");
   }
 
+  _updateTimesLabel() {
+    const hasDir = !!this._els.directionsInput?.value.trim();
+    const lbl = document.getElementById("medTimesLabel");
+    if (lbl) lbl.textContent = hasDir ? this._t("medTimesOptional") : this._t("medTimesLabel");
+  }
+
   _addTimeField(value = "") {
     this._timeCount++;
     const wrap = document.createElement("div");
@@ -380,9 +390,10 @@ export class MedicationManager {
     const name = this._els.nameInput.value.trim();
     if (!name) { this._els.formStatus.textContent = this._t("medNameRequired"); return; }
 
+    const directions = this._els.directionsInput.value.trim().slice(0, 30);
     const times = Array.from(this._els.timesContainer.querySelectorAll(".med-time-input"))
       .map(i => i.value).filter(Boolean);
-    if (!times.length) { this._els.formStatus.textContent = this._t("medTimesRequired"); return; }
+    if (!directions && !times.length) { this._els.formStatus.textContent = this._t("medTimesRequired"); return; }
 
     const freqType = this._els.freqSelect.value;
 
@@ -403,6 +414,7 @@ export class MedicationManager {
     const payload = {
       name,
       dose:       this._els.doseInput.value.trim() || null,
+      directions: directions || null,
       recurrence,
       startDate:  this._els.startInput.value,
       endDate:    this._els.limitedCheck.checked ? this._els.endInput.value : null,
@@ -463,12 +475,13 @@ export class MedicationManager {
       </div>
       <table class="med-schedule-table">
         <thead><tr>
-          <th>${t(v,"medColMedication")}</th>
-          <th>${t(v,"medColDose")}</th>
-          <th>${t(v,"medColSchedule")}</th>
-          <th>${t(v,"medColStart")}</th>
-          <th>${t(v,"medColUntil")}</th>
-          <th>${t(v,"medColNotes")}</th>
+          <th style="width:22%">${t(v,"medColMedication")}</th>
+          <th style="width:9%">${t(v,"medColDose")}</th>
+          <th style="width:16%;word-break:break-word">${t(v,"medColDirections")}</th>
+          <th style="width:22%">${t(v,"medColSchedule")}</th>
+          <th style="width:9%">${t(v,"medColStart")}</th>
+          <th style="width:9%">${t(v,"medColUntil")}</th>
+          <th style="width:13%">${t(v,"medColNotes")}</th>
         </tr></thead>
         <tbody>`;
 
@@ -479,6 +492,7 @@ export class MedicationManager {
       html += `<tr>
         <td><strong>${med.name}</strong></td>
         <td>${med.dose || "—"}</td>
+        <td style="word-break:break-word">${med.directions || "—"}</td>
         <td>${this._humanSchedule(med)}</td>
         <td>${med.startDate || "—"}</td>
         <td>${until}</td>
@@ -577,6 +591,8 @@ ${content}
     });
 
     this._els.freqSelect?.addEventListener("change", () => this._onFreqChange(this._els.freqSelect.value));
+
+    this._els.directionsInput?.addEventListener("input", () => this._updateTimesLabel());
 
     this._els.limitedCheck?.addEventListener("change", () => {
       this._els.endRow.classList.toggle("hidden", !this._els.limitedCheck.checked);

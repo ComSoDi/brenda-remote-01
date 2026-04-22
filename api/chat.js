@@ -347,9 +347,9 @@ function buildMedReplyParts(meds, locale) {
   for (const med of meds) {
     const times = med.recurrence?.times || [];
     if (times.length) {
-      for (const t of times) entries.push({ name: med.name, time: t });
+      for (const t of times) entries.push({ name: med.name, time: t, directions: med.directions || null });
     } else {
-      entries.push({ name: med.name, time: null });
+      entries.push({ name: med.name, time: null, directions: med.directions || null });
     }
   }
   entries.sort((a, b) => {
@@ -362,9 +362,10 @@ function buildMedReplyParts(meds, locale) {
   let listText = null;
   if (entries.length) {
     const parts = entries.map((e) => {
-      if (!e.time) return e.name;
+      const dir = e.directions ? ` (${e.directions})` : "";
+      if (!e.time) return e.name + dir;
       const tf = formatMedTime(e.time, locale);
-      return isEs ? `${e.name} a las ${tf}` : `${e.name} at ${tf}`;
+      return (isEs ? `${e.name} a las ${tf}` : `${e.name} at ${tf}`) + dir;
     });
     if (parts.length === 1) {
       listText = parts[0];

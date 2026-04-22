@@ -85,9 +85,10 @@ function buildMedSystemBlock(meds, locale) {
   const isEs = locale.startsWith("es");
   const lines = meds.map((med) => {
     const times = (med.recurrence?.times || []).map((t) => formatVoiceMedTime(t, locale));
+    const dir = med.directions ? ` — ${med.directions}` : "";
     return times.length
-      ? `- ${med.name}: ${times.join(", ")}`
-      : `- ${med.name}`;
+      ? `- ${med.name}${dir}: ${times.join(", ")}`
+      : `- ${med.name}${dir}`;
   });
   if (isEs) {
     return (

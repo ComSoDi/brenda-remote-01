@@ -508,6 +508,53 @@ export class MedicationManager {
     return t(v, key).replace("{name}", name);
   }
 
+  // ── print ────────────────────────────────────────────────────────────────
+
+  _buildPrintFilename() {
+    const prefix = this._v().startsWith("es") ? "Horario Medicaciones" : "Medication Schedule";
+    const now = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const time = `${pad(now.getHours())}_${pad(now.getMinutes())}_${pad(now.getSeconds())}`;
+    return `${prefix} ${date} - ${time}`;
+  }
+
+  _printSchedule() {
+    const content = this._els.scheduleContent?.innerHTML || "";
+    const title   = this._buildPrintFilename();
+    const html = `<!DOCTYPE html><html lang="${this._v()}">
+<head>
+<meta charset="UTF-8" />
+<title>${title}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; color: #0f172a; }
+  .med-schedule-header { margin-bottom: 16px; }
+  .med-schedule-user { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .med-schedule-meta { font-size: 12px; color: #64748b; }
+  .med-schedule-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+  .med-schedule-table th,
+  .med-schedule-table td { padding: 7px 10px; border: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+  .med-schedule-table th { background: #f1f5f9; font-weight: 600; font-size: 11px; text-transform: uppercase; color: #374151; }
+  .med-schedule-footer { margin-top: 16px; font-size: 11px; color: #92400e; background: #fef3c7; border-radius: 6px; padding: 8px 12px; }
+  .med-pill { display: inline-block; border-radius: 9999px; padding: 1px 8px; font-size: 11px; font-weight: 600; }
+  .med-pill-green { background: #dcfce7; color: #16a34a; }
+  .med-pill-amber { background: #fef3c7; color: #92400e; }
+  @media print { body { padding: 0; } }
+</style>
+</head>
+<body>
+${content}
+<script>window.addEventListener('load',function(){ setTimeout(function(){ window.print(); },250); });</script>
+</body>
+</html>`;
+    const blob = new Blob([html], { type: "text/html" });
+    const url  = URL.createObjectURL(blob);
+    const win  = window.open(url, "_blank");
+    if (!win) { URL.revokeObjectURL(url); return; } // popup blocked
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+
   // ── event binding ─────────────────────────────────────────────────────────
 
   _bindEvents() {
@@ -550,7 +597,7 @@ export class MedicationManager {
       this._showPanel(this.medications.length ? "main" : "form");
     });
 
-    this._els.schedulePrintBtn?.addEventListener("click", () => window.print());
+    this._els.schedulePrintBtn?.addEventListener("click", () => this._printSchedule());
 
     // Close on backdrop click
     this._els.overlay?.addEventListener("click", e => {

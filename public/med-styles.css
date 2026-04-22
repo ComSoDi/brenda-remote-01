@@ -481,11 +481,3 @@
   }
 }
 
-/* Print styles */
-@media print {
-  body > *:not(.med-overlay) { display: none !important; }
-  .med-overlay { position: static !important; background: none !important; }
-  .med-card { box-shadow: none !important; max-height: none !important; width: 100% !important; }
-  .med-form-actions { display: none !important; }
-  .med-schedule-content { overflow: visible !important; }
-}

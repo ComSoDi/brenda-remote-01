@@ -34,12 +34,17 @@
 .med-card {
   background: #fff;
   border-radius: 16px;
-  width: min(92vw, 380px);
+  width: min(92vw, 390px);        /* phone portrait */
   max-height: min(90dvh, 680px);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+/* Wider card on desktop / large tablets */
+@media (min-width: 600px) {
+  .med-card { width: min(88vw, 560px); }
 }
 
 /* Panels */

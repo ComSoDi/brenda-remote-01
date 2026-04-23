@@ -278,17 +278,17 @@ export class MedicationManager {
   _humanSchedule(med) {
     const { type, times, daysOfWeek, intervalDays, nextDue } = med.recurrence || {};
     const timesStr = (times || []).join(" & ");
-    if (type === "daily")    return `${this._t("medFreqDaily")} — ${timesStr}`;
+    if (type === "daily")    return `${this._t("medFreqDaily")} : ${timesStr}`;
     if (type === "weekly") {
       const dayLabels = (daysOfWeek || []).map(d => {
         const i = DAYS_VALUES.indexOf(d.toLowerCase());
         return i >= 0 ? this._t(`medDay${DAYS_KEYS[i]}`) : d;
       }).join(", ");
-      return `${dayLabels} — ${timesStr}`;
+      return `${dayLabels} : ${timesStr}`;
     }
     if (type === "interval") {
-      const next = nextDue ? ` | Next: ${nextDue}` : "";
-      return `${this._t("medFreqInterval").replace("N", intervalDays || "?")} — ${timesStr}${next}`;
+      const next = nextDue ? ` | ${this._t("medNextDue")}: ${nextDue}` : "";
+      return `${this._t("medFreqInterval").replace("N", intervalDays || "?")} : ${timesStr}${next}`;
     }
     return timesStr;
   }
@@ -355,7 +355,7 @@ export class MedicationManager {
   _updateTimesLabel() {
     const hasDir = !!this._els.directionsInput?.value.trim();
     const lbl = document.getElementById("medTimesLabel");
-    if (lbl) lbl.textContent = hasDir ? this._t("medTimesOptional") : this._t("medTimesLabel");
+    if (lbl) lbl.textContent = hasDir ? this._t("Med Times (Optional)") : this._t("medTimesLabel");
   }
 
   _addTimeField(value = "") {
@@ -477,8 +477,8 @@ export class MedicationManager {
         <thead><tr>
           <th style="width:22%">${t(v,"medColMedication")}</th>
           <th style="width:9%">${t(v,"medColDose")}</th>
-          <th style="width:16%;word-break:break-word">${t(v,"medColDirections")}</th>
-          <th style="width:22%">${t(v,"medColSchedule")}</th>
+          <th style="width:20%">${t(v,"medColSchedule")}</th>
+          <th style="width:18%;word-break:break-word">${t(v,"medColDirections")}</th>
           <th style="width:9%">${t(v,"medColStart")}</th>
           <th style="width:9%">${t(v,"medColUntil")}</th>
           <th style="width:13%">${t(v,"medColNotes")}</th>
@@ -492,8 +492,8 @@ export class MedicationManager {
       html += `<tr>
         <td><strong>${med.name}</strong></td>
         <td>${med.dose || "—"}</td>
-        <td style="word-break:break-word">${med.directions || "—"}</td>
         <td>${this._humanSchedule(med)}</td>
+        <td style="word-break:break-word">${med.directions || "—"}</td>
         <td>${med.startDate || "—"}</td>
         <td>${until}</td>
         <td>${med.notes || "—"}</td>

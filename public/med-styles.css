@@ -435,11 +435,28 @@
 .med-schedule-user { font-weight: 700; font-size: 18px; color: #0f172a; }
 .med-schedule-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
 
+/* Scroll wrapper — portrait: both axes; landscape phone: none */
+.med-schedule-table-wrap {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .med-schedule-table {
   width: 100%;
+  min-width: 540px;   /* portrait: triggers horizontal scroll */
   border-collapse: collapse;
   font-size: 13px;
+  table-layout: fixed;
 }
+
+/* Column widths (sum = 100%) */
+.med-schedule-table th:nth-child(1) { width: 22%; }  /* Medication */
+.med-schedule-table th:nth-child(2) { width:  8%; }  /* Dose */
+.med-schedule-table th:nth-child(3) { width: 22%; }  /* Schedule */
+.med-schedule-table th:nth-child(4) { width: 16%; }  /* Directions */
+.med-schedule-table th:nth-child(5) { width: 10%; }  /* Start */
+.med-schedule-table th:nth-child(6) { width: 10%; }  /* Until */
+.med-schedule-table th:nth-child(7) { width: 12%; }  /* Notes */
 
 .med-schedule-table th,
 .med-schedule-table td {
@@ -447,6 +464,8 @@
   border: 1px solid #e2e8f0;
   text-align: left;
   vertical-align: top;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .med-schedule-table th {
@@ -455,6 +474,11 @@
   color: #374151;
   font-size: 11px;
   text-transform: uppercase;
+}
+
+/* Landscape phone: table fills card, no horizontal scroll needed */
+@media (orientation: landscape) and (max-height: 500px) {
+  .med-schedule-table { min-width: 0; }
 }
 
 .med-schedule-footer {

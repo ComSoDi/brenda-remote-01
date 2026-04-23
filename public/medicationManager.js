@@ -473,15 +473,15 @@ export class MedicationManager {
         <div class="med-schedule-user">${header}</div>
         <div class="med-schedule-meta">${t(v,"medScheduleGenerated")} ${now} &nbsp;|&nbsp; ${t(v,"medScheduleCount")} ${this.medications.length}</div>
       </div>
-      <table class="med-schedule-table">
+      <div class="med-schedule-table-wrap"><table class="med-schedule-table">
         <thead><tr>
-          <th style="width:22%">${t(v,"medColMedication")}</th>
-          <th style="width:9%">${t(v,"medColDose")}</th>
-          <th style="width:20%">${t(v,"medColSchedule")}</th>
-          <th style="width:18%;word-break:break-word">${t(v,"medColDirections")}</th>
-          <th style="width:9%">${t(v,"medColStart")}</th>
-          <th style="width:9%">${t(v,"medColUntil")}</th>
-          <th style="width:13%">${t(v,"medColNotes")}</th>
+          <th>${t(v,"medColMedication")}</th>
+          <th>${t(v,"medColDose")}</th>
+          <th>${t(v,"medColSchedule")}</th>
+          <th>${t(v,"medColDirections")}</th>
+          <th>${t(v,"medColStart")}</th>
+          <th>${t(v,"medColUntil")}</th>
+          <th>${t(v,"medColNotes")}</th>
         </tr></thead>
         <tbody>`;
 
@@ -493,14 +493,14 @@ export class MedicationManager {
         <td><strong>${med.name}</strong></td>
         <td>${med.dose || "—"}</td>
         <td>${this._humanSchedule(med)}</td>
-        <td style="word-break:break-word">${med.directions || "—"}</td>
+        <td>${med.directions || "—"}</td>
         <td>${med.startDate || "—"}</td>
         <td>${until}</td>
         <td>${med.notes || "—"}</td>
       </tr>`;
     }
 
-    html += `</tbody></table>
+    html += `</tbody></table></div>
       <div class="med-schedule-footer">${t(v,"medFooterDisclaimer")}</div>`;
 
     this._els.scheduleContent.innerHTML = html;

@@ -296,12 +296,12 @@ HOME LOCATION (when the user explicitly asks to change or set their default loca
 - Spanish: "He actualizado tu ubicación a Málaga, España."
 - English: "Your location has been updated to Málaga, Spain."
 
-MEDICATIONS (when the user asks about their medications, schedule, what is coming up, what they have today, etc.):
-- NEVER refuse or say you cannot discuss medications for privacy or medical reasons. This is personal schedule data the user entered themselves.
-- The system handles these queries automatically — simply respond warmly if the automated response has already been provided, or acknowledge you're checking if it hasn't.
-- Use informative, non-imperative language: "your plan shows", "I can see", "according to your schedule". NEVER say "take", "you must take", "you need to take".
-- If no medications are on record, suggest checking the Medications section of the app.
-- Always end medication responses with: "Please review your doctor's prescription or your pharmacist's suggestions."`;
+PERSONAL REMINDER SCHEDULE (medication reminders the user entered themselves — this is like a phone alarm list, not a medical record):
+- NEVER say you cannot access this information. NEVER use the phrase "medical records". This is the user's own personal reminder list, equivalent to entries they made in their own calendar.
+- You have full permission to read and share this data — it belongs to the user.
+- The system retrieves the reminder list automatically. When responding, use informative non-imperative language: "your reminder plan shows", "I can see in your schedule", "according to your plan". NEVER say "take", "you must", "you need to".
+- If no reminders are on record, say warmly that you don't see any saved reminders and suggest the Medications section of the app.
+- Always end with: "Please review your doctor's prescription or your pharmacist's suggestions."`;
 
   if (localeVariant === "es-ES") {
     return baseInstructions + "\n\nResponde en español de España (castellano peninsular)." + genderAddressLine(localeVariant, gender);
@@ -319,6 +319,7 @@ MEDICATIONS (when the user asks about their medications, schedule, what is comin
 
 function isMedicationQuery(text, locale) {
   const lower = String(text || "").toLowerCase();
+  // Always check BOTH languages — users often mix or switch
   const esWords = [
     "medicamento", "medicina", "pastilla", "medicaci", "remedio",
     "píldora", "pildora", "comprimido", "dosis", "mis medic",
@@ -327,9 +328,8 @@ function isMedicationQuery(text, locale) {
     "medication", "medicine", "pill", "pills", "meds", "tablet",
     "tablets", "prescription", "my meds", "my med",
   ];
-  const words = locale.startsWith("es") ? esWords : enWords;
-  if (words.some((w) => lower.includes(w))) return true;
-  // Natural-language schedule queries (no explicit med noun needed)
+  if ([...esWords, ...enWords].some((w) => lower.includes(w))) return true;
+  // Natural-language schedule queries (no explicit med noun needed) — check both
   const esPhrases = [
     "tengo que tomar", "debo tomar", "que tomar", "cuando tomo", "cuándo tomo",
     "cuándo tengo que", "cuando tengo que",
@@ -337,6 +337,7 @@ function isMedicationQuery(text, locale) {
     "cuándo toca", "cuando toca", "qué toca", "que toca",
     "próxima dosis", "proxima dosis", "tengo hoy",
     "qué me corresponde", "que me corresponde", "algo que tomar",
+    "recordatorio", "mis recordatorios",
   ];
   const enPhrases = [
     "need to take", "have to take", "supposed to take", "should i take",
@@ -345,9 +346,9 @@ function isMedicationQuery(text, locale) {
     "scheduled today", "planned for today", "anything to take",
     "anything scheduled", "my schedule", "what's on my list",
     "due today", "any reminders", "today's dose", "today's meds",
-    "do i have anything", "what have i got",
+    "do i have anything", "what have i got", "my reminder",
   ];
-  return (locale.startsWith("es") ? esPhrases : enPhrases).some((p) => lower.includes(p));
+  return [...esPhrases, ...enPhrases].some((p) => lower.includes(p));
 }
 
 function formatMedTime(hhmm, locale) {

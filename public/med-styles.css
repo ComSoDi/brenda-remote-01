@@ -450,13 +450,13 @@
 }
 
 /* Column widths (sum = 100%) */
-.med-schedule-table th:nth-child(1) { width: 22%; }  /* Medication */
-.med-schedule-table th:nth-child(2) { width:  8%; }  /* Dose */
-.med-schedule-table th:nth-child(3) { width: 22%; }  /* Schedule */
-.med-schedule-table th:nth-child(4) { width: 16%; }  /* Directions */
+.med-schedule-table th:nth-child(1) { width: 18%; }  /* Medication */
+.med-schedule-table th:nth-child(2) { width:  10%; }  /* Dose */
+.med-schedule-table th:nth-child(3) { width: 14%; }  /* Schedule */
+.med-schedule-table th:nth-child(4) { width: 14%; }  /* Directions */
 .med-schedule-table th:nth-child(5) { width: 10%; }  /* Start */
-.med-schedule-table th:nth-child(6) { width: 10%; }  /* Until */
-.med-schedule-table th:nth-child(7) { width: 12%; }  /* Notes */
+.med-schedule-table th:nth-child(6) { width: 16%; }  /* Until */
+.med-schedule-table th:nth-child(7) { width: 18%; }  /* Notes */
 
 .med-schedule-table th,
 .med-schedule-table td {

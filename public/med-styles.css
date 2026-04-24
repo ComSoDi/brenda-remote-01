@@ -443,7 +443,7 @@
 
 .med-schedule-table {
   width: 100%;
-  min-width: 540px;   /* portrait: triggers horizontal scroll */
+  min-width: 560px;   /* portrait: triggers horizontal scroll */
   border-collapse: collapse;
   font-size: 13px;
   table-layout: fixed;
@@ -455,8 +455,8 @@
 .med-schedule-table th:nth-child(3) { width: 14%; }  /* Schedule */
 .med-schedule-table th:nth-child(4) { width: 14%; }  /* Directions */
 .med-schedule-table th:nth-child(5) { width: 10%; }  /* Start */
-.med-schedule-table th:nth-child(6) { width: 16%; }  /* Until */
-.med-schedule-table th:nth-child(7) { width: 18%; }  /* Notes */
+.med-schedule-table th:nth-child(6) { width: 14%; }  /* Until */
+.med-schedule-table th:nth-child(7) { width: 20%; }  /* Notes */
 
 .med-schedule-table th,
 .med-schedule-table td {

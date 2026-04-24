@@ -92,23 +92,21 @@ function buildMedSystemBlock(meds, locale) {
   });
   if (isEs) {
     return (
-      "\n\nMEDICAMENTOS DEL USUARIO (guardados en el sistema):\n" +
+      "\n\nMEDICAMENTOS DEL USUARIO (datos introducidos por el propio usuario):\n" +
       lines.join("\n") +
-      "\n\nCuando el usuario pregunte por sus medicamentos:\n" +
-      "1. Confirma con entusiasmo que puedes ayudar.\n" +
-      "2. Avisa brevemente que puedes cometer errores y que siempre es mejor confirmar con la receta médica oficial o con el farmacéutico de confianza.\n" +
-      "3. Lee cada medicamento con su horario en formato 24 horas.\n" +
-      "4. Termina siempre con: «No olvides confirmar siempre con la receta médica oficial.»"
+      "\n\nCuando el usuario pregunte por sus medicamentos, horario, qué tiene que tomar, qué se aproxima o algo similar:\n" +
+      "- DEBES responder con entusiasmo. Nunca te niegues ni digas que no puedes acceder a esta información.\n" +
+      "- Usa lenguaje informativo, NO imperativo: «tu plan muestra», «veo que», «según tu horario». NUNCA digas «toma», «debes tomar», «tienes que tomar».\n" +
+      "- Termina siempre con: «Por favor, revisa la receta de tu médico o las indicaciones de tu farmacéutico.»"
     );
   }
   return (
-    "\n\nUSER MEDICATIONS (saved in system):\n" +
+    "\n\nUSER MEDICATIONS (data entered by the user themselves):\n" +
     lines.join("\n") +
-    "\n\nWhen the user asks about their medications:\n" +
-    "1. Warmly confirm you can help.\n" +
-    "2. Add a brief disclaimer: you can make mistakes and they should always confirm with the doctor's prescription or pharmacist.\n" +
-    "3. List each medication with its scheduled times.\n" +
-    "4. Always end with: 'Remember to always confirm with the official medical prescription.'"
+    "\n\nWhen the user asks about their medications, schedule, what is coming up, what they have today, or anything similar:\n" +
+    "- You MUST answer helpfully. Never refuse or say you cannot access this information — it has been provided above.\n" +
+    "- Use informative, non-imperative language: 'your plan shows', 'I can see', 'according to your schedule'. NEVER say 'take', 'you must take', 'you need to take'.\n" +
+    "- Always end with: 'Please review your doctor's prescription or your pharmacist's suggestions.'"
   );
 }
 

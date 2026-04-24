@@ -294,7 +294,14 @@ HOME LOCATION (when the user explicitly asks to change or set their default loca
 - Do NOT call set_home_location just because a user asks about weather in a different city.
 - Confirm the update in the conversation language.
 - Spanish: "He actualizado tu ubicación a Málaga, España."
-- English: "Your location has been updated to Málaga, Spain."`;
+- English: "Your location has been updated to Málaga, Spain."
+
+MEDICATIONS (when the user asks about their medications, schedule, what is coming up, what they have today, etc.):
+- NEVER refuse or say you cannot discuss medications for privacy or medical reasons. This is personal schedule data the user entered themselves.
+- The system handles these queries automatically — simply respond warmly if the automated response has already been provided, or acknowledge you're checking if it hasn't.
+- Use informative, non-imperative language: "your plan shows", "I can see", "according to your schedule". NEVER say "take", "you must take", "you need to take".
+- If no medications are on record, suggest checking the Medications section of the app.
+- Always end medication responses with: "Please review your doctor's prescription or your pharmacist's suggestions."`;
 
   if (localeVariant === "es-ES") {
     return baseInstructions + "\n\nResponde en español de España (castellano peninsular)." + genderAddressLine(localeVariant, gender);
@@ -322,9 +329,24 @@ function isMedicationQuery(text, locale) {
   ];
   const words = locale.startsWith("es") ? esWords : enWords;
   if (words.some((w) => lower.includes(w))) return true;
-  // "when/what do I need to take" patterns (catches "take XXXX" without med noun)
-  const esPhrases = ["tengo que tomar", "debo tomar", "que tomar", "cuando tomo", "cuándo tomo", "cuándo tengo que", "cuando tengo que"];
-  const enPhrases = ["need to take", "have to take", "supposed to take", "should i take", "when do i take", "what do i take"];
+  // Natural-language schedule queries (no explicit med noun needed)
+  const esPhrases = [
+    "tengo que tomar", "debo tomar", "que tomar", "cuando tomo", "cuándo tomo",
+    "cuándo tengo que", "cuando tengo que",
+    "qué tengo hoy", "que tengo hoy", "qué hay programado", "que hay programado",
+    "cuándo toca", "cuando toca", "qué toca", "que toca",
+    "próxima dosis", "proxima dosis", "tengo hoy",
+    "qué me corresponde", "que me corresponde", "algo que tomar",
+  ];
+  const enPhrases = [
+    "need to take", "have to take", "supposed to take", "should i take",
+    "when do i take", "what do i take",
+    "coming up", "what do i have", "what's due", "what is due",
+    "scheduled today", "planned for today", "anything to take",
+    "anything scheduled", "my schedule", "what's on my list",
+    "due today", "any reminders", "today's dose", "today's meds",
+    "do i have anything", "what have i got",
+  ];
   return (locale.startsWith("es") ? esPhrases : enPhrases).some((p) => lower.includes(p));
 }
 
@@ -378,20 +400,20 @@ function buildMedReplyParts(meds, locale) {
   if (isEs) {
     return [
       "¡Claro, con mucho gusto!",
-      "Recuerda que puedo cometer errores. Lo ideal es que consultes siempre la receta médica oficial o a tu farmacéutico de confianza.",
+      "Ten en cuenta que puedo cometer errores, así que lo ideal es que siempre consultes la receta médica oficial o a tu farmacéutico de confianza.",
       listText
-        ? `Lo que veo en tu lista es: ${listText}.`
+        ? `En tu plan veo lo siguiente: ${listText}.`
         : "No parece que tenga medicamentos guardados para ti. Por favor, usa el botón «Medicamentos» en el menú superior.",
-      "No olvides confirmar SIEMPRE con la receta médica oficial.",
+      "Por favor, revisa la receta de tu médico o las indicaciones de tu farmacéutico.",
     ];
   }
   return [
-    "Sure, I'd love to help!",
-    "Just remember — I can make mistakes or forget important information. Ideally you should consult the doctor's prescription or your trusted pharmacist.",
+    "Sure, happy to help!",
+    "Just keep in mind I can make mistakes — it's always best to check with your doctor's prescription or your pharmacist.",
     listText
-      ? `What I can see is: ${listText}.`
-      : "I don't seem to have any medications saved for you. Please check the Medications button in the top menu.",
-    "Remember to always confirm with the official medical prescription.",
+      ? `Your plan shows: ${listText}.`
+      : "I don't seem to have any medications on record for you. Please check the Medications button in the top menu.",
+    "Please review your doctor's prescription or your pharmacist's suggestions.",
   ];
 }
 

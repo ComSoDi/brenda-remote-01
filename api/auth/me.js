@@ -1,5 +1,5 @@
 // api/auth/me.js
-import { getSession, setSessionCookie } from "../../lib/auth.js";
+import { getSession, setSessionCookie, signSession } from "../../lib/auth.js";
 import { getDb } from "../../lib/mongo.js";
 
 function json(res, status, body) {
@@ -49,6 +49,12 @@ export default async function handler(req, res) {
     }
   }
 
+  // Short-lived token (10 min) so the external voice proxy (different domain)
+  // can identify the user when the HttpOnly session cookie is not sent cross-site.
+  const voiceToken = !s.isAnonymous
+    ? signSession({ userId: s.userId, isAnonymous: false }, 600)
+    : null;
+
   return json(res, 200, {
     userId: s.userId,
     username: s.username || "",
@@ -56,5 +62,6 @@ export default async function handler(req, res) {
     isAnonymous: !!s.isAnonymous,
     gender,
     voiceProxyUrl: process.env.VOICE_PROXY_WS_URL || null,
+    voiceToken,
   });
 }

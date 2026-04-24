@@ -159,7 +159,10 @@
       const proxyBase = externalProxy
         ? externalProxy.replace(/^http/, "ws")
         : `${proto}://${window.location.host}`;
-      const url = `${proxyBase}/api/voice/stream?locale=${encodeURIComponent(localeVariant)}`;
+      // When connecting cross-domain, the HttpOnly session cookie is not sent.
+      // Pass a short-lived signed token so the voice proxy can identify the user.
+      const voiceToken = externalProxy ? (window.Config?.VOICE_TOKEN || null) : null;
+      const url = `${proxyBase}/api/voice/stream?locale=${encodeURIComponent(localeVariant)}${voiceToken ? `&vt=${encodeURIComponent(voiceToken)}` : ""}`;
 
       // Pre-warm external proxy (e.g. Render free tier) — HTTP ping wakes the service
       // before we open the WebSocket, so the WS connect itself is always fast.

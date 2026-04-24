@@ -16,11 +16,22 @@ const COOKIE_NAME = "brenda_session";
 const SESSION_SECRET = process.env.AUTH_SESSION_SECRET || "default_secret";
 
 function getSession(req) {
+  // Try session cookie first (same-domain / local dev)
+  let token;
   const raw = req.headers.cookie || "";
   const pair = raw.split(";").map((c) => c.trim()).find((c) => c.startsWith(COOKIE_NAME + "="));
-  if (!pair) return null;
+  if (pair) {
+    token = decodeURIComponent(pair.split("=")[1]);
+  } else {
+    // Cross-domain fallback: short-lived voice token passed as ?vt= URL param.
+    // Issued by /api/auth/me and stored in window.Config.VOICE_TOKEN on the frontend.
+    try {
+      const vt = new URL(req.url, "http://localhost").searchParams.get("vt");
+      if (vt) token = vt;
+    } catch { /* ignore */ }
+  }
+  if (!token) return null;
   try {
-    const token = decodeURIComponent(pair.split("=")[1]);
     const parts = token.split(".");
     if (parts.length !== 3) return null;
     const [head, p, sig] = parts;

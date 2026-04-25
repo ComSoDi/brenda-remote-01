@@ -51,7 +51,7 @@ export default async function handler(req, res) {
 
     if (!name?.trim())     return json(res, 400, { error: "name required" });
     if (!recurrence?.type) return json(res, 400, { error: "recurrence required" });
-    if (!directions?.trim() && !recurrence.times?.length) return json(res, 400, { error: "at least one time required (or set directions)" });
+    if (!recurrence.times?.length) return json(res, 400, { error: "at least one time required" });
     if (!timezone)         return json(res, 400, { error: "timezone required" });
 
     const now = new Date();

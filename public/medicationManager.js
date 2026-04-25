@@ -132,7 +132,7 @@ export class MedicationManager {
     document.getElementById("medDaysLabel").textContent        = s("medDaysLabel");
     document.getElementById("medIntervalLabel").textContent    = s("medIntervalLabel");
     document.getElementById("medDirectionsLabel").textContent  = s("medDirectionsLabel");
-    document.getElementById("medTimesLabel").textContent       = s("medTimesLabel");
+    document.getElementById("medTimesLabel").innerHTML         = s("medTimesLabel").replace(/\s*\*\s*$/, "") + ' <span style="color:red" aria-hidden="true">*</span>';
     document.getElementById("medStartLabel").textContent       = s("medStartLabel");
     document.getElementById("medLimitedLabel").textContent     = s("medLimitedLabel");
     document.getElementById("medEndLabel").textContent         = s("medEndLabel");
@@ -353,9 +353,8 @@ export class MedicationManager {
   }
 
   _updateTimesLabel() {
-    const hasDir = !!this._els.directionsInput?.value.trim();
     const lbl = document.getElementById("medTimesLabel");
-    if (lbl) lbl.textContent = hasDir ? this._t("Med Times (Optional)") : this._t("medTimesLabel");
+    if (lbl) lbl.innerHTML = this._t("medTimesLabel").replace(/\s*\*\s*$/, "") + ' <span style="color:red" aria-hidden="true">*</span>';
   }
 
   _addTimeField(value = "") {
@@ -393,7 +392,7 @@ export class MedicationManager {
     const directions = this._els.directionsInput.value.trim().slice(0, 30);
     const times = Array.from(this._els.timesContainer.querySelectorAll(".med-time-input"))
       .map(i => i.value).filter(Boolean);
-    if (!directions && !times.length) { this._els.formStatus.textContent = this._t("medTimesRequired"); return; }
+    if (!times.length) { this._els.formStatus.textContent = this._t("medTimesRequired"); return; }
 
     const freqType = this._els.freqSelect.value;
 

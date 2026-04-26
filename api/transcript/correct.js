@@ -36,13 +36,15 @@ ${text}`;
       headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(10000),
       body: JSON.stringify({
-        generationConfig: { temperature: 0 },
+        generationConfig: { temperature: 0, thinkingConfig: { thinkingBudget: 0 } },
         contents: [{ role: "user", parts: [{ text: prompt }] }],
       }),
     });
 
     const data = await r.json();
-    const corrected = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || text;
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const outputPart = parts.find(p => !p.thought && typeof p.text === "string") ?? parts[0];
+    const corrected = outputPart?.text?.trim() || text;
     res.statusCode = 200;
     return res.end(JSON.stringify({ corrected }));
   } catch (e) {

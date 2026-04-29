@@ -1010,8 +1010,48 @@ class BrendaApp {
   setThinkingIndicator(show) {
     const indicator = this.elements.callThinking;
     if (!indicator) return;
-    indicator.classList.toggle("hidden", !show);
-    indicator.setAttribute("aria-hidden", String(!show));
+
+    if (!show) {
+      if (this._thinkingPillRaf) {
+        cancelAnimationFrame(this._thinkingPillRaf);
+        this._thinkingPillRaf = null;
+      }
+      indicator.classList.add("hidden");
+      indicator.setAttribute("aria-hidden", "true");
+      this._thinkingBridgeFired = false;
+      this._pendingBridgePhrase = null;
+      return;
+    }
+
+    // First activation: emit phrase now (paints this frame), show pill next frame.
+    if (!this._thinkingBridgeFired) {
+      this._thinkingBridgeFired = true;
+      this._emitThinkingBridgePhrase();
+      this._thinkingPillRaf = requestAnimationFrame(() => {
+        this._thinkingPillRaf = null;
+        indicator.classList.remove("hidden");
+        indicator.setAttribute("aria-hidden", "false");
+      });
+    } else {
+      indicator.classList.remove("hidden");
+      indicator.setAttribute("aria-hidden", "false");
+    }
+  }
+
+  _emitThinkingBridgePhrase() {
+    const isEs = (this.locale?.variant || "").toLowerCase().startsWith("es");
+    const phrases = isEs
+      ? ["Dame un momento", "¡Seguro! Lo busco", "¡Déjame revisar!"]
+      : ["Give me a moment", "Sure! I'll look it up", "Let me check!"];
+    const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+    this._pendingBridgePhrase = phrase; // voice paths speak it after clearing the audio queue
+
+    if (this.mode === "text") {
+      const msg = this.addMessage({ role: "assistant", channel: "text", text: phrase, status: "final" });
+      msg._bridge = true; // exclude from buildChatHistory
+      this.render();
+    }
+    // talk mode: phrase will be spoken explicitly by each voice path after stopAudioQueue
   }
 
   setCallUI(state) {
@@ -1578,6 +1618,10 @@ class BrendaApp {
     const shouldShowThinking = !!entry?.showThinking;
     this._voiceChatInFlight = true;
     if (shouldShowThinking) this.setThinkingIndicator(true);
+    if (this._pendingBridgePhrase) {
+      void this.speakText(this._pendingBridgePhrase);
+      this._pendingBridgePhrase = null;
+    }
 
     try {
       const payload = { localeVariant: this.locale.variant, messages: this.buildChatHistory(16) };
@@ -1624,6 +1668,10 @@ class BrendaApp {
       }
       if (typeof this.agent?.stopAudioQueue === "function") {
         this.agent.stopAudioQueue();
+      }
+      if (this._pendingBridgePhrase) {
+        void this.speakText(this._pendingBridgePhrase);
+        this._pendingBridgePhrase = null;
       }
 
       const payload = { localeVariant: this.locale.variant, messages: this.buildChatHistory(16) };
@@ -1735,7 +1783,7 @@ class BrendaApp {
 
   buildChatHistory(limit = 16) {
     return this.messages
-      .filter((m) => m.role === "user" || m.role === "assistant")
+      .filter((m) => (m.role === "user" || m.role === "assistant") && !m._bridge)
       .slice(-limit)
       .map((m) => ({ role: m.role, content: m.text }));
   }

@@ -40,9 +40,6 @@ dist/
 build/
 .vercel
 
-# No server.js
-server.js
-
 # Local Claude instructions (machine-specific)
 CLAUDE.local.md
 

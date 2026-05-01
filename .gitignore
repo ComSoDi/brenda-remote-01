@@ -43,8 +43,5 @@ build/
 # Local Claude instructions (machine-specific)
 CLAUDE.local.md
 
-# Ignored Dead files
-realtime-key.js
-
 # Voice proxy local deps
 voice-proxy/node_modules/

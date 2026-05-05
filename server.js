@@ -17,6 +17,10 @@ import appendHandler from "./api/conversation/append.js";
 import transcriptCorrectHandler from "./api/transcript/correct.js";
 import greetingHandler from "./api/greeting.js";
 import medicationsHandler from "./api/medications.js";
+import categoriesHandler from "./api/brenda/categories.js";
+import headlinesHandler from "./api/brenda/headlines.js";
+import gossipHandler from "./api/brenda/gossip.js";
+import greetNewsHandler from "./api/brenda/greet.js";
 import { getSession } from "./lib/auth.js";
 import { getDb } from "./lib/mongo.js";
 
@@ -49,6 +53,12 @@ app.post("/api/voice/realtime-key", realtimeKeyHandler);
 
 app.all("/api/greeting", greetingHandler);
 app.all("/api/medications", medicationsHandler);
+
+app.all("/api/brenda/categories", categoriesHandler);
+app.all("/api/brenda/headlines", headlinesHandler);
+app.get("/api/brenda/headlines/:userId", headlinesHandler);
+app.post("/api/brenda/gossip", gossipHandler);
+app.post("/api/brenda/greet", greetNewsHandler);
 
 app.post("/api/transcript/correct", transcriptCorrectHandler);
 

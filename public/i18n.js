@@ -459,7 +459,7 @@ const STRINGS = {
     brendaClose: "Cerrar",
 
     // Módulo de medicamentos
-    medBtn: "Mis tomas",
+    medBtn: "Tomas",
     medDisclaimerTitle: "Recordatorios de medicamentos",
     medDisclaimerText: "Los recordatorios de medicamentos de Brenda son solo avisos amistosos, no consejos médicos. Sigue siempre las instrucciones de tu médico o farmacéutico. Brenda no puede garantizar que los recordatorios se entreguen siempre (problemas de red, ajustes del dispositivo u otros factores pueden impedirlo). No dependas únicamente de Brenda para medicamentos críticos.",
     medDisclaimerConfirm: "Lo entiendo",
@@ -639,7 +639,7 @@ const STRINGS = {
     brendaClose: "Cerrar",
 
     // Módulo de medicamentos
-    medBtn: "Mis tomas",
+    medBtn: "Tomas",
     medDisclaimerTitle: "Recordatorio de tomas",
     medDisclaimerText: "Los recordatorios de tomas son solo avisos amistosos, no consejos médicos. Sigue siempre las instrucciones de tu médico o farmacéutico. Brenda no puede garantizar que los recordatorios se entreguen siempre. Pueden darse problemas de red, ajustes del dispositivo u otros factores que causen fallas y errores. No dependas únicamente de Brenda para medicamentos críticos.",
     medDisclaimerConfirm: "Lo entiendo",

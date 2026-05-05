@@ -192,6 +192,43 @@ class BrendaApp {
       helpBottomCloseBtn: document.getElementById("helpBottomCloseBtn"),
       helpContent: document.getElementById("helpContent"),
       helpTitle: document.getElementById("helpTitle"),
+
+      // News & Gossip — Latest (category picker)
+      latestBtn: document.getElementById("latestBtn"),
+      latestOverlay: document.getElementById("latestOverlay"),
+      latestCloseBtn: document.getElementById("latestCloseBtn"),
+      latestTitle: document.getElementById("latestTitle"),
+      latestSubtitle: document.getElementById("latestSubtitle"),
+      latestCancelBtn: document.getElementById("latestCancelBtn"),
+      latestSaveBtn: document.getElementById("latestSaveBtn"),
+      latestStatus: document.getElementById("latestStatus"),
+      latestCatCheckboxes: [
+        document.getElementById("latestCatActualidad"),
+        document.getElementById("latestCatGossip"),
+        document.getElementById("latestCatSport"),
+        document.getElementById("latestCatPolitica"),
+        document.getElementById("latestCatTv"),
+      ],
+      latestCatLabels: [
+        document.getElementById("latestCatActualidadLabel"),
+        document.getElementById("latestCatGossipLabel"),
+        document.getElementById("latestCatSportLabel"),
+        document.getElementById("latestCatPoliticaLabel"),
+        document.getElementById("latestCatTvLabel"),
+      ],
+
+      // News & Gossip — Headlines feed
+      headlinesBtn: document.getElementById("headlinesBtn"),
+      headlinesOverlay: document.getElementById("headlinesOverlay"),
+      headlinesCloseBtn: document.getElementById("headlinesCloseBtn"),
+      headlinesTitle: document.getElementById("headlinesTitle"),
+      headlinesLoading: document.getElementById("headlinesLoading"),
+      headlinesLoadingText: document.getElementById("headlinesLoadingText"),
+      headlinesList: document.getElementById("headlinesList"),
+      headlinesRefreshBtn: document.getElementById("headlinesRefreshBtn"),
+      legendHot: document.getElementById("legendHot"),
+      legendWarm: document.getElementById("legendWarm"),
+      legendCool: document.getElementById("legendCool"),
     };
 
     // Canvas
@@ -255,6 +292,9 @@ class BrendaApp {
       this.elements.helpTitle.textContent = t(this.locale.variant, "helpTitle");
     }
 
+    // News & Gossip button labels + legends
+    this.localizeNewsUI();
+
     // Buttons
     this.elements.toggleBtnTalk.addEventListener("click", () => this.onTalkButton());
     this.elements.toggleBtnText.addEventListener("click", () => this.onTextButton());
@@ -297,6 +337,17 @@ class BrendaApp {
     this.elements.helpBtn?.addEventListener("click", () => this.openHelpOverlay());
     this.elements.helpCloseBtn?.addEventListener("click", () => this.closeHelpOverlay());
     this.elements.helpBottomCloseBtn?.addEventListener("click", () => this.closeHelpOverlay());
+
+    // News & Gossip — Latest overlay
+    this.elements.latestBtn?.addEventListener("click", () => this.onLatestButton());
+    this.elements.latestCloseBtn?.addEventListener("click", () => this.closeLatestOverlay());
+    this.elements.latestCancelBtn?.addEventListener("click", () => this.closeLatestOverlay());
+    this.elements.latestSaveBtn?.addEventListener("click", () => this.onLatestSave());
+
+    // News & Gossip — Headlines overlay
+    this.elements.headlinesBtn?.addEventListener("click", () => this.onHeadlinesButton());
+    this.elements.headlinesCloseBtn?.addEventListener("click", () => this.closeHeadlinesOverlay());
+    this.elements.headlinesRefreshBtn?.addEventListener("click", () => this.fetchAndRenderHeadlines(true));
 
     // Voice callbacks
     this.agent.onStatusChange = (s) => this.updateVoiceStatus(s);
@@ -642,6 +693,261 @@ class BrendaApp {
     }
     if (this.elements.subjectsSaveBtn) this.elements.subjectsSaveBtn.textContent = t(v, "subjectsSave");
     if (this.elements.subjectsCancelBtn) this.elements.subjectsCancelBtn.textContent = t(v, "subjectsCancel");
+  }
+
+  /* --------------------
+     NEWS & GOSSIP — LOCALIZE
+  -------------------- */
+  localizeNewsUI() {
+    const v = this.locale.variant;
+    const e = this.elements;
+    const catKeys = ["Actualidad", "Gossip", "Sport", "Politica", "Tv"];
+    if (e.latestBtn)     e.latestBtn.textContent     = t(v, "latestBtn");
+    if (e.latestTitle)   e.latestTitle.textContent   = t(v, "latestTitle");
+    if (e.latestSubtitle) e.latestSubtitle.textContent = t(v, "latestSubtitle");
+    if (e.latestSaveBtn)   e.latestSaveBtn.textContent   = t(v, "latestSave");
+    if (e.latestCancelBtn) e.latestCancelBtn.textContent = t(v, "latestCancel");
+    if (e.latestCatLabels) {
+      e.latestCatLabels.forEach((el, i) => {
+        if (el) el.textContent = t(v, `latestCat${catKeys[i]}`);
+      });
+    }
+    if (e.headlinesBtn)   e.headlinesBtn.textContent   = t(v, "headlinesBtn");
+    if (e.headlinesTitle) e.headlinesTitle.textContent = t(v, "headlinesTitle");
+    if (e.legendHot)  e.legendHot.textContent  = t(v, "headlinesLegendHot");
+    if (e.legendWarm) e.legendWarm.textContent = t(v, "headlinesLegendWarm");
+    if (e.legendCool) e.legendCool.textContent = t(v, "headlinesLegendCool");
+    if (e.headlinesRefreshBtn) e.headlinesRefreshBtn.textContent = t(v, "headlinesRefresh");
+    if (e.headlinesLoadingText) e.headlinesLoadingText.textContent = t(v, "headlinesLoading");
+  }
+
+  /* --------------------
+     LATEST OVERLAY
+  -------------------- */
+  onLatestButton() {
+    if (!this.user) {
+      this.openAuthOverlay({ closable: false, resetFields: true });
+      return;
+    }
+    this.openLatestOverlay();
+  }
+
+  async openLatestOverlay() {
+    const o = this.elements.latestOverlay;
+    if (!o) return;
+
+    this.setLatestStatus("");
+    o.classList.remove("hidden");
+    o.setAttribute("aria-hidden", "false");
+
+    // Load saved categories (default: all checked)
+    let saved = ["actualidad", "gossip", "sport", "politica", "tv"];
+    try {
+      const data = await this.apiJSON("/api/brenda/categories", { method: "GET" });
+      if (data?.categories?.length) saved = data.categories;
+    } catch { /* non-fatal */ }
+
+    const checkboxes = this.elements.latestCatCheckboxes || [];
+    checkboxes.forEach((cb) => {
+      if (cb) cb.checked = saved.includes(cb.value);
+    });
+  }
+
+  closeLatestOverlay() {
+    const o = this.elements.latestOverlay;
+    if (!o) return;
+    o.classList.add("hidden");
+    o.setAttribute("aria-hidden", "true");
+    this.setLatestStatus("");
+  }
+
+  setLatestStatus(msg, isError = false) {
+    if (this.elements.latestStatus) {
+      this.elements.latestStatus.textContent = msg || "";
+      this.elements.latestStatus.style.color = isError ? "#b00020" : "#2563eb";
+    }
+  }
+
+  async onLatestSave() {
+    const v = this.locale.variant;
+    const checkboxes = this.elements.latestCatCheckboxes || [];
+    const selected = checkboxes.filter((cb) => cb?.checked).map((cb) => cb.value);
+    if (!selected.length) {
+      this.setLatestStatus(t(v, "latestSaveError"), true);
+      return;
+    }
+    try {
+      await this.apiJSON("/api/brenda/categories", {
+        method: "POST",
+        body: { categories: selected },
+      });
+      this.setLatestStatus(t(v, "latestSaved"));
+      setTimeout(() => this.closeLatestOverlay(), 500);
+    } catch (e) {
+      console.error("[latest/save]", e);
+      this.setLatestStatus(t(v, "latestSaveError"), true);
+    }
+  }
+
+  /* --------------------
+     HEADLINES OVERLAY
+  -------------------- */
+  onHeadlinesButton() {
+    if (!this.user) {
+      this.openAuthOverlay({ closable: false, resetFields: true });
+      return;
+    }
+    this.openHeadlinesOverlay();
+  }
+
+  openHeadlinesOverlay() {
+    const o = this.elements.headlinesOverlay;
+    if (!o) return;
+    o.classList.remove("hidden");
+    o.setAttribute("aria-hidden", "false");
+    // Reset to loading state before fetching
+    if (this.elements.headlinesLoading) this.elements.headlinesLoading.classList.add("hidden");
+    if (this.elements.headlinesList)    this.elements.headlinesList.classList.remove("hidden");
+    this.fetchAndRenderHeadlines();
+  }
+
+  closeHeadlinesOverlay() {
+    const o = this.elements.headlinesOverlay;
+    if (!o) return;
+    o.classList.add("hidden");
+    o.setAttribute("aria-hidden", "true");
+  }
+
+  setHeadlinesLoading(show) {
+    const loading = this.elements.headlinesLoading;
+    const list    = this.elements.headlinesList;
+    if (loading) loading.classList.toggle("hidden", !show);
+    if (list)    list.classList.toggle("hidden", show);
+  }
+
+  async fetchAndRenderHeadlines(force = false) {
+    const v = this.locale.variant;
+    const list = this.elements.headlinesList;
+    if (!list) return;
+
+    const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+    const cache = this._headlinesCache;
+    if (!force && cache?.items?.length && (Date.now() - cache.ts) < CACHE_TTL) {
+      this.setHeadlinesLoading(false);
+      this.renderHeadlines(cache.items);
+      return;
+    }
+
+    this.setHeadlinesLoading(true);
+    list.innerHTML = "";
+
+    try {
+      const data = await this.apiJSON("/api/brenda/headlines", { method: "GET" });
+      const headlines = data?.headlines || [];
+      this.setHeadlinesLoading(false);
+
+      if (!headlines.length) {
+        list.innerHTML = `<p style="text-align:center;color:#888;padding:24px 0">${t(v, "headlinesEmpty")}</p>`;
+        return;
+      }
+      this._headlinesCache = { items: headlines, ts: Date.now() };
+      this.renderHeadlines(headlines);
+    } catch (e) {
+      console.error("[headlines/fetch]", e);
+      this.setHeadlinesLoading(false);
+      list.innerHTML = `<p style="text-align:center;color:#b00020;padding:24px 0">${t(v, "headlinesEmpty")}</p>`;
+    }
+  }
+
+  renderHeadlines(headlines) {
+    const list = this.elements.headlinesList;
+    if (!list) return;
+
+    const v = this.locale.variant;
+    const frag = document.createDocumentFragment();
+    headlines.forEach((h) => {
+      const tier = h.heat >= 80 ? "hot" : h.heat >= 50 ? "warm" : "cool";
+      const card = document.createElement("div");
+      card.className = `headline-card headline-card--${tier}`;
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+
+      const pillText = t(v, `catPill_${h.cat}`) || h.cat;
+      const heatPct  = Math.round(h.heat || 0);
+
+      card.innerHTML = `
+        <span class="headline-pill headline-pill--${h.cat}">${pillText}</span>
+        <div class="headline-title">${this._esc(h.headline)}</div>
+        ${h.snippet ? `<div class="headline-snippet">${this._esc(h.snippet)}</div>` : ""}
+        <div class="headline-heat-row">
+          <span class="headline-heat-label">${heatPct}</span>
+          <div class="headline-heat-bar-wrap">
+            <div class="headline-heat-bar-fill headline-heat-bar-fill--${tier}" style="width:${heatPct}%"></div>
+          </div>
+        </div>
+      `;
+
+      const tap = () => this.onHeadlineCardTap(h);
+      card.addEventListener("click", tap);
+      card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") tap(); });
+      frag.appendChild(card);
+    });
+
+    list.innerHTML = "";
+    list.appendChild(frag);
+  }
+
+  async onHeadlineCardTap(headline) {
+    this.closeHeadlinesOverlay();
+
+    const needsConnect = this._lastVoiceStatus === "disconnected";
+    if (this.mode !== "talk") this.setMode("talk");
+    if (needsConnect) this.connectVoice();
+
+    try {
+      const [data] = await Promise.all([
+        this.apiJSON("/api/brenda/gossip", {
+          method: "POST",
+          body: {
+            headline: headline.headline,
+            snippet:  headline.snippet || "",
+            locale:   this.locale.variant,
+            history:  [],
+          },
+        }),
+        needsConnect ? this._waitForVoice(15000) : Promise.resolve(),
+      ]);
+      if (data?.reply) {
+        await this.emitAssistantLine({ text: data.reply, channel: "voice" });
+      }
+    } catch (e) {
+      console.warn("[gossip/tap]", e?.message || e);
+    }
+  }
+
+  _waitForVoice(timeoutMs = 15000) {
+    return new Promise((resolve) => {
+      if (this._lastVoiceStatus === "connected" || this._lastVoiceStatus === "speaking") {
+        resolve();
+        return;
+      }
+      const deadline = Date.now() + timeoutMs;
+      const id = setInterval(() => {
+        if (this._lastVoiceStatus === "connected" || this._lastVoiceStatus === "speaking" || Date.now() > deadline) {
+          clearInterval(id);
+          resolve();
+        }
+      }, 100);
+    });
+  }
+
+  /** HTML-escape helper for injecting user-sourced strings into innerHTML */
+  _esc(str) {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
   populateSubjectsForm() {
@@ -2396,9 +2702,31 @@ class BrendaApp {
         this._greetingShown = true;
         await this.emitAssistantLine({ text: this._greetingText, channel: "text", forceNewDateSeparator: true });
       }
+
+      // Water-cooler news greeting — only on full greetings for logged-in users
+      if (greetingType === "full" && !this.user?.isAnonymous) {
+        this.fetchAndShowNewsGreeting().catch(() => {});
+      }
     } catch (e) {
       // Non-fatal: app continues normally without a greeting.
       console.warn("[greeting/checkin] failed:", e?.message || e);
+    }
+  }
+
+  async fetchAndShowNewsGreeting() {
+    try {
+      const data = await this.apiJSON("/api/brenda/greet", {
+        method: "POST",
+        body: { locale: this.locale.variant },
+      });
+      if (data?.headlinesUsed?.length) {
+        this._headlinesCache = { items: data.headlinesUsed, ts: Date.now() };
+      }
+      if (data?.greeting) {
+        await this.emitAssistantLine({ text: data.greeting, channel: "text" });
+      }
+    } catch (e) {
+      console.warn("[greet/news] failed (non-fatal):", e?.message || e);
     }
   }
 

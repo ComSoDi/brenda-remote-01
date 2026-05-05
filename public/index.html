@@ -37,6 +37,8 @@
             <button id="subjectsBtn" class="subjects-btn" type="button"></button>
             <button id="startBtn" class="start-btn" type="button"></button>
             <button id="medBtn" class="med-btn" type="button"></button>
+            <button id="latestBtn" class="latest-btn" type="button"></button>
+            <button id="headlinesBtn" class="headlines-btn" type="button"></button>
             <button id="helpBtn" class="help-btn" type="button" aria-label="Help">?</button>
 
           </div>
@@ -462,6 +464,92 @@
             <button id="medSchedulePrintBtn" class="med-primary-btn"   type="button"></button>
           </div>
         </div>
+
+      </div>
+    </div>
+
+    <!-- LATEST (MY NEWS CATEGORIES) OVERLAY -->
+    <div id="latestOverlay" class="subjects-overlay hidden" aria-hidden="true">
+      <div class="subjects-card" role="dialog" aria-modal="true" aria-labelledby="latestTitle">
+        <div class="subjects-card-header">
+          <h1 id="latestTitle"></h1>
+          <button id="latestCloseBtn" class="subjects-close-btn" type="button" aria-label="Close">×</button>
+        </div>
+        <h2 id="latestSubtitle" class="subjects-subtitle"></h2>
+
+        <div class="latest-categories">
+          <label class="latest-cat-item">
+            <input id="latestCatActualidad" type="checkbox" value="actualidad" />
+            <span id="latestCatActualidadLabel"></span>
+          </label>
+          <label class="latest-cat-item">
+            <input id="latestCatGossip" type="checkbox" value="gossip" />
+            <span id="latestCatGossipLabel"></span>
+          </label>
+          <label class="latest-cat-item">
+            <input id="latestCatSport" type="checkbox" value="sport" />
+            <span id="latestCatSportLabel"></span>
+          </label>
+          <label class="latest-cat-item">
+            <input id="latestCatPolitica" type="checkbox" value="politica" />
+            <span id="latestCatPoliticaLabel"></span>
+          </label>
+          <label class="latest-cat-item">
+            <input id="latestCatTv" type="checkbox" value="tv" />
+            <span id="latestCatTvLabel"></span>
+          </label>
+        </div>
+
+        <div class="subjects-actions">
+          <button id="latestCancelBtn" class="subjects-btn-cancel" type="button"></button>
+          <button id="latestSaveBtn" class="subjects-btn-save" type="button"></button>
+        </div>
+        <div id="latestStatus" class="subjects-status" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <!-- HEADLINES OVERLAY -->
+    <div id="headlinesOverlay" class="subjects-overlay hidden" aria-hidden="true">
+      <div class="headlines-card" role="dialog" aria-modal="true" aria-labelledby="headlinesTitle">
+
+        <!-- Header -->
+        <div class="subjects-card-header">
+          <h1 id="headlinesTitle"></h1>
+          <button id="headlinesCloseBtn" class="subjects-close-btn" type="button" aria-label="Close">×</button>
+        </div>
+
+        <!-- Heat tier legend -->
+        <div class="headlines-legend">
+          <span class="heat-legend-item">
+            <span class="heat-dot heat-dot-hot"></span>
+            <span id="legendHot"></span>
+          </span>
+          <span class="heat-legend-item">
+            <span class="heat-dot heat-dot-warm"></span>
+            <span id="legendWarm"></span>
+          </span>
+          <span class="heat-legend-item">
+            <span class="heat-dot heat-dot-cool"></span>
+            <span id="legendCool"></span>
+          </span>
+        </div>
+
+        <!-- Signal key -->
+        <div class="headlines-signal-legend" id="headlinesSignalLegend"></div>
+
+        <!-- Loading state (shown while fetching) -->
+        <div id="headlinesLoading" class="headlines-loading hidden" aria-live="polite">
+          <div class="headlines-loading-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <p id="headlinesLoadingText" class="headlines-loading-text"></p>
+        </div>
+
+        <!-- Scrollable card list -->
+        <div id="headlinesList" class="headlines-list"></div>
+
+        <!-- Pinned refresh button -->
+        <button id="headlinesRefreshBtn" class="headlines-refresh-btn" type="button"></button>
 
       </div>
     </div>

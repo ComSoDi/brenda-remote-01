@@ -13,7 +13,7 @@ const STRINGS = {
     connecting: "Connecting",
     warming: "Starting up...",
     thinking: "Thinking",
-    startButton: "You start",
+    startButton: "Start",
     startButtonBusy: "Starting...",
 
     // Hints / placeholders
@@ -101,7 +101,7 @@ const STRINGS = {
     brendaClose: "Close",
 
     // Medication module
-    medBtn: "My meds",
+    medBtn: "Meds",
     medDisclaimerTitle: "Medication Reminders",
     medDisclaimerText: "Brenda's medication reminders are friendly nudges only — not medical advice. Always follow your doctor's or pharmacist's instructions. Brenda cannot guarantee that reminders will always be delivered (network issues, device settings, and other factors may prevent delivery). Do not rely solely on Brenda for critical medications.",
     medDisclaimerConfirm: "I understand",
@@ -179,7 +179,7 @@ const STRINGS = {
     latestCatPolitica: "Politics",
     latestCatTv: "TV & Entertainment",
     headlinesBtn: "Headlines",
-    headlinesTitle: "Headlines",
+    headlinesTitle: "Top Headlines",
     headlinesLegendHot: "Hot",
     headlinesLegendWarm: "Trending",
     headlinesLegendCool: "Cool",
@@ -199,7 +199,7 @@ const STRINGS = {
     connecting: "Connecting",
     warming: "Starting up...",
     thinking: "Thinking",
-    startButton: "You start",
+    startButton: "Start",
     startButtonBusy: "Starting...",
 
     hintTalk: "Tap to speak",
@@ -280,7 +280,7 @@ const STRINGS = {
     brendaClose: "Close",
 
     // Medication module
-    medBtn: "My meds",
+    medBtn: "Meds",
     medDisclaimerTitle: "Medication Reminders",
     medDisclaimerText: "Brenda's medication reminders are friendly nudges only — not medical advice. Always follow your doctor's or pharmacist's instructions. Brenda cannot guarantee that reminders will always be delivered (network issues, device settings, and other factors may prevent delivery). Do not rely solely on Brenda for critical medications.",
     medDisclaimerConfirm: "I understand",
@@ -358,7 +358,7 @@ const STRINGS = {
     latestCatPolitica: "Politics",
     latestCatTv: "TV & Entertainment",
     headlinesBtn: "Headlines",
-    headlinesTitle: "Headlines",
+    headlinesTitle: "Top Headlines",
     headlinesLegendHot: "Hot",
     headlinesLegendWarm: "Trending",
     headlinesLegendCool: "Cool",
@@ -378,7 +378,7 @@ const STRINGS = {
     connecting: "Conectando",
     warming: "Iniciando...",
     thinking: "Pensando",
-    startButton: "Inicia tú",
+    startButton: "Inicia",
     startButtonBusy: "Iniciando...",
 
     hintTalk: "Toca para hablar",
@@ -537,7 +537,7 @@ const STRINGS = {
     latestCatPolitica: "Política",
     latestCatTv: "TV y entretenimiento",
     headlinesBtn: "Actuales",
-    headlinesTitle: "Portadas Actuales",
+    headlinesTitle: "Titulares Top",
     headlinesLegendHot: "Viral",
     headlinesLegendWarm: "Tendencia",
     headlinesLegendCool: "Normal",
@@ -557,7 +557,7 @@ const STRINGS = {
     connecting: "Conectando",
     warming: "Iniciando...",
     thinking: "Pensando",
-    startButton: "Inicia tú",
+    startButton: "Inicia",
     startButtonBusy: "Iniciando...",
 
     hintTalk: "Toca para hablar",
@@ -717,7 +717,7 @@ const STRINGS = {
     latestCatPolitica: "Política",
     latestCatTv: "TV y entretenimiento",
     headlinesBtn: "Actuales",
-    headlinesTitle: "Portadas Actuales",
+    headlinesTitle: "Portadas Top",
     headlinesLegendHot: "Viral",
     headlinesLegendWarm: "Tendencia",
     headlinesLegendCool: "Normal",

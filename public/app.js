@@ -918,11 +918,38 @@ class BrendaApp {
         needsConnect ? this._waitForVoice(15000) : Promise.resolve(),
       ]);
       if (data?.reply) {
-        await this.emitAssistantLine({ text: data.reply, channel: "voice" });
+        // Speak Part 1 exactly — Gemini says the gossip text, transcript adds it to chat
+        const spoken = await this.speakExactLine(data.reply);
+
+        if (spoken) {
+          // Wait for Part 1 to finish, then let Gemini react naturally (Part 2)
+          await this._waitForSpeechEnd(45000);
+          await new Promise(r => setTimeout(r, 1500));
+          await this.agent.speakText(data.reply);
+        } else {
+          // Voice not available — show in chat + browser TTS, skip Part 2
+          await this.emitAssistantLine({ text: data.reply, channel: "text" });
+          await this.speakText(data.reply, { forceLocal: true });
+        }
       }
     } catch (e) {
       console.warn("[gossip/tap]", e?.message || e);
     }
+  }
+
+  _waitForSpeechEnd(timeoutMs = 45000) {
+    return new Promise((resolve) => {
+      const deadline = Date.now() + timeoutMs;
+      let speechStarted = false;
+      const id = setInterval(() => {
+        const s = this._lastVoiceStatus;
+        if (s === "speaking") speechStarted = true;
+        if ((speechStarted && s !== "speaking") || Date.now() > deadline) {
+          clearInterval(id);
+          resolve();
+        }
+      }, 100);
+    });
   }
 
   _waitForVoice(timeoutMs = 15000) {

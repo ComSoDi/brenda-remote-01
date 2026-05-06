@@ -1914,6 +1914,26 @@ class BrendaApp {
     return list.some((k) => raw.includes(k));
   }
 
+  _isNewsQuery(text) {
+    const raw = String(text || "").toLowerCase();
+    if (!raw) return false;
+    const esPatterns = [
+      /\blo último\b/, /\blas últimas?\b/, /\búltimas? noticias\b/,
+      /\bqué pasó\b/, /\bque paso\b/, /\bqué está pasando\b/,
+      /\bqué hay de\b/, /\bqué se sabe\b/, /\bnoticias (de|sobre|del?)\b/,
+      /\bcuéntame (sobre|del?|de los?)\b/, /\bnoticia\b/, /\bnoticias\b/,
+      /\bse sabe algo\b/, /\bcómo va\b/, /\bqué ha dicho\b/, /\bqué dijo\b/,
+    ];
+    const enPatterns = [
+      /\blatest (news|on|about)\b/, /\brecent news\b/, /\bwhat('s| is) (new|happening|going on)\b/,
+      /\bwhat happened\b/, /\bany news\b/, /\btell me about the news\b/,
+      /\bwhat did .+ (say|do)\b/, /\bhave you heard\b/, /\bin the news\b/,
+    ];
+    const isSpanish = (this.locale?.variant || "").toLowerCase().startsWith("es");
+    const list = isSpanish ? esPatterns : enPatterns;
+    return list.some((p) => p.test(raw));
+  }
+
   // Detects explicit requests to change/update the user's default location.
   // Routed through /api/chat so the set_home_location tool can update MongoDB.
   isLocationChangeRequest(text) {
@@ -1957,24 +1977,40 @@ class BrendaApp {
     }
 
     try {
-      const payload = { localeVariant: this.locale.variant, messages: this.buildChatHistory(16) };
-      const data = await this.chatRequest(payload);
-      const reply = data.reply;
-      this.setThinkingIndicator(false);
-
-      if (Array.isArray(data.replyParts) && data.replyParts.length > 1) {
-        for (const part of data.replyParts) {
-          const msg = this.addMessage({ role: "assistant", channel: "voice", text: part, status: "final" });
-          this.render();
-          await this.persistMessage(msg);
-        }
-      } else {
+      let reply;
+      if (this._isNewsQuery(entry.text)) {
+        const r = await fetch("/api/brenda/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: entry.text, locale: this.locale.variant }),
+        });
+        const data = await r.json();
+        reply = data.reply;
+        this.setThinkingIndicator(false);
         const msg = this.addMessage({ role: "assistant", channel: "voice", text: reply, status: "final" });
         this.render();
         await this.persistMessage(msg);
-      }
+        await this.speakExactLine(reply);
+      } else {
+        const payload = { localeVariant: this.locale.variant, messages: this.buildChatHistory(16) };
+        const data = await this.chatRequest(payload);
+        reply = data.reply;
+        this.setThinkingIndicator(false);
 
-      await this.speakText(reply);
+        if (Array.isArray(data.replyParts) && data.replyParts.length > 1) {
+          for (const part of data.replyParts) {
+            const msg = this.addMessage({ role: "assistant", channel: "voice", text: part, status: "final" });
+            this.render();
+            await this.persistMessage(msg);
+          }
+        } else {
+          const msg = this.addMessage({ role: "assistant", channel: "voice", text: reply, status: "final" });
+          this.render();
+          await this.persistMessage(msg);
+        }
+
+        await this.speakText(reply);
+      }
     } catch (e) {
       console.error(e);
       this.setThinkingIndicator(false);
@@ -2059,26 +2095,42 @@ class BrendaApp {
     try {
       await this.persistMessage(userMsg);
 
-      const payload = { localeVariant: this.locale.variant, messages: this.buildChatHistory(16) };
-      if (this._textWeatherPending) payload.weatherPending = true;
-      const data = await this.chatRequest(payload);
-      const reply = data.reply;
-
-      // Track whether the server is awaiting a location follow-up
-      const weatherStatus = data?.meta?.weather?.status;
-      this._textWeatherPending = (weatherStatus === "needs_location" || weatherStatus === "needs_disambiguation");
-
-      this.setThinkingIndicator(false);
-      if (Array.isArray(data.replyParts) && data.replyParts.length > 1) {
-        for (const part of data.replyParts) {
-          const msg = this.addMessage({ role: "assistant", channel: "text", text: part, status: "final" });
-          this.render();
-          await this.persistMessage(msg);
-        }
-      } else {
+      let reply;
+      if (this._isNewsQuery(text)) {
+        const r = await fetch("/api/brenda/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: text, locale: this.locale.variant }),
+        });
+        const data = await r.json();
+        reply = data.reply;
+        this._textWeatherPending = false;
+        this.setThinkingIndicator(false);
         const aiMsg = this.addMessage({ role: "assistant", channel: "text", text: reply, status: "final" });
         this.render();
         await this.persistMessage(aiMsg);
+      } else {
+        const payload = { localeVariant: this.locale.variant, messages: this.buildChatHistory(16) };
+        if (this._textWeatherPending) payload.weatherPending = true;
+        const data = await this.chatRequest(payload);
+        reply = data.reply;
+
+        // Track whether the server is awaiting a location follow-up
+        const weatherStatus = data?.meta?.weather?.status;
+        this._textWeatherPending = (weatherStatus === "needs_location" || weatherStatus === "needs_disambiguation");
+
+        this.setThinkingIndicator(false);
+        if (Array.isArray(data.replyParts) && data.replyParts.length > 1) {
+          for (const part of data.replyParts) {
+            const msg = this.addMessage({ role: "assistant", channel: "text", text: part, status: "final" });
+            this.render();
+            await this.persistMessage(msg);
+          }
+        } else {
+          const aiMsg = this.addMessage({ role: "assistant", channel: "text", text: reply, status: "final" });
+          this.render();
+          await this.persistMessage(aiMsg);
+        }
       }
     } catch (e) {
       console.error(e);

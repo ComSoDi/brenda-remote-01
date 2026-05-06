@@ -21,6 +21,7 @@ import categoriesHandler from "./api/brenda/categories.js";
 import headlinesHandler from "./api/brenda/headlines.js";
 import gossipHandler from "./api/brenda/gossip.js";
 import greetNewsHandler from "./api/brenda/greet.js";
+import searchHandler from "./api/brenda/search.js";
 import { getSession } from "./lib/auth.js";
 import { getDb } from "./lib/mongo.js";
 
@@ -59,6 +60,7 @@ app.all("/api/brenda/headlines", headlinesHandler);
 app.get("/api/brenda/headlines/:userId", headlinesHandler);
 app.post("/api/brenda/gossip", gossipHandler);
 app.post("/api/brenda/greet", greetNewsHandler);
+app.post("/api/brenda/search", searchHandler);
 
 app.post("/api/transcript/correct", transcriptCorrectHandler);
 
@@ -248,7 +250,8 @@ wss.on("connection", (ws) => {
         output_audio_transcription: {},
         system_instruction: {
           parts: [{ text: systemText }]
-        }
+        },
+        tools: [{ google_search: {} }],
       }
     };
     geminiWs.send(JSON.stringify(setupMessage));

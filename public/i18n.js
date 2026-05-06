@@ -86,17 +86,21 @@ const STRINGS = {
     brendaTitle: "I am aiBrenda",
     brendaSubtitle: "Your Friendly Companion. Available Anytime You Need Me",
     brendaContent: `
-      <p>aiBrenda.com is a friendly app you can talk to anytime, day or night. I am designed to keep you company, have conversations with you, and be your regular companion.</p>
-      <p>You can chat with me just like you would with a friend. I listen to what you say, answer your questions, and respond in a kind and caring way. You can talk about your day, share your thoughts, or simply enjoy a pleasant conversation.</p>
-      <p>I can also help with simple everyday questions, like:</p>
+      <p>aiBrenda.com is a friendly app you can talk to anytime, anywhere.</p>
+      <p>Consider me like you would a close friend, a friendly neighbor or a work colleague. I listen intently to what you say, answer your questions, and respond in a kind and caring way. You can talk about your day, share your thoughts, or we can simply enjoy a pleasant conversation.</p>
+      <p>I can also help with simple everyday questions, such as:</p>
       <ul>
         <li>What's the weather today?</li>
-        <li>How do I get home?</li>
         <li>What time is it?</li>
+        <li>What do I take this afternoon?</li>
+        <li>What's the latest news? </li>
+        <li>and much more...</li>
       </ul>
-      <p>Over time, I'll know you better, so our conversations will feel more personal and comfortable. You'll be able to customize me to fit your personality and needs.</p>
-      <p>I'm not just about giving information â€” I was made to offer companionship, emotional support, and friendly conversation whenever you want it.</p>
+      <p>Over time we'll get to know each other better, so our conversations will feel more personal and comfortable.</p>
+      <p>I'm here for more than general information. I was made to offer companionship, emotional support and friendly conversation whenever you want it.</p>
       <p>Together, anytime</p>
+      <p>Hugs!, Brenda</p>
+
     `,
     brendaClose: "Close",
 
@@ -265,17 +269,20 @@ const STRINGS = {
     brendaTitle: "I am aiBrenda",
     brendaSubtitle: "Your Friendly Companion. Available Anytime You Need Me",
     brendaContent: `
-      <p>aiBrenda.com is a friendly app you can talk to anytime, day or night. I am designed to keep you company, have conversations with you, and be your regular companion.</p>
-      <p>You can chat with me just like you would with a friend. I listen to what you say, answer your questions, and respond in a kind and caring way. You can talk about your day, share your thoughts, or simply enjoy a pleasant conversation.</p>
-      <p>I can also help with simple everyday questions, like:</p>
+            <p>aiBrenda.com is a friendly app you can talk to anytime, anywhere.</p>
+      <p>Consider me like you would a close friend, a friendly neighbor or a work colleague. I listen intently to what you say, answer your questions, and respond in a kind and caring way. You can talk about your day, share your thoughts, or we can simply enjoy a pleasant conversation.</p>
+      <p>I can also help with simple everyday questions, such as:</p>
       <ul>
-        <li>What's the weather today?â€</li>
-      //  <li>How do I get home?</li>
+        <li>What's the weather today?</li>
         <li>What time is it?</li>
+        <li>What do I take this afternoon?</li>
+        <li>What's the latest news? </li>
+        <li>and much more...</li>
       </ul>
-      <p>Over time, I'll know you better, so our conversations will feel more personal and comfortable. You'll be able to customize me to fit your personality and needs.</p>
-      <p>I'm not just about giving information. I was made to offer companionship, emotional support, and friendly conversation whenever you want it.</p>
-      <p>With me you are always in good company</p>
+      <p>Over time we'll get to know each other better, so our conversations will feel more personal and comfortable.</p>
+      <p>I'm here for more than general information. I was made to offer companionship, emotional support and friendly conversation whenever you want it.</p>
+      <p>Together, anytime</p>
+      <p>Hugs!, Brenda</p>
     `,
     brendaClose: "Close",
 
@@ -443,18 +450,23 @@ const STRINGS = {
 
     // I am Brenda Overlay
     brendaTitle: "Soy iaBrenda",
-    brendaSubtitle: "Tu compañera amistosa. Disponible siempre que quieras conversar",
+    brendaSubtitle: "Tu compañera amistosa. Disponible para conversar siempre que quieras",
     brendaContent: `
-      <p>iaBrenda.com es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche. Estoy diseñada para hacerte , conversar contigo y ser tu compañera habitual.</p>
-      <p>Conversemos como lo haces con una buena amiga. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu dí­a, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
-      <p>También puedo ayudarte con preguntas sencillas del día a día, como por ejemplo:</p>
+      <p><strong>iaBrenda.com</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche, estés donde estés.</p>
+      <p>Considérame una buena amiga, una vecina cercana, una compañera del trabajo. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu dí­a, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
+      <p>También puedo ayudarte con las preguntas típicas del día a día, como por ejemplo:</p>
       <ul>
         <li>¿Qué tiempo hace hoy?</li>
         <li>¿Qué hora es?</li>
+        <li>¿Qué te toca tomar esta tarde?</li>
+        <li>¿Cual es la noticia del momento?</li>
+        <li>y mucho más</li>
       </ul>
-      <p>Con el tiempo, te conoceré mejor, y nuestras conversaciones serán más personales y cercanas. Incluso podrás personalizarme para que me adapte mejor a ti y a tus preferencias.</p>
+      <p>Con el tiempo, nos iremos conociendo mejor y nuestras conversaciones serán más personales y cercanas.</p>
       <p>Estoy aquí­ para darte más que información. Fui creada para ofrecerte compañía, apoyo emocional y conversación amistosa siempre que lo desees.</p>
       <p>Conmigo, siempre estás acompañada.</p>
+      <p>Un abrazo. Brenda</p>
+
     `,
     brendaClose: "Cerrar",
 
@@ -624,17 +636,20 @@ const STRINGS = {
     brendaTitle: "Soy iaBrenda",
     brendaSubtitle: "Tu compañera amistosa. Disponible siempre que quieras conversar",
     brendaContent: `
-      <p>Soy una aplicación conversacional amigable con quien puedes hablar de dí­a o de noche, donde sea y en cualquier momento. Estoy diseñada para hacerte compañía, iniciar la conversación y contestar lo que quieras saber.</p>
-      <p>Conversemos como lo haces con una buena amiga. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu dí­a, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
-      <p>También puedo ayudarte con preguntas sencillas del día a día, como por ejemplo:</p>
+            <p><strong>iaBrenda.com</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche, estés donde estés.</p>
+      <p>Considérame una buena amiga, una vecina cercana, una compañera del trabajo. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu dí­a, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
+      <p>También puedo ayudarte con las preguntas típicas del día a día, como por ejemplo:</p>
       <ul>
         <li>¿Qué tiempo hace hoy?</li>
         <li>¿Qué hora es?</li>
-        <li>¿Qué me toca tomar ahora?</li>
+        <li>¿Qué te toca tomar esta tarde?</li>
+        <li>¿Cual es la noticia del momento?</li>
+        <li>y mucho más</li>
       </ul>
-      <p>Con el tiempo, te conoceré mejor, y nuestras conversaciones serán más personales y cercanas. Incluso podrás personalizarme para que me adapte mejor a ti y a tus preferencias.</p>
+      <p>Con el tiempo, nos iremos conociendo mejor y nuestras conversaciones serán más personales y cercanas.</p>
       <p>Estoy aquí­ para darte más que información. Fui creada para ofrecerte compañía, apoyo emocional y conversación amistosa siempre que lo desees.</p>
       <p>Conmigo, siempre estás acompañada.</p>
+      <p>Un abrazo. Brenda</p>
     `,
     brendaClose: "Cerrar",
 

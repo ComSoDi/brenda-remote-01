@@ -1335,6 +1335,7 @@ body {
 .help-frame-cell--text-center {
   justify-content: center;
   text-align: center;
+  padding: 5px 10px;
 }
 
 .help-divider {

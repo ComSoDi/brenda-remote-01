@@ -2177,7 +2177,7 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
-@media (max-width: 499px) {
+@media (max-width: 440px) {
   .sidenav-pill-col,
   .sidenav-title-col { width: 100px; }
 }

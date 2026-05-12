@@ -3098,7 +3098,7 @@ class BrendaApp {
 
 const SIDENAV_HOME_PILLS = [
   { pillKey: "sideNavPillHelp",     pillClass: "snp-light",      labelKey: "sideNavLabelHelp",     nav: null },
-  { pillKey: "sideNavPillMyInfo",   pillClass: "snp-light",      labelKey: "sideNavLabelMyInfo",   nav: null },
+  { pillKey: "sideNavPillMyInfo",   pillClass: "snp-light",      labelKey: "sideNavLabelMyInfo",   nav: "miInfo" },
   // account pill is inserted here dynamically
   { pillKey: "sideNavPillTomas",    pillClass: "snp-salmon",     labelKey: "sideNavLabelTomas",    nav: "tomas" },
   { pillKey: "sideNavPillMisTemas", pillClass: "snp-blue",       labelKey: "sideNavLabelMisTemas", nav: null },
@@ -3124,6 +3124,21 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",     key: "sideNavTomasText5" },
       { type: "text",     key: "sideNavTomasText6" },
       { type: "text",     key: "sideNavTomasText7" },
+      { type: "pill-btn", key: "sideNavSaveBtn", pillClass: "snp-green" },
+    ],
+  },
+  miInfo: {
+    pillKey:  "sideNavPillMyInfo",
+    pillClass: "snp-light",
+    titleKey: "sideNavMiInfoTitleText",
+    blocks: [
+      { type: "text",     key: "sideNavMiInfoText1" },
+      { type: "text",     key: "sideNavMiInfoText2" },
+      { type: "text",     key: "sideNavMiInfoText3" },
+      { type: "text",     key: "sideNavMiInfoText4" },
+      { type: "image",    src: "images/brenda-avatar.png" },
+      { type: "text",     key: "sideNavMiInfoText5" },
+      { type: "text",     key: "sideNavMiInfoText6" },
       { type: "pill-btn", key: "sideNavSaveBtn", pillClass: "snp-green" },
     ],
   },

@@ -115,6 +115,13 @@ const STRINGS = {
     sideNavTomasText6: "If it’s a time-limited course (for example, antibiotics) check the box and choose the end date.",
     sideNavTomasText7: "Carefully compare all the data with your doctor’s prescription or pharmacist’s instructions and, if everything looks good, tap",
     sideNavSaveBtn: "Save",
+    sideNavMiInfoTitleText: "Where you live, what you are",
+    sideNavMiInfoText1: "To give you the most accurate weather information I need to know where you live.",
+    sideNavMiInfoText2: 'Why do I ask? There are cities with the same name. For example, there are more than 9 cities and around 25 towns called Valencia!"',
+    sideNavMiInfoText3: 'If you just ask "Brenda, do you think it will rain tomorrow?", I will look up the city or town you saved.',
+    sideNavMiInfoText4: 'If instead you ask "What will the temperature be in Málaga tomorrow?" I will give the forecast for Málaga.',
+    sideNavMiInfoText5: "I also ask for your gender so I can address you correctly.",
+    sideNavMiInfoText6: "Once you have entered (or updated) this information, tap the green save button so I remember.",
 
     // I am Brenda Overlay
     brendaTitle: "I am aiBrenda",
@@ -332,6 +339,13 @@ const STRINGS = {
     sideNavTomasText6: "If it's a time-limited course (for example, antibiotics) check the box and choose the end date.",
     sideNavTomasText7: "Carefully compare all the data with your doctor's prescription or pharmacist's instructions and, if everything looks good, tap",
     sideNavSaveBtn: "Save",
+    sideNavMiInfoTitleText: "Where you live, who you are",
+    sideNavMiInfoText1: "To give you the most accurate weather information I need to know where you live.",
+    sideNavMiInfoText2: "Why do I ask? There are cities with the same name. For example, there are more than 9 cities and around 25 towns called \"Valencia\"!",
+    sideNavMiInfoText3: "If you just ask \"Brenda, do you think it will rain tomorrow?\", I will look up the city or town you saved.",
+    sideNavMiInfoText4: "If instead you ask \"What will the temperature be in Málaga tomorrow?\" I will give the forecast for Málaga.",
+    sideNavMiInfoText5: "I also ask for your gender so I can address you correctly.",
+    sideNavMiInfoText6: "Once you have entered (or updated) this information, tap the green save button so I remember.",
 
     // I am Brenda Overlay
     brendaTitle: "I am aiBrenda",
@@ -549,6 +563,13 @@ const STRINGS = {
     sideNavTomasText6: "Si es un tratamiento de tiempo limitado (por ejemplo, antibióticos) marca la casilla y escoge la fecha final.",
     sideNavTomasText7: "Compara cuidadosamente todos los datos con la receta del médico o las indicaciones del farmaceuta y, si está todo bien, pulsa",
     sideNavSaveBtn: "Guardar",
+    sideNavMiInfoTitleText: "Donde vives, qué eres",
+    sideNavMiInfoText1: "Para darte la información del clima más acertada necesito saber donde vives.",
+    sideNavMiInfoText2: "¿Por qué te lo pido? Hay ciudades con el mismo nombre. Por ejemplo, ¡hay más de 9 ciudades y unas 25 poblaciones llamadas \"Valencia\"!",
+    sideNavMiInfoText3: "Si preguntas \"Brenda, ¿crees que lloverá mañana?\" sin más, yo buscaré la ciudad o población que guardaste.",
+    sideNavMiInfoText4: "Si en cambio pides \"¿Qué temperatura hará mañana en Málaga?\" diré la de Málaga.",
+    sideNavMiInfoText5: "Luego pregunto el género para dirigirme correctamente a ti: (\"¡Hola maja!\" o \"¡Claro, guapo!\")",
+    sideNavMiInfoText6: "Cuando hayas indicado (o cambiado) esta información, pulsa el botón verde de guardar para recordarlo.",
 
     // I am Brenda Overlay
     brendaTitle: "Soy iaBrenda",
@@ -767,6 +788,13 @@ const STRINGS = {
     sideNavTomasText6: "Si es un tratamiento de tiempo limitado (por ejemplo, antibióticos) marca la casilla y escoge la fecha final.",
     sideNavTomasText7: "Compara cuidadosamente todos los datos con la receta del médico o las indicaciones del farmaceuta y, si está todo bien, pulsa",
     sideNavSaveBtn: "Guardar",
+    sideNavMiInfoTitleText: "Donde vives, qué eres",
+    sideNavMiInfoText1: "Para darte la información del clima más acertada necesito saber donde vives.",
+    sideNavMiInfoText2: "¿Por qué te lo pido? Hay ciudades con el mismo nombre. Por ejemplo, ¡hay más de 9 ciudades y unas 25 poblaciones llamadas \"Valencia\"!",
+    sideNavMiInfoText3: "Si preguntas \"Brenda, ¿crees que lloverá mañana?\" sin más, yo buscaré la ciudad o población que guardaste.",
+    sideNavMiInfoText4: "Si en cambio pides \"¿Qué temperatura hará mañana en Málaga?\" diré la de Málaga.",
+    sideNavMiInfoText5: "Luego pregunto el género para dirigirme correctamente a ti: (\"¡Hola maja!\" o \"¡Claro, guapo!\")",
+    sideNavMiInfoText6: "Cuando hayas indicado (o cambiado) esta información, pulsa el botón verde de guardar para recordarlo.",
 
     // I am Brenda Overlay
     brendaTitle: "Soy iaBrenda",

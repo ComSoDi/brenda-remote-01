@@ -117,7 +117,7 @@ const STRINGS = {
     sideNavSaveBtn: "Save",
     sideNavMiInfoTitleText: "Where you live, what you are",
     sideNavMiInfoText1: "To give you the most accurate weather information I need to know where you live.",
-    sideNavMiInfoText2: 'Why do I ask? There are cities with the same name. For example, there are more than 9 cities and around 25 towns called Valencia!"',
+    sideNavMiInfoText2: 'Why do I ask? In the world there are cities with the same name. For example, there are more than 9 cities and around 25 towns called Valencia!',
     sideNavMiInfoText3: 'If you just ask "Brenda, do you think it will rain tomorrow?", I will look up the city or town you saved.',
     sideNavMiInfoText4: 'If instead you ask "What will the temperature be in Málaga tomorrow?" I will give the forecast for Málaga.',
     sideNavMiInfoText5: "I also ask for your gender so I can address you correctly.",

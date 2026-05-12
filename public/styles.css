@@ -2179,6 +2179,6 @@ body {
 
 @media (max-width: 499px) {
   .sidenav-pill-col,
-  .sidenav-title-col { width: 130px; }
+  .sidenav-title-col { width: 100px; }
 }
 .headline-heat-bar-fill--cool { background: #888780; }

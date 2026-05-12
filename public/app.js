@@ -333,8 +333,8 @@ class BrendaApp {
     this.elements.locationCancelBtn?.addEventListener("click", () => this.closeLocationOverlay());
     this.elements.locationSaveBtn?.addEventListener("click", () => this.onLocationSave());
 
-    // Help button
-    this.elements.helpBtn?.addEventListener("click", () => this.openHelpOverlay());
+    // Help button → opens new SideNav system
+    this.elements.helpBtn?.addEventListener("click", () => this.openSideNavHome());
     this.elements.helpCloseBtn?.addEventListener("click", () => this.closeHelpOverlay());
     this.elements.helpBottomCloseBtn?.addEventListener("click", () => this.closeHelpOverlay());
 
@@ -370,7 +370,13 @@ class BrendaApp {
 
     // Canvas setup
     this.resizeCanvas();
-    window.addEventListener("resize", () => this.resizeCanvas());
+    window.addEventListener("resize", () => {
+      this.resizeCanvas();
+      this._positionSideNavPanels();
+    });
+
+    // Position sidenav panels relative to the centered app container
+    this._positionSideNavPanels();
     this.animateWaveform();
 
     // Initial render
@@ -1245,6 +1251,159 @@ class BrendaApp {
     if (!o) return;
     o.classList.add("hidden");
     o.setAttribute("aria-hidden", "true");
+  }
+
+  // ── SideNav Help System ─────────────────────────────────────────────────
+
+  _positionSideNavPanels() {
+    const container = document.querySelector(".container");
+    const wrapper   = document.getElementById("sideNavWrapper");
+    if (!container || !wrapper) return;
+    const r = container.getBoundingClientRect();
+    wrapper.style.left   = r.left + "px";
+    wrapper.style.top    = r.top  + "px";
+    wrapper.style.width  = r.width  + "px";
+    wrapper.style.height = r.height + "px";
+  }
+
+  openSideNavHome() {
+    this._positionSideNavPanels();
+    const panel = document.getElementById("sideNavHome");
+    if (!panel) return;
+    const v = this.locale.variant;
+    this._renderSideNavHome(panel, v);
+    panel.classList.add("sidenav-open");
+    panel.setAttribute("aria-hidden", "false");
+  }
+
+  closeSideNavHome() {
+    document.querySelectorAll(".sidenav-detail").forEach((p) => {
+      p.classList.remove("sidenav-open");
+      p.setAttribute("aria-hidden", "true");
+    });
+    const panel = document.getElementById("sideNavHome");
+    if (!panel) return;
+    panel.classList.remove("sidenav-open");
+    panel.setAttribute("aria-hidden", "true");
+  }
+
+  openSideNavDetail(name) {
+    this._positionSideNavPanels();
+    const id = "sideNav" + name.charAt(0).toUpperCase() + name.slice(1);
+    const panel = document.getElementById(id);
+    if (!panel) return;
+    const v = this.locale.variant;
+    this._renderSideNavDetail(panel, name, v);
+    panel.classList.add("sidenav-open");
+    panel.setAttribute("aria-hidden", "false");
+  }
+
+  closeSideNavDetail(name) {
+    const id = "sideNav" + name.charAt(0).toUpperCase() + name.slice(1);
+    const panel = document.getElementById(id);
+    if (!panel) return;
+    panel.classList.remove("sidenav-open");
+    panel.setAttribute("aria-hidden", "true");
+  }
+
+  _renderSideNavHome(panel, v) {
+    const inner = panel.querySelector(".sidenav-inner");
+    if (!inner) return;
+
+    const isAnon = !this.user || this.user.isAnonymous;
+    const accountPillText = isAnon
+      ? t(v, "accountBtnAnonymous")
+      : (this.user.displayName || this.user.username || t(v, "accountBtnAnonymous"));
+    const accountLabelKey = isAnon ? "sideNavLabelAnon" : "sideNavLabelAccount";
+
+    const accountRowHtml = `
+      <div class="sidenav-pill-row">
+        <div class="sidenav-pill-col">
+          <span class="snp snp-light">${this._snEsc(accountPillText)}</span>
+        </div>
+        <span class="sidenav-row-label">${this._snEsc(t(v, accountLabelKey))}</span>
+      </div>`;
+
+    const beforeAccount = SIDENAV_HOME_PILLS.slice(0, 2);
+    const afterAccount  = SIDENAV_HOME_PILLS.slice(2);
+
+    const pillsHtml = (pills) => pills.map((pill) => {
+      const isNav = !!pill.nav;
+      return `<div class="sidenav-pill-row${isNav ? " sidenav-pill-row--nav" : ""}" data-nav="${pill.nav || ""}">
+        <div class="sidenav-pill-col">
+          <span class="snp ${pill.pillClass}">${this._snEsc(t(v, pill.pillKey))}</span>
+        </div>
+        <span class="sidenav-row-label">${this._snEsc(t(v, pill.labelKey))}</span>
+      </div>`;
+    }).join("");
+
+    inner.innerHTML = `
+      <div class="sidenav-close-row">
+        <button class="sidenav-close-btn js-snav-home-close">
+          <span class="sidenav-close-label">${this._snEsc(t(v, "sideNavCloseLabel"))}</span>
+          <span class="sidenav-close-x">X</span>
+        </button>
+      </div>
+      <p class="sidenav-intro">${this._snEsc(t(v, "sideNavIntro"))}</p>
+      <div class="sidenav-pill-list">
+        ${pillsHtml(beforeAccount)}
+        ${accountRowHtml}
+        ${pillsHtml(afterAccount)}
+      </div>`;
+
+    inner.querySelector(".js-snav-home-close")
+      ?.addEventListener("click", () => this.closeSideNavHome());
+
+    inner.querySelectorAll(".sidenav-pill-row--nav").forEach((row) => {
+      const nav = row.dataset.nav;
+      if (nav) row.addEventListener("click", () => this.openSideNavDetail(nav));
+    });
+  }
+
+  _renderSideNavDetail(panel, name, v) {
+    const cfg = SIDENAV_DETAIL_CONFIGS[name];
+    if (!cfg) return;
+    const inner = panel.querySelector(".sidenav-inner");
+    if (!inner) return;
+
+    const blocksHtml = cfg.blocks.map((block) => {
+      if (block.type === "text") {
+        return `<p class="sidenav-text-block">${this._snEsc(t(v, block.key))}</p>`;
+      }
+      if (block.type === "pill-btn") {
+        return `<div class="sidenav-pill-btn-wrap">
+          <span class="snp ${block.pillClass}">${this._snEsc(t(v, block.key))}</span>
+        </div>`;
+      }
+      if (block.type === "image") {
+        return `<div class="sidenav-img-wrap">
+          <img src="${block.src}" alt="Brenda" />
+        </div>`;
+      }
+      return "";
+    }).join("");
+
+    inner.innerHTML = `
+      <div class="sidenav-close-row">
+        <button class="sidenav-close-btn js-snav-detail-close">
+          <span class="sidenav-close-label">${this._snEsc(t(v, "sideNavCloseLabel"))}</span>
+          <span class="sidenav-close-x">X</span>
+        </button>
+      </div>
+      <div class="sidenav-title-row">
+        <div class="sidenav-title-col">
+          <span class="snp ${cfg.pillClass}">${this._snEsc(t(v, cfg.pillKey))}</span>
+        </div>
+        <span class="sidenav-title-text">${this._snEsc(t(v, cfg.titleKey))}</span>
+      </div>
+      <div class="sidenav-body">${blocksHtml}</div>`;
+
+    inner.querySelector(".js-snav-detail-close")
+      ?.addEventListener("click", () => this.closeSideNavDetail(name));
+  }
+
+  _snEsc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
   getAnonSubjectsKey() {
@@ -2934,6 +3093,41 @@ class BrendaApp {
     });
   }
 }
+
+// ── SideNav Help Config ─────────────────────────────────────────────────────
+
+const SIDENAV_HOME_PILLS = [
+  { pillKey: "sideNavPillHelp",     pillClass: "snp-light",      labelKey: "sideNavLabelHelp",     nav: null },
+  { pillKey: "sideNavPillMyInfo",   pillClass: "snp-light",      labelKey: "sideNavLabelMyInfo",   nav: null },
+  // account pill is inserted here dynamically
+  { pillKey: "sideNavPillTomas",    pillClass: "snp-salmon",     labelKey: "sideNavLabelTomas",    nav: "tomas" },
+  { pillKey: "sideNavPillMisTemas", pillClass: "snp-blue",       labelKey: "sideNavLabelMisTemas", nav: null },
+  { pillKey: "sideNavPillInit",     pillClass: "snp-yellow",     labelKey: "sideNavLabelInit",     nav: null },
+  { pillKey: "sideNavPillNews",     pillClass: "snp-periwinkle", labelKey: "sideNavLabelNews",     nav: null },
+  { pillKey: "sideNavPillLatest",   pillClass: "snp-magenta",    labelKey: "sideNavLabelLatest",   nav: null },
+  { pillKey: "sideNavPillTalk",     pillClass: "snp-green",      labelKey: "sideNavLabelTalk",     nav: null },
+  { pillKey: "sideNavPillWrite",    pillClass: "snp-purple",     labelKey: "sideNavLabelWrite",    nav: null },
+];
+
+const SIDENAV_DETAIL_CONFIGS = {
+  tomas: {
+    pillKey:  "sideNavPillTomas",
+    pillClass: "snp-salmon",
+    titleKey: "sideNavTomasTitleText",
+    blocks: [
+      { type: "text",     key: "sideNavTomasText1" },
+      { type: "text",     key: "sideNavTomasText2" },
+      { type: "pill-btn", key: "sideNavTomasAddBtn", pillClass: "snp-green" },
+      { type: "text",     key: "sideNavTomasText3" },
+      { type: "text",     key: "sideNavTomasText4" },
+      { type: "image",    src: "images/brenda-avatar.png" },
+      { type: "text",     key: "sideNavTomasText5" },
+      { type: "text",     key: "sideNavTomasText6" },
+      { type: "text",     key: "sideNavTomasText7" },
+      { type: "pill-btn", key: "sideNavSaveBtn", pillClass: "snp-green" },
+    ],
+  },
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   window.__app = new BrendaApp();

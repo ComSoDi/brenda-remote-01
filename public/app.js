@@ -1315,7 +1315,7 @@ class BrendaApp {
       : (this.user.displayName || this.user.username || t(v, "accountBtnAnonymous"));
     const accountLabelKey = isAnon ? "sideNavLabelAnon" : "sideNavLabelAccount";
 
-    const accountNav = isAnon ? "anon" : "";
+    const accountNav = isAnon ? "anon" : "cuenta";
     const accountRowHtml = `
       <div class="sidenav-pill-row${accountNav ? " sidenav-pill-row--nav" : ""}" data-nav="${accountNav}">
         <div class="sidenav-pill-col">
@@ -1392,7 +1392,7 @@ class BrendaApp {
       </div>
       <div class="sidenav-title-row">
         <div class="sidenav-title-col">
-          <span class="snp ${cfg.pillClass}">${this._snEsc(t(v, cfg.pillKey))}</span>
+          <span class="snp ${cfg.pillClass}">${this._snEsc(cfg.pillDynamic ? (this.user?.displayName || t(v, "accountBtnAnonymous")) : t(v, cfg.pillKey))}</span>
         </div>
         <span class="sidenav-title-text">${this._snEsc(t(v, cfg.titleKey))}</span>
       </div>
@@ -3153,6 +3153,22 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",  key: "sideNavAnonText4" },
       { type: "text",  key: "sideNavAnonText5" },
       { type: "text",  key: "sideNavAnonText6" },
+      { type: "image", src: "images/brenda-avatar.png" },
+      { type: "text",  key: "sideNavAnonText7" },
+      { type: "text",  key: "sideNavAnonText8" },
+    ],
+  },
+  cuenta: {
+    pillDynamic: true,
+    pillClass: "snp-light",
+    titleKey: "sideNavCuentaTitleText",
+    blocks: [
+      { type: "text",  key: "sideNavCuentaText1" },
+      { type: "text",  key: "sideNavCuentaText2" },
+      { type: "text",  key: "sideNavCuentaText3" },
+      { type: "text",  key: "sideNavCuentaText4" },
+      { type: "text",  key: "sideNavCuentaText5" },
+      { type: "text",  key: "sideNavCuentaText6" },
       { type: "image", src: "images/brenda-avatar.png" },
       { type: "text",  key: "sideNavAnonText7" },
       { type: "text",  key: "sideNavAnonText8" },

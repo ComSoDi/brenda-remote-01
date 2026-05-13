@@ -529,10 +529,9 @@ class BrendaApp {
     // Update account button text
     if (this.elements.accountBtn) {
       const v = this.locale.variant;
-      if (!this.user) {
-        this.elements.accountBtn.textContent = t(v, "accountBtnAnonymous") || "Anonymous";
+      if (!this.user || this.user.isAnonymous) {
+        this.elements.accountBtn.textContent = t(v, "accountBtnAnonymous");
       } else {
-        // Force the display name into the button
         this.elements.accountBtn.textContent = this.user.displayName;
       }
     }

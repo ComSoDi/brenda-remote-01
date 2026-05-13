@@ -1316,8 +1316,9 @@ class BrendaApp {
       : (this.user.displayName || this.user.username || t(v, "accountBtnAnonymous"));
     const accountLabelKey = isAnon ? "sideNavLabelAnon" : "sideNavLabelAccount";
 
+    const accountNav = isAnon ? "anon" : "";
     const accountRowHtml = `
-      <div class="sidenav-pill-row">
+      <div class="sidenav-pill-row${accountNav ? " sidenav-pill-row--nav" : ""}" data-nav="${accountNav}">
         <div class="sidenav-pill-col">
           <span class="snp snp-light">${this._snEsc(accountPillText)}</span>
         </div>
@@ -3140,6 +3141,22 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",     key: "sideNavMiInfoText5" },
       { type: "text",     key: "sideNavMiInfoText6" },
       { type: "pill-btn", key: "sideNavSaveBtn", pillClass: "snp-green" },
+    ],
+  },
+  anon: {
+    pillKey:  "accountBtnAnonymous",
+    pillClass: "snp-light",
+    titleKey: "sideNavAnonTitleText",
+    blocks: [
+      { type: "text",  key: "sideNavAnonText1" },
+      { type: "text",  key: "sideNavAnonText2" },
+      { type: "text",  key: "sideNavAnonText3" },
+      { type: "text",  key: "sideNavAnonText4" },
+      { type: "text",  key: "sideNavAnonText5" },
+      { type: "text",  key: "sideNavAnonText6" },
+      { type: "image", src: "images/brenda-avatar.png" },
+      { type: "text",  key: "sideNavAnonText7" },
+      { type: "text",  key: "sideNavAnonText8" },
     ],
   },
 };

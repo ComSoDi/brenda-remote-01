@@ -122,6 +122,15 @@ const STRINGS = {
     sideNavMiInfoText4: 'If instead you ask "What will the temperature be in Málaga tomorrow?" I will give the forecast for Málaga.',
     sideNavMiInfoText5: "I also ask for your gender so I can address you correctly.",
     sideNavMiInfoText6: "Once you have entered (or updated) this information, tap the green save button so I remember.",
+    sideNavAnonTitleText: "When you use me without an account",
+    sideNavAnonText1: "I see you tapped \"tap here to chat without an account (anonymous)\" when you opened Brenda",
+    sideNavAnonText2: "Your conversations with me will be anonymous but public (others can see them and participate)",
+    sideNavAnonText3: "For our conversations to be just between you and me, I recommend creating an account.",
+    sideNavAnonText4: "With an account I can get to know you better every day. We also keep our conversations, save your preferences and anything you want me to remember",
+    sideNavAnonText5: "Tap the \"Anonymous\" button at the top right and a window will open where you enter a nickname, a four-digit PIN and you're done!",
+    sideNavAnonText6: "From then on the nickname you chose will appear in the same place",
+    sideNavAnonText7: "IMPORTANT NOTE: This app is in development. To make things easier for our collaborators, the identification and security process is the most basic (and least secure) there is.",
+    sideNavAnonText8: "DO NOT SHARE ANYTHING PERSONAL. DO NOT TELL ME your real name, address, phone number, bank details, etc.)",
 
     // I am Brenda Overlay
     brendaTitle: "I am aiBrenda",
@@ -346,6 +355,15 @@ const STRINGS = {
     sideNavMiInfoText4: "If instead you ask \"What will the temperature be in Málaga tomorrow?\" I will give the forecast for Málaga.",
     sideNavMiInfoText5: "I also ask for your gender so I can address you correctly.",
     sideNavMiInfoText6: "Once you have entered (or updated) this information, tap the green save button so I remember.",
+    sideNavAnonTitleText: "When you use me without an account",
+    sideNavAnonText1: "I see you tapped \"tap here to chat without an account (anonymous)\" when you opened Brenda",
+    sideNavAnonText2: "Your conversations with me will be anonymous but public (others can see them and participate)",
+    sideNavAnonText3: "For our conversations to be just between you and me, I recommend creating an account.",
+    sideNavAnonText4: "With an account I can get to know you better every day. We also keep our conversations, save your preferences and anything you want me to remember",
+    sideNavAnonText5: "Tap the \"Anonymous\" button at the top right and a window will open where you enter a nickname, a four-digit PIN and you're done!",
+    sideNavAnonText6: "From then on the nickname you chose will appear in the same place",
+    sideNavAnonText7: "IMPORTANT NOTE: This app is in development. To make things easier for our collaborators, the identification and security process is the most basic (and least secure) there is.",
+    sideNavAnonText8: "DO NOT SHARE ANYTHING PERSONAL. DO NOT TELL ME your real name, address, phone number, bank details, etc.)",
 
     // I am Brenda Overlay
     brendaTitle: "I am aiBrenda",
@@ -570,6 +588,15 @@ const STRINGS = {
     sideNavMiInfoText4: "Si en cambio pides \"¿Qué temperatura hará mañana en Málaga?\" diré la de Málaga.",
     sideNavMiInfoText5: "Luego pregunto el género para dirigirme correctamente a ti: (\"¡Hola maja!\" o \"¡Claro, guapo!\")",
     sideNavMiInfoText6: "Cuando hayas indicado (o cambiado) esta información, pulsa el botón verde de guardar para recordarlo.",
+    sideNavAnonTitleText: "Si me usas sin cuenta",
+    sideNavAnonText1: "Veo que clicaste \"haz clic aquí para chatear sin cuenta (anónimo)\" cuando abriste Brenda",
+    sideNavAnonText2: "Tus conversaciones conmigo serán anónimas pero públicas (otros las pueden ver y participar)",
+    sideNavAnonText3: "Para que nuestras conversaciones sean solo entre tú y yo te recomiendo que te hagas una cuenta.",
+    sideNavAnonText4: "Con una cuenta podré conocerte mejor cada día. Además mantenemos nuestras conversaciones, guardo tus preferencias y lo que quieras que yo recuerde",
+    sideNavAnonText5: "Clica en el botón \"Anónimo\" que está arriba a la derecha y se abrirá la ventana en la que pones un apodo, un PIN de cuatro números y ¡listo!",
+    sideNavAnonText6: "En adelante aparecerá el apodo que escogiste en el mismo lugar",
+    sideNavAnonText7: "NOTA IMPORTANTE: Esta app está en etapa de desarrollo. Para facilitar el uso entre nuestros colaboradores el proceso de identificación y seguridad es el más básico (y menos seguro) que hay.",
+    sideNavAnonText8: "NO COMPARTAS NADA PERSONAL. NO ME DIGAS tu nombre real, dirección, teléfono, datos bancarios, etc.)",
 
     // I am Brenda Overlay
     brendaTitle: "Soy iaBrenda",
@@ -795,6 +822,15 @@ const STRINGS = {
     sideNavMiInfoText4: "Si en cambio pides \"¿Qué temperatura hará mañana en Málaga?\" diré la de Málaga.",
     sideNavMiInfoText5: "Luego pregunto el género para dirigirme correctamente a ti: (\"¡Hola maja!\" o \"¡Claro, guapo!\")",
     sideNavMiInfoText6: "Cuando hayas indicado (o cambiado) esta información, pulsa el botón verde de guardar para recordarlo.",
+    sideNavAnonTitleText: "Si me usas sin cuenta",
+    sideNavAnonText1: "Veo que clicaste \"haz clic aquí para chatear sin cuenta (anónimo)\" cuando abriste Brenda",
+    sideNavAnonText2: "Tus conversaciones conmigo serán anónimas pero públicas (otros las pueden ver y participar)",
+    sideNavAnonText3: "Para que nuestras conversaciones sean solo entre tú y yo te recomiendo que te hagas una cuenta.",
+    sideNavAnonText4: "Con una cuenta podré conocerte mejor cada día. Además mantenemos nuestras conversaciones, guardo tus preferencias y lo que quieras que yo recuerde",
+    sideNavAnonText5: "Clica en el botón \"Anónimo\" que está arriba a la derecha y se abrirá la ventana en la que pones un apodo, un PIN de cuatro números y ¡listo!",
+    sideNavAnonText6: "En adelante aparecerá el apodo que escogiste en el mismo lugar",
+    sideNavAnonText7: "NOTA IMPORTANTE: Esta app está en etapa de desarrollo. Para facilitar el uso entre nuestros colaboradores el proceso de identificación y seguridad es el más básico (y menos seguro) que hay.",
+    sideNavAnonText8: "NO COMPARTAS NADA PERSONAL. NO ME DIGAS tu nombre real, dirección, teléfono, datos bancarios, etc.)",
 
     // I am Brenda Overlay
     brendaTitle: "Soy iaBrenda",

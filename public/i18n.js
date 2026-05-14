@@ -1,4 +1,4 @@
-﻿// public/i18n.js
+// public/i18n.js
 // UI strings for English + Spanish with regional variants.
 // Safe t(): always falls back to en-US, then key.
 
@@ -109,11 +109,11 @@ const STRINGS = {
     sideNavTomasText1: "I help you remember the medications your doctor has prescribed.",
     sideNavTomasText2: "You just need to enter the information in the window that opens when you tap this button.",
     sideNavTomasAddBtn: "+ Add medication",
-    sideNavTomasText3: "In the “Dose” section, enter the amount for each dose. For example: “2 Capsules”",
+    sideNavTomasText3: 'In the "Dose" section, enter the amount for each dose. For example: "2 Capsules"',
     sideNavTomasText4: "Indicate whether the dose is daily, on certain days of the week, or every few days.",
-    sideNavTomasText5: "Add instructions (“Before breakfast”) if any, and the times you plan to take it. There can be several times.",
-    sideNavTomasText6: "If it’s a time-limited course (for example, antibiotics) check the box and choose the end date.",
-    sideNavTomasText7: "Carefully compare all the data with your doctor’s prescription or pharmacist’s instructions and, if everything looks good, tap",
+    sideNavTomasText5: 'Add instructions ("Before breakfast") if any, and the times you plan to take it. There can be several times.',
+    sideNavTomasText6: "If it's a time-limited course (for example, antibiotics) check the box and choose the end date.",
+    sideNavTomasText7: "Carefully compare all the data with your doctor's prescription or pharmacist's instructions and, if everything looks good, tap",
     sideNavSaveBtn: "Save",
     sideNavMiInfoTitleText: "Where you live, what you are",
     sideNavMiInfoText1: "To give you the most accurate weather information I need to know where you live.",
@@ -138,6 +138,13 @@ const STRINGS = {
     sideNavCuentaText4: "Your conversations with me are private and persistent. That means when you come back to the app we can continue where we left off.",
     sideNavCuentaText5: "I also save your preferences in a private area just for you.",
     sideNavCuentaText6: "It is important that you remember or write down the nickname and secret PIN you used.",
+    sideNavInitTitleText: "Brenda starts the conversation",
+    sideNavInitText1: "Not sure what to ask me?",
+    sideNavInitText2: "Don't worry. Tap the yellow \"I start\" button and I'll bring up a conversation topic.",
+    sideNavInitText3: "You don't need to ask anything, just go with the flow and we'll have a pleasant conversation.",
+    sideNavInitText4: "If you want to change the subject, tell me what's on your mind and we'll switch to it.",
+    sideNavInitText5: "Or tap the yellow button again and I'll bring up another topic.",
+    sideNavInitText6: "What topics do you enjoy talking about most? Tell me using the \"My topics\" button.",
 
     // I am Brenda Overlay
     brendaTitle: "I am aiBrenda",
@@ -378,6 +385,13 @@ const STRINGS = {
     sideNavCuentaText4: "Your conversations with me are private and persistent. That means when you come back to the app we can continue where we left off.",
     sideNavCuentaText5: "I also save your preferences in a private area just for you.",
     sideNavCuentaText6: "It is important that you remember or write down the nickname and secret PIN you used.",
+    sideNavInitTitleText: "Brenda starts the conversation",
+    sideNavInitText1: "Not sure what to ask me?",
+    sideNavInitText2: "Don't worry. Tap the yellow \"I start\" button and I'll bring up a conversation topic.",
+    sideNavInitText3: "You don't need to ask anything, just go with the flow and we'll have a pleasant conversation.",
+    sideNavInitText4: "If you want to change the subject, tell me what's on your mind and we'll switch to it.",
+    sideNavInitText5: "Or tap the yellow button again and I'll bring up another topic.",
+    sideNavInitText6: "What topics do you enjoy talking about most? Tell me using the \"My topics\" button.",
 
     // I am Brenda Overlay
     brendaTitle: "I am aiBrenda",
@@ -618,6 +632,13 @@ const STRINGS = {
     sideNavCuentaText4: "Tus conversaciones conmigo son privadas y persistentes. Es decir, cuando retomas la app podemos seguir conversando donde lo dejamos.",
     sideNavCuentaText5: "Además, guardo tus preferencias en una zona privada solo para ti.",
     sideNavCuentaText6: "Es importante que recuerdes o apuntes el apodo y PIN secreto que usaste.",
+    sideNavInitTitleText: "Brenda inicia la conversación",
+    sideNavInitText1: "¿No se te ocurre que preguntarme?",
+    sideNavInitText2: "No te preocupes. Pulsa el botón amarillo \"Inicia tú\" y yo saco tema de conversación",
+    sideNavInitText3: "No hace falta que preguntes, simplemente sígueme la corriente y conversamos amenamente.",
+    sideNavInitText4: "Si quieres cambiar de tema, dime lo que tengas en mente y pasamos a ello.",
+    sideNavInitText5: "O pulsa el botón amarillo de nuevo y saco otro tema.",
+    sideNavInitText6: "¿De qué temas te gusta hablar más? Dímelo en el botón \"Mis temas\".",
 
     // I am Brenda Overlay
     brendaTitle: "Soy iaBrenda",
@@ -859,6 +880,13 @@ const STRINGS = {
     sideNavCuentaText4: "Tus conversaciones conmigo son privadas y persistentes. Es decir, cuando retomas la app podemos seguir conversando donde lo dejamos.",
     sideNavCuentaText5: "Además, guardo tus preferencias en una zona privada solo para ti.",
     sideNavCuentaText6: "Es importante que recuerdes o apuntes el apodo y PIN secreto que usaste.",
+    sideNavInitTitleText: "Brenda inicia la conversación",
+    sideNavInitText1: "¿No se te ocurre que preguntarme?",
+    sideNavInitText2: "No te preocupes. Pulsa el botón amarillo \"Inicia tú\" y yo saco tema de conversación",
+    sideNavInitText3: "No hace falta que preguntes, simplemente sígueme la corriente y conversamos amenamente.",
+    sideNavInitText4: "Si quieres cambiar de tema, dime lo que tengas en mente y pasamos a ello.",
+    sideNavInitText5: "O pulsa el botón amarillo de nuevo y saco otro tema.",
+    sideNavInitText6: "¿De qué temas te gusta hablar más? Dímelo en el botón \"Mis temas\".",
 
     // I am Brenda Overlay
     brendaTitle: "Soy iaBrenda",

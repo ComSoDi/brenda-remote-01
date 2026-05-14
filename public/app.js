@@ -3102,7 +3102,7 @@ const SIDENAV_HOME_PILLS = [
   // account pill is inserted here dynamically
   { pillKey: "sideNavPillTomas",    pillClass: "snp-salmon",     labelKey: "sideNavLabelTomas",    nav: "tomas" },
   { pillKey: "sideNavPillMisTemas", pillClass: "snp-blue",       labelKey: "sideNavLabelMisTemas", nav: null },
-  { pillKey: "sideNavPillInit",     pillClass: "snp-yellow",     labelKey: "sideNavLabelInit",     nav: null },
+  { pillKey: "sideNavPillInit",     pillClass: "snp-yellow",     labelKey: "sideNavLabelInit",     nav: "iniciaTu" },
   { pillKey: "sideNavPillNews",     pillClass: "snp-periwinkle", labelKey: "sideNavLabelNews",     nav: null },
   { pillKey: "sideNavPillLatest",   pillClass: "snp-magenta",    labelKey: "sideNavLabelLatest",   nav: null },
   { pillKey: "sideNavPillTalk",     pillClass: "snp-green",      labelKey: "sideNavLabelTalk",     nav: null },
@@ -3172,6 +3172,20 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "image", src: "images/brenda-avatar.png" },
       { type: "text",  key: "sideNavAnonText7" },
       { type: "text",  key: "sideNavAnonText8" },
+    ],
+  },
+  iniciaTu: {
+    pillKey:  "sideNavPillInit",
+    pillClass: "snp-yellow",
+    titleKey: "sideNavInitTitleText",
+    blocks: [
+      { type: "text",  key: "sideNavInitText1" },
+      { type: "text",  key: "sideNavInitText2" },
+      { type: "text",  key: "sideNavInitText3" },
+      { type: "text",  key: "sideNavInitText4" },
+      { type: "text",  key: "sideNavInitText5" },
+      { type: "text",  key: "sideNavInitText6" },
+      { type: "image", src: "images/mis_temas_01.png" },
     ],
   },
 };

@@ -7,13 +7,15 @@
 .med-btn {
   margin-left: auto;
   align-self: flex-start;
+  height: 45px;
+  font-size: 24px;
+  width: 140px;
   padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid #bfe1f8;
   background: #bfe1f8;
   color: #0f172a;
   font-weight: 700;
-  font-size: 16px;
   cursor: pointer;
 }
 .med-btn:hover {

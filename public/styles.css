@@ -91,7 +91,7 @@ body {
   display: flex;
   align-items: center;
   column-gap: 8px; 
-  row-gap: 2px;
+  row-gap: 6px;
   flex-wrap: wrap;
 }
 
@@ -113,15 +113,15 @@ body {
 
 .subjects-btn {
   align-self: flex-start;
-  height: 32px;
-  width: 100px;
+  height: 45px;
+  font-size: 24px;
+  width: 140px;
   padding: 6px 6px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.15);
   background: #fff;
   color: #0f172a;
   font-weight: 700;
-  font-size: 16px;
   cursor: pointer;
 }
 
@@ -132,14 +132,15 @@ body {
 
 .start-btn {
   align-self: flex-start;
-  width: 100px;
   padding: 6px 6px;
   border-radius: 8px;
   border: 1px solid rgba(37, 99, 235, 0.22);
   background: #ffff00;
   color: #0f172a;
   font-weight: 700;
-  font-size: 16px;
+  height: 45px;
+  font-size: 24px;
+  width: 120px;
   cursor: pointer;
 
 }
@@ -161,15 +162,18 @@ body {
 
 .help-btn {
   align-self: flex-start;
+  height: 45px;  
+  width: 45px;
+  font-size: 30px;
   padding: 2px 6px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   background: #ff0121;
   color: #fff;
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 800;
+
   cursor: pointer;
-  height: 36px;
+
   min-width: 26px;
   line-height: 1;
 }
@@ -759,14 +763,16 @@ body {
 
 .account-btn {
   flex-shrink: 0;
-  height: 32px;
+  height: 45px;
+  font-size: 24px;
+  width:fit-content;
+  max-width: 180px;
   padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid #d9d9d9;
   background: #fff;
   color: #0f172a;
   font-weight: 700;
-  font-size: 16px;
   cursor: pointer;
 }
 
@@ -777,14 +783,15 @@ body {
 
 .my-info-btn {
   flex-shrink: 0;
-  height: 32px;
+  height: 45px;
+  font-size: 24px;
+  width: 120px;  
   padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   background: #ffffff;
   color: #0f172a;
   font-weight: 700;
-  font-size: 16px;
   cursor: pointer;
 }
 
@@ -1628,14 +1635,14 @@ body {
 
 .latest-btn {
   align-self: flex-start;
-  height: 32px;
-  width: 100px;
+  height: 45px;
+  font-size: 24px;
+  width: 140px;
   padding: 6px 6px;
   background: #fff;
   color: #0f172a;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 8px;
-  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
@@ -1650,15 +1657,14 @@ body {
 
 .headlines-btn {
   align-self: flex-start;
-  height: 32px;
-  width: 100px;
+  height: 45px;
+  font-size: 24px;
+  width: 120px;
   padding: 6px 6px;
   background: #ff74c4;
   color: #000;
-  
-  border: 1px solid #e0cc00;
+    border: 1px solid #e0cc00;
   border-radius: 8px;
-  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;

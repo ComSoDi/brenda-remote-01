@@ -52,30 +52,30 @@ const STRINGS = {
     authErrorNoGender: "Please select a gender.",
 
     // Subjects modal
-    subjectsButton: "My Topics",
-    subjectsTitle: "My Topics",
-    subjectsSubtitle: "Tell me the topics you love to talk about",
-    subjectLabel1: "Topic 1",
-    subjectLabel2: "Topic 2",
-    subjectLabel3: "Topic 3",
-    subjectLabel4: "Topic 4",
-    subjectLabel5: "Topic 5",
+    subjectsButton: "Subjects",
+    subjectsTitle: "Subjects",
+    subjectsSubtitle: "Tell me the subjects you love to talk about",
+    subjectLabel1: "Subject 1",
+    subjectLabel2: "Subject 2",
+    subjectLabel3: "Subject 3",
+    subjectLabel4: "Subject 4",
+    subjectLabel5: "Subject 5",
     subjectsSave: "Save",
     subjectsCancel: "Cancel",
     subjectsSaved: "Saved",
     subjectsSaveError: "Unable to save topics right now.",
 
     // Location overlay
-    locationButton: "My info",
-    locationTitle: "My information",
-    locationSubtitle: "Please tell me where and what you are",
-    locationTown: "Town / City",
-    locationState: "State / Region (optional)",
-    locationCountry: "Country",
-    locationSave: "Save",
-    locationCancel: "Cancel",
-    locationSaved: "Saved",
-    locationSaveError: "Unable to save location right now.",
+    myInfoButton: "My info",
+    myInfoTitle: "My information",
+    myInfoSubtitle: "Please tell me where and what you are",
+    myInfoTown: "Town / City",
+    myInfoState: "State / Region (optional)",
+    myInfoCountry: "Country",
+    myInfoSave: "Save",
+    myInfoCancel: "Cancel",
+    myInfoSaved: "Saved",
+    myInfoSaveError: "Unable to save location right now.",
 
     // Help
     helpTitle: "aiBrenda",
@@ -97,9 +97,9 @@ const STRINGS = {
     sideNavLabelMisTemas: "The topics that interest you",
     sideNavPillInit: "I start",
     sideNavLabelInit: "Brenda starts the conversation",
-    sideNavPillNews: "News",
+    sideNavPillNews: "Sections",
     sideNavLabelNews: "Categories I should look for",
-    sideNavPillLatest: "Latest",
+    sideNavPillLatest: "Headlines",
     sideNavLabelLatest: "The most current news",
     sideNavPillTalk: "Talk",
     sideNavLabelTalk: "I hear you and you hear me",
@@ -117,7 +117,7 @@ const STRINGS = {
     sideNavSaveBtn: "Save",
     sideNavMiInfoTitleText: "Where you live, what you are",
     sideNavMiInfoText1: "To give you the most accurate weather information I need to know where you live.",
-    sideNavMiInfoText2: 'Why do I ask? In the world there are cities with the same name. For example, there are more than 9 cities and around 25 towns called Valencia!',
+    sideNavMiInfoText2: 'Why do I ask? There are cities with the same name all over the world. For example, there are more than 9 cities and around 25 towns called \"Valencia\"!',
     sideNavMiInfoText3: 'If you just ask "Brenda, do you think it will rain tomorrow?", I will look up the city or town you saved.',
     sideNavMiInfoText4: 'If instead you ask "What will the temperature be in Málaga tomorrow?" I will give the forecast for Málaga.',
     sideNavMiInfoText5: "I also ask for your gender so I can address you correctly.",
@@ -146,6 +146,48 @@ const STRINGS = {
     sideNavInitText5: "Or tap the yellow button again and I'll bring up another topic.",
     sideNavInitText6: "What topics do you enjoy talking about most? Tell me using the \"My topics\" button.",
 
+    // SideNav — My topics panel
+    sideNavMisTemasText1: "This button works alongside 'I Start' as a way for me to begin the conversation.",
+    sideNavMisTemasText2: "When you tap 'I Start', I can talk to you about thousands of different interesting things.",
+    sideNavMisTemasText3: "If you prefer, I can focus the conversation on the topics you enter in the screen that opens with this button.",
+    sideNavMisTemasText4: "Write up to five different topics and then tap the 'Save' button.",
+    sideNavMisTemasText5: "Then tap the yellow 'I Start' button and you'll see me start a conversation on one of those topics.",
+
+    // SideNav — Headlines panel
+    sideNavLatestText1: "I'm the friend who scans the news and brings you the most relevant and current stories.",
+    sideNavLatestText2: "When you tap 'Headlines', within seconds I show you the 5 most current and relevant right now.",
+    sideNavLatestText3: "You'll see I assign each headline a score that combines how fresh the story is, how viral it has become, and how relevant it is.",
+    sideNavLatestText4: "You can also choose which press sections you want me to look at.",
+    sideNavLatestText5: "Check or uncheck the ones you want using the button...",
+
+    // SideNav — Sections panel
+    sideNavNewsTitleText: "Choose the types of news that interest you",
+    sideNavNewsText1: "Sometimes you want to know about everything, and other times just about certain things.",
+    sideNavNewsText2: "Traditional newspapers are divided into sections: Politics, International, Sport, Society, etc.",
+    sideNavNewsText3: "I can find the hottest headlines from all sections or only the ones that interest you most.",
+    sideNavNewsText4: "Before tapping the 'Headlines' button, tap 'Sections' and choose from",
+    sideNavNewsText5: "Current Affairs, Gossip, Sport, Politics, TV and Entertainment",
+    sideNavNewsText6: "You can select one, several or all. Whatever you like!",
+
+    // SideNav — Talk panel
+    sideNavTalkTitleText: "I hear you and you hear me",
+    sideNavTalkText1: "This is the button you'll use the most!",
+    sideNavTalkText2: "Tap 'Talk' whenever you want us to speak as if you were calling me on the phone.",
+    sideNavTalkText3: "The first time you call me I'll ask permission to use your microphone. Select",
+    sideNavTalkText4: "While I'm answering you'll see an animated yellow signal saying 'Connecting'. When you see 'Speaking with aiBrenda' and the round red hang-up circle, we can talk!",
+    sideNavTalkText5: "Speak to me clearly in a quiet place and I'll understand perfectly what you say or ask.",
+    sideNavTalkText6: "If you tap the yellow 'I Start' button while we're talking, I'll start the conversation with one of your favourite topics.",
+    sideNavTalkText7: "And when you want to hang up, just tap the red circle.",
+
+    // SideNav — Write panel
+    sideNavWriteText1: "Sometimes it's better to write and read!",
+    sideNavWriteText2: "Tap 'Write' when you want us to communicate by text.",
+    sideNavWriteText3: "It's like what you do on WhatsApp, Telegram and social media.",
+    sideNavWriteText4: "Type in the box at the bottom that says 'Type here' and tap 'Send'.",
+    sideNavWriteText5: "What you write appears above in the green blocks.",
+    sideNavWriteText6: "You'll see my replies in the white blocks.",
+    sideNavWriteText7: "If you tap the yellow 'I Start' button while we're chatting, I'll start the conversation with one of your favourite topics.",
+
     // I am Brenda Overlay
     brendaTitle: "I am aiBrenda",
     brendaSubtitle: "Your Friendly Companion. Available Anytime You Need Me",
@@ -154,10 +196,10 @@ const STRINGS = {
       <p>Consider me like you would a close friend, a friendly neighbor or a work colleague. I listen intently to what you say, answer your questions, and respond in a kind and caring way. You can talk about your day, share your thoughts, or we can simply enjoy a pleasant conversation.</p>
       <p>I can also help with simple everyday questions, such as:</p>
       <ul>
-        <li>What's the weather today?</li>
+        <li>Will it rain tomorrow?</li>
         <li>What time is it?</li>
         <li>What do I take this afternoon?</li>
-        <li>What's the latest news? </li>
+        <li>Tell me the latest news </li>
         <li>and much more...</li>
       </ul>
       <p>Over time we'll get to know each other better, so our conversations will feel more personal and comfortable.</p>
@@ -234,9 +276,9 @@ const STRINGS = {
     medNotifBtn: "Enable",
 
     // News & Gossip
-    latestBtn: "My News",
-    latestTitle: "My News",
-    latestSubtitle: "Choose the topics you want to follow",
+    latestBtn: "Sections",
+    latestTitle: "Sections",
+    latestSubtitle: "Choose the news sections you want me to follow for you",
     latestSave: "Save",
     latestCancel: "Cancel",
     latestSaved: "Saved",
@@ -301,30 +343,30 @@ const STRINGS = {
     authGenderOther: "Another",
     authErrorNoGender: "Please select a gender.",
 
-    subjectsButton: "My topics",
-    subjectsTitle: "My topics",
-    subjectsSubtitle: "Tell me the topics you love to talk about",
-    subjectLabel1: "Topic 1",
-    subjectLabel2: "Topic 2",
-    subjectLabel3: "Topic 3",
-    subjectLabel4: "Topic 4",
-    subjectLabel5: "Topic 5",
+    subjectsButton: "Subjects",
+    subjectsTitle: "Subjects",
+    subjectsSubtitle: "Tell me the subjects you love to talk about",
+    subjectLabel1: "Subject 1",
+    subjectLabel2: "Subject 2",
+    subjectLabel3: "Subject 3",
+    subjectLabel4: "Subject 4",
+    subjectLabel5: "Subject 5",
     subjectsSave: "Save",
     subjectsCancel: "Cancel",
     subjectsSaved: "Saved",
     subjectsSaveError: "Unable to save topics right now.",
 
     // Location overlay
-    locationButton: "My info",
-    locationTitle: "My information",
-    locationSubtitle: "Please tell me where and what you are",
-    locationTown: "Town / City",
-    locationState: "State / Region (optional)",
-    locationCountry: "Country",
-    locationSave: "Save",
-    locationCancel: "Cancel",
-    locationSaved: "Saved",
-    locationSaveError: "Unable to save location right now.",
+    myInfoButton: "My info",
+    myInfoTitle: "My information",
+    myInfoSubtitle: "Please tell me where and what you are",
+    myInfoTown: "Town / City",
+    myInfoState: "State / Region (optional)",
+    myInfoCountry: "Country",
+    myInfoSave: "Save",
+    myInfoCancel: "Cancel",
+    myInfoSaved: "Saved",
+    myInfoSaveError: "Unable to save location right now.",
 
     // Help
     helpTitle: "aiBrenda",
@@ -344,9 +386,9 @@ const STRINGS = {
     sideNavLabelMisTemas: "The topics that interest you",
     sideNavPillInit: "I start",
     sideNavLabelInit: "Brenda starts the conversation",
-    sideNavPillNews: "News",
+    sideNavPillNews: "Sections",
     sideNavLabelNews: "Categories I should look for",
-    sideNavPillLatest: "Latest",
+    sideNavPillLatest: "Headlines",
     sideNavLabelLatest: "The most current news",
     sideNavPillTalk: "Talk",
     sideNavLabelTalk: "I hear you and you hear me",
@@ -364,7 +406,7 @@ const STRINGS = {
     sideNavSaveBtn: "Save",
     sideNavMiInfoTitleText: "Where you live, who you are",
     sideNavMiInfoText1: "To give you the most accurate weather information I need to know where you live.",
-    sideNavMiInfoText2: "Why do I ask? There are cities with the same name. For example, there are more than 9 cities and around 25 towns called \"Valencia\"!",
+    sideNavMiInfoText2: 'Why do I ask? There are cities with the same name all over the world. For example, there are more than 9 cities and around 25 towns called \"Valencia\"!',
     sideNavMiInfoText3: "If you just ask \"Brenda, do you think it will rain tomorrow?\", I will look up the city or town you saved.",
     sideNavMiInfoText4: "If instead you ask \"What will the temperature be in Málaga tomorrow?\" I will give the forecast for Málaga.",
     sideNavMiInfoText5: "I also ask for your gender so I can address you correctly.",
@@ -393,6 +435,48 @@ const STRINGS = {
     sideNavInitText5: "Or tap the yellow button again and I'll bring up another topic.",
     sideNavInitText6: "What topics do you enjoy talking about most? Tell me using the \"My topics\" button.",
 
+    // SideNav — My topics panel
+    sideNavMisTemasText1: "This button works alongside 'I Start' as a way for me to begin the conversation.",
+    sideNavMisTemasText2: "When you tap 'I Start', I can talk to you about thousands of different interesting things.",
+    sideNavMisTemasText3: "If you prefer, I can focus the conversation on the topics you enter in the screen that opens with this button.",
+    sideNavMisTemasText4: "Write up to five different topics and then tap the 'Save' button.",
+    sideNavMisTemasText5: "Then tap the yellow 'I Start' button and you'll see me start a conversation on one of those topics.",
+
+    // SideNav — Headlines panel
+    sideNavLatestText1: "I'm the friend who scans the news and brings you the most relevant and current stories.",
+    sideNavLatestText2: "When you tap 'Headlines', within seconds I show you the 5 most current and relevant right now.",
+    sideNavLatestText3: "You'll see I assign each headline a score that combines how fresh the story is, how viral it has become, and how relevant it is.",
+    sideNavLatestText4: "You can also choose which press sections you want me to look at.",
+    sideNavLatestText5: "Check or uncheck the ones you want using the button...",
+
+    // SideNav — Sections panel
+    sideNavNewsTitleText: "Choose the types of news that interest you",
+    sideNavNewsText1: "Sometimes you want to know about everything, and other times just about certain things.",
+    sideNavNewsText2: "Traditional newspapers are divided into sections: Politics, International, Sport, Society, etc.",
+    sideNavNewsText3: "I can find the hottest headlines from all sections or only the ones that interest you most.",
+    sideNavNewsText4: "Before tapping the 'Headlines' button, tap 'Sections' and choose from",
+    sideNavNewsText5: "Current Affairs, Gossip, Sport, Politics, TV and Entertainment",
+    sideNavNewsText6: "You can select one, several or all. Whatever you like!",
+
+    // SideNav — Talk panel
+    sideNavTalkTitleText: "I hear you and you hear me",
+    sideNavTalkText1: "This is the button you'll use the most!",
+    sideNavTalkText2: "Tap 'Talk' whenever you want us to speak as if you were calling me on the phone.",
+    sideNavTalkText3: "The first time you call me I'll ask permission to use your microphone. Select",
+    sideNavTalkText4: "While I'm answering you'll see an animated yellow signal saying 'Connecting'. When you see 'Speaking with aiBrenda' and the round red hang-up circle, we can talk!",
+    sideNavTalkText5: "Speak to me clearly in a quiet place and I'll understand perfectly what you say or ask.",
+    sideNavTalkText6: "If you tap the yellow 'I Start' button while we're talking, I'll start the conversation with one of your favourite topics.",
+    sideNavTalkText7: "And when you want to hang up, just tap the red circle.",
+
+    // SideNav — Write panel
+    sideNavWriteText1: "Sometimes it's better to write and read!",
+    sideNavWriteText2: "Tap 'Write' when you want us to communicate by text.",
+    sideNavWriteText3: "It's like what you do on WhatsApp, Telegram and social media.",
+    sideNavWriteText4: "Type in the box at the bottom that says 'Type here' and tap 'Send'.",
+    sideNavWriteText5: "What you write appears above in the green blocks.",
+    sideNavWriteText6: "You'll see my replies in the white blocks.",
+    sideNavWriteText7: "If you tap the yellow 'I Start' button while we're chatting, I'll start the conversation with one of your favourite topics.",
+
     // I am Brenda Overlay
     brendaTitle: "I am aiBrenda",
     brendaSubtitle: "Your Friendly Companion. Available Anytime You Need Me",
@@ -401,10 +485,10 @@ const STRINGS = {
       <p>Consider me like you would a close friend, a friendly neighbor or a work colleague. I listen intently to what you say, answer your questions, and respond in a kind and caring way. You can talk about your day, share your thoughts, or we can simply enjoy a pleasant conversation.</p>
       <p>I can also help with simple everyday questions, such as:</p>
       <ul>
-        <li>What's the weather today?</li>
+        <li>Will it rain tomorrow?</li>
         <li>What time is it?</li>
         <li>What do I take this afternoon?</li>
-        <li>What's the latest news? </li>
+        <li>Tell me the latest news </li>
         <li>and much more...</li>
       </ul>
       <p>Over time we'll get to know each other better, so our conversations will feel more personal and comfortable.</p>
@@ -480,9 +564,9 @@ const STRINGS = {
     medNotifBtn: "Enable",
 
     // News & Gossip
-    latestBtn: "My News",
-    latestTitle: "My News",
-    latestSubtitle: "Choose the topics you want to follow",
+    latestBtn: "Sections",
+    latestTitle: "Sections",
+    latestSubtitle: "Choose the news sections you want me to follow for you",
     latestSave: "Save",
     latestCancel: "Cancel",
     latestSaved: "Saved",
@@ -546,9 +630,9 @@ const STRINGS = {
     authGenderOther: "Otro",
     authErrorNoGender: "Por favor selecciona un género.",
 
-    subjectsButton: "Mis temas",
-    subjectsTitle: "Mis temas",
-    subjectsSubtitle: "Cuentame los temas de los que te encanta hablar",
+    subjectsButton: "Temas",
+    subjectsTitle: "Temas",
+    subjectsSubtitle: "Dime los temas que más te interesan para hablar",
     subjectLabel1: "Tema 1",
     subjectLabel2: "Tema 2",
     subjectLabel3: "Tema 3",
@@ -560,16 +644,16 @@ const STRINGS = {
     subjectsSaveError: "No puedo guardar los temas ahora mismo.",
 
     // Location overlay
-    locationButton: "Mi info",
-    locationTitle: "Mi información",
-    locationSubtitle: "Por favor, dime dónde estás y qué eres",
-    locationTown: "Población / Ciudad",
-    locationState: "Región (opcional)",
-    locationCountry: "País",
-    locationSave: "Guardar",
-    locationCancel: "Cancelar",
-    locationSaved: "Guardado",
-    locationSaveError: "No puedo guardar la ubicación ahora mismo.",
+    myInfoButton: "Mi info",
+    myInfoTitle: "Mi información",
+    myInfoSubtitle: "Por favor, dime dónde estás y qué eres",
+    myInfoTown: "Población / Ciudad",
+    myInfoState: "Región (opcional)",
+    myInfoCountry: "País",
+    myInfoSave: "Guardar",
+    myInfoCancel: "Cancelar",
+    myInfoSaved: "Guardado",
+    myInfoSaveError: "No puedo guardar la ubicación ahora mismo.",
 
     // Help
     helpTitle: "aiBrenda Help",
@@ -591,9 +675,9 @@ const STRINGS = {
     sideNavLabelMisTemas: "Los temas que te interesan",
     sideNavPillInit: "Inicia tú",
     sideNavLabelInit: "Brenda inicia la conversación",
-    sideNavPillNews: "Noticias",
+    sideNavPillNews: "Secciones",
     sideNavLabelNews: "Categorías que debo buscar",
-    sideNavPillLatest: "Actuales",
+    sideNavPillLatest: "Titulares",
     sideNavLabelLatest: "Las noticias más actuales",
     sideNavPillTalk: "Hablar",
     sideNavLabelTalk: "Te oigo y me oyes",
@@ -611,7 +695,7 @@ const STRINGS = {
     sideNavSaveBtn: "Guardar",
     sideNavMiInfoTitleText: "Donde vives, qué eres",
     sideNavMiInfoText1: "Para darte la información del clima más acertada necesito saber donde vives.",
-    sideNavMiInfoText2: "¿Por qué te lo pido? Hay ciudades con el mismo nombre. Por ejemplo, ¡hay más de 9 ciudades y unas 25 poblaciones llamadas \"Valencia\"!",
+    sideNavMiInfoText2: "¿Por qué te lo pido? Hay ciudades con el mismo nombre. Por ejemplo, en todo el mundo ¡hay más de 9 ciudades y unas 25 poblaciones llamadas \"Valencia\"!",
     sideNavMiInfoText3: "Si preguntas \"Brenda, ¿crees que lloverá mañana?\" sin más, yo buscaré la ciudad o población que guardaste.",
     sideNavMiInfoText4: "Si en cambio pides \"¿Qué temperatura hará mañana en Málaga?\" diré la de Málaga.",
     sideNavMiInfoText5: "Luego pregunto el género para dirigirme correctamente a ti: (\"¡Hola maja!\" o \"¡Claro, guapo!\")",
@@ -640,6 +724,49 @@ const STRINGS = {
     sideNavInitText5: "O pulsa el botón amarillo de nuevo y saco otro tema.",
     sideNavInitText6: "¿De qué temas te gusta hablar más? Dímelo en el botón \"Mis temas\".",
 
+    // SideNav — Panel Mis temas
+    sideNavMisTemasText1: "Este botón es la otra parte de la forma que tenemos para que yo inicie la conversación.",
+    sideNavMisTemasText2: "Cuando pulsas \"Inicia tú\" te puedo hablar de miles de cosas diferentes muy interesantes.",
+    sideNavMisTemasText3: "Si prefieres, puedo dedicar los temas de conversación a los que tú me indiques en la pantalla que sale con este botón.",
+    sideNavMisTemasText4: "Escribe hasta cinco temas diferentes y luego pulsa la tecla \"Guardar\".",
+    sideNavMisTemasText5: "Después pulsa el botón amarillo \"Inicia tú\" y verás que inicio conversación de uno de esos temas.",
+
+    // SideNav — Panel Titulares
+    sideNavLatestText1: "Soy la amiga que repasa la prensa y te ofrece lo más relevante y actual.",
+    sideNavLatestText2: "Cuando pulsas \"Titulares\" en segundos te muestro los 5 más actuales y relevantes del momento.",
+    sideNavLatestText3: "Verás que a cada titular le asigno un valor que une la frescura de la noticia, lo viral que se ha hecho y lo relevante que es.",
+    sideNavLatestText4: "También puedes escoger qué secciones de la prensa te interesan que yo mire.",
+    sideNavLatestText5: "Marca o desmarca las que tú quieras en el botón...",
+
+    // SideNav — Panel Secciones
+    sideNavNewsTitleText: "Decide los tipos de noticias que te interesan",
+    sideNavNewsText1: "A veces quieres saber de todo y otras veces de algunas cosas nada más.",
+    sideNavNewsText2: "Los periódicos de siempre están divididos por secciones: Política, Internacional, Deportes, Sociedad, etc.",
+    sideNavNewsText3: "Yo puedo buscar los titulares más candentes de todas las secciones o solo de las que más te interesan.",
+    sideNavNewsText4: "Antes de pulsar el botón \"Titulares\" pulsa \"Secciones\" y escoge entre",
+    sideNavNewsText5: "Actualidad, Cotilleo, Deporte, Política, TV y entretenimiento",
+    sideNavNewsText6: "¡Puedes marcar uno, varios o todos. Cómo tú quieras!",
+
+    // SideNav — Panel Hablar
+    sideNavTalkTitleText: "Te oigo y me oyes",
+    sideNavTalkText1: "¡Este es el botón que más usarás!",
+    sideNavTalkText2: "Pulsa \"Hablar\" cuando quieras que hablemos como si me llamas por teléfono.",
+    sideNavTalkText3: "La primera vez que me llames te pediré permiso para usar tu micrófono.",
+    sideNavTalkText4: "Selecciona cualquier 'Permitir' y es como hacer la llamada.", 
+    sideNavTalkText5: "Mientras contesto, verás una señal amarilla animada que dice \"Conectando\". Cuando veas \"Hablando con iaBrenda\" y el círculo redondo rojo de colgar, ¡podemos hablar!",
+    sideNavTalkText6: "Háblame con claridad en un lugar con poco ruido y entenderé perfectamente lo que me digas o preguntes.",
+    sideNavTalkText7: "Si pulsas el botón amarillo \"Inicia\" mientras hablamos, iniciaré la conversación con uno de tus temas favoritos.",
+    sideNavTalkText8: "Y, cuando quieras colgar, solo pulsa en el círculo rojo.",
+
+    // SideNav — Panel Escribir
+    sideNavWriteText1: "¡A veces es mejor escribir y leer!",
+    sideNavWriteText2: "Pulsa \"Escribir\" cuando quieras que nos comuniquemos por texto.",
+    sideNavWriteText3: "Sería como lo haces por WhatsApp, Telegram y las Redes Sociales.",
+    sideNavWriteText4: "Escribes en la ventanilla inferior que dice \"Escribe aquí\" y pulsa \"Enviar\".",
+    sideNavWriteText5: "Lo que escribes aparece arriba en los bloques verdes.",
+    sideNavWriteText6: "Verás lo que yo te contesto en los bloques blancos.",
+    sideNavWriteText7: "Si pulsas el botón amarillo \"Inicia\" mientras escribimos, iniciaré la conversación con uno de tus temas favoritos.",
+
     // I am Brenda Overlay
     brendaTitle: "Soy iaBrenda",
     brendaSubtitle: "Tu compañera amistosa. Disponible para conversar siempre que quieras",
@@ -648,11 +775,11 @@ const STRINGS = {
       <p>Considérame una buena amiga, una vecina cercana, una compañera del trabajo. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu dí­a, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
       <p>También puedo ayudarte con las preguntas típicas del día a día, como por ejemplo:</p>
       <ul>
-        <li>¿Qué tiempo hace hoy?</li>
+        <li>¿Lloverá mañana?</li>
         <li>¿Qué hora es?</li>
-        <li>¿Qué te toca tomar esta tarde?</li>
-        <li>¿Cual es la noticia del momento?</li>
-        <li>y mucho más</li>
+        <li>¿Qué me toca tomar esta tarde?</li>
+        <li>Dime lo último en la prensa</li>
+        <li>y mucho más...</li>
       </ul>
       <p>Con el tiempo, nos iremos conociendo mejor y nuestras conversaciones serán más personales y cercanas.</p>
       <p>Estoy aquí­ para darte más que información. Fui creada para ofrecerte compañía, apoyo emocional y conversación amistosa siempre que lo desees.</p>
@@ -728,9 +855,9 @@ const STRINGS = {
     medNotifBtn: "Activar",
 
     // News & Gossip
-    latestBtn: "Noticias",
-    latestTitle: "Noticias",
-    latestSubtitle: "Elige los temas que quieres seguir",
+    latestBtn: "Secciones",
+    latestTitle: "Secciones",
+    latestSubtitle: "Elige las secciones de noticias que quieres que yo siga",
     latestSave: "Guardar",
     latestCancel: "Cancelar",
     latestSaved: "Guardado",
@@ -740,7 +867,7 @@ const STRINGS = {
     latestCatSport: "Deporte",
     latestCatPolitica: "Política",
     latestCatTv: "TV y entretenimiento",
-    headlinesBtn: "Actuales",
+    headlinesBtn: "Titulares",
     headlinesTitle: "Titulares Top",
     headlinesLegendHot: "Viral",
     headlinesLegendWarm: "Tendencia",
@@ -794,9 +921,9 @@ const STRINGS = {
     authGenderOther: "Otro",
     authErrorNoGender: "Por favor selecciona un género.",
 
-    subjectsButton: "Mis temas",
-    subjectsTitle: "Mis temas",
-    subjectsSubtitle: "Cuentame los temas de los que te encanta hablar",
+    subjectsButton: "Temas",
+    subjectsTitle: "Temas",
+    subjectsSubtitle: "Dime los temas que más te interesan para hablar",
     subjectLabel1: "Tema 1",
     subjectLabel2: "Tema 2",
     subjectLabel3: "Tema 3",
@@ -808,16 +935,16 @@ const STRINGS = {
     subjectsSaveError: "No puedo guardar los temas ahora mismo.",
 
     // Location overlay
-    locationButton: "Mi info",
-    locationTitle: "Mi información",
-    locationSubtitle: "Por favor, dime dónde estás y qué eres",
-    locationTown: "Población / Ciudad",
-    locationState: "Región (opcional)",
-    locationCountry: "País",
-    locationSave: "Guardar",
-    locationCancel: "Cancelar",
-    locationSaved: "Guardado",
-    locationSaveError: "No puedo guardar la ubicación ahora mismo.",
+    myInfoButton: "Mi info",
+    myInfoTitle: "Mi información",
+    myInfoSubtitle: "Por favor, dime dónde estás y qué eres",
+    myInfoTown: "Población / Ciudad",
+    myInfoState: "Región (opcional)",
+    myInfoCountry: "País",
+    myInfoSave: "Guardar",
+    myInfoCancel: "Cancelar",
+    myInfoSaved: "Guardado",
+    myInfoSaveError: "No puedo guardar la ubicación ahora mismo.",
 
     // Help
     helpTitle: "aiBrenda Help",
@@ -839,9 +966,9 @@ const STRINGS = {
     sideNavLabelMisTemas: "Los temas que te interesan",
     sideNavPillInit: "Inicia tú",
     sideNavLabelInit: "Brenda inicia la conversación",
-    sideNavPillNews: "Noticias",
+    sideNavPillNews: "Secciones",
     sideNavLabelNews: "Categorías que debo buscar",
-    sideNavPillLatest: "Actuales",
+    sideNavPillLatest: "Titulares",
     sideNavLabelLatest: "Las noticias más actuales",
     sideNavPillTalk: "Hablar",
     sideNavLabelTalk: "Te oigo y me oyes",
@@ -859,7 +986,7 @@ const STRINGS = {
     sideNavSaveBtn: "Guardar",
     sideNavMiInfoTitleText: "Donde vives, qué eres",
     sideNavMiInfoText1: "Para darte la información del clima más acertada necesito saber donde vives.",
-    sideNavMiInfoText2: "¿Por qué te lo pido? Hay ciudades con el mismo nombre. Por ejemplo, ¡hay más de 9 ciudades y unas 25 poblaciones llamadas \"Valencia\"!",
+    sideNavMiInfoText2: "¿Por qué te lo pido? Hay ciudades con el mismo nombre. Por ejemplo, en todo el mundo ¡hay más de 9 ciudades y unas 25 poblaciones llamadas \"Valencia\"!",
     sideNavMiInfoText3: "Si preguntas \"Brenda, ¿crees que lloverá mañana?\" sin más, yo buscaré la ciudad o población que guardaste.",
     sideNavMiInfoText4: "Si en cambio pides \"¿Qué temperatura hará mañana en Málaga?\" diré la de Málaga.",
     sideNavMiInfoText5: "Luego pregunto el género para dirigirme correctamente a ti: (\"¡Hola maja!\" o \"¡Claro, guapo!\")",
@@ -888,6 +1015,48 @@ const STRINGS = {
     sideNavInitText5: "O pulsa el botón amarillo de nuevo y saco otro tema.",
     sideNavInitText6: "¿De qué temas te gusta hablar más? Dímelo en el botón \"Mis temas\".",
 
+    // SideNav — Panel Mis temas
+    sideNavMisTemasText1: "Este botón es la otra parte de la forma que tenemos para que yo inicie la conversación.",
+    sideNavMisTemasText2: "Cuando pulsas \"Inicia tú\" te puedo hablar de miles de cosas diferentes muy interesantes.",
+    sideNavMisTemasText3: "Si prefieres, puedo dedicar los temas de conversación a los que tú me indiques en la pantalla que sale con este botón.",
+    sideNavMisTemasText4: "Escribe hasta cinco temas diferentes y luego pulsa la tecla \"Guardar\".",
+    sideNavMisTemasText5: "Después pulsa el botón amarillo \"Inicia tú\" y verás que inicio conversación de uno de esos temas.",
+
+    // SideNav — Panel Titulares
+    sideNavLatestText1: "Soy la amiga que repasa la prensa y te ofrece lo más relevante y actual.",
+    sideNavLatestText2: "Cuando pulsas \"Titulares\" en segundos te muestro los 5 más actuales y relevantes del momento.",
+    sideNavLatestText3: "Verás que a cada titular le asigno un valor que une la frescura de la noticia, lo viral que se ha hecho y lo relevante que es.",
+    sideNavLatestText4: "También puedes escoger qué secciones de la prensa te interesan que yo mire.",
+    sideNavLatestText5: "Marca o desmarca las que tú quieras en el botón...",
+
+    // SideNav — Panel Secciones
+    sideNavNewsTitleText: "Decide los tipos de noticias que te interesan",
+    sideNavNewsText1: "A veces quieres saber de todo y otras veces de algunas cosas nada más.",
+    sideNavNewsText2: "Los periódicos de siempre están divididos por secciones: Política, Internacional, Deportes, Sociedad, etc.",
+    sideNavNewsText3: "Yo puedo buscar los titulares más candentes de todas las secciones o solo de las que más te interesan.",
+    sideNavNewsText4: "Antes de pulsar el botón \"Titulares\" pulsa \"Secciones\" y escoge entre",
+    sideNavNewsText5: "Actualidad, Cotilleo, Deporte, Política, TV y entretenimiento",
+    sideNavNewsText6: "¡Puedes marcar uno, varios o todos. Cómo tú quieras!",
+
+    // SideNav — Panel Hablar
+    sideNavTalkTitleText: "Te oigo y me oyes",
+    sideNavTalkText1: "¡Este es el botón que más usarás!",
+    sideNavTalkText2: "Pulsa \"Hablar\" cuando quieras que hablemos como si me llamas por teléfono.",
+    sideNavTalkText3: "La primera vez que me llames te pediré permiso para usar tu micrófono. Selecciona",
+    sideNavTalkText4: "Mientras contesto, verás una señal amarilla animada que dice \"Conectando\". Cuando veas \"Hablando con iaBrenda\" y el círculo redondo rojo de colgar, ¡podemos hablar!",
+    sideNavTalkText5: "Háblame con claridad en un lugar con poco ruido y entenderé perfectamente lo que me digas o preguntes.",
+    sideNavTalkText6: "Si pulsas el botón amarillo \"Inicia\" mientras hablamos, iniciaré la conversación con uno de tus temas favoritos.",
+    sideNavTalkText7: "Y, cuando quieras colgar, solo pulsa en el círculo rojo.",
+
+    // SideNav — Panel Escribir
+    sideNavWriteText1: "¡A veces es mejor escribir y leer!",
+    sideNavWriteText2: "Pulsa \"Escribir\" cuando quieras que nos comuniquemos por texto.",
+    sideNavWriteText3: "Sería como lo haces por WhatsApp, Telegram y las Redes Sociales.",
+    sideNavWriteText4: "Escribes en la ventanilla inferior que dice \"Escribe aquí\" y pulsa \"Enviar\".",
+    sideNavWriteText5: "Lo que escribes aparece arriba en los bloques verdes.",
+    sideNavWriteText6: "Verás lo que yo te contesto en los bloques blancos.",
+    sideNavWriteText7: "Si pulsas el botón amarillo \"Inicia\" mientras escribimos, iniciaré la conversación con uno de tus temas favoritos.",
+
     // I am Brenda Overlay
     brendaTitle: "Soy iaBrenda",
     brendaSubtitle: "Tu compañera amistosa. Disponible siempre que quieras conversar",
@@ -896,11 +1065,11 @@ const STRINGS = {
       <p>Considérame una buena amiga, una vecina cercana, una compañera del trabajo. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu dí­a, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
       <p>También puedo ayudarte con las preguntas típicas del día a día, como por ejemplo:</p>
       <ul>
-        <li>¿Qué tiempo hace hoy?</li>
+        <li>¿Lloverá mañana?</li>
         <li>¿Qué hora es?</li>
-        <li>¿Qué te toca tomar esta tarde?</li>
-        <li>¿Cual es la noticia del momento?</li>
-        <li>y mucho más</li>
+        <li>¿Qué me toca tomar esta tarde?</li>
+        <li>Dime lo último en la prensa</li>
+        <li>y mucho más...</li>
       </ul>
       <p>Con el tiempo, nos iremos conociendo mejor y nuestras conversaciones serán más personales y cercanas.</p>
       <p>Estoy aquí­ para darte más que información. Fui creada para ofrecerte compañía, apoyo emocional y conversación amistosa siempre que lo desees.</p>
@@ -975,9 +1144,9 @@ const STRINGS = {
     medNotifBtn: "Activar",
 
     // News & Gossip
-    latestBtn: "Noticias",
-    latestTitle: "Noticias",
-    latestSubtitle: "Elige los temas que quieres seguir",
+    latestBtn: "Secciones",
+    latestTitle: "Secciones",
+    latestSubtitle: "Elige las secciones de noticias que quieres que yo siga",
     latestSave: "Guardar",
     latestCancel: "Cancelar",
     latestSaved: "Guardado",
@@ -987,7 +1156,7 @@ const STRINGS = {
     latestCatSport: "Deporte",
     latestCatPolitica: "Política",
     latestCatTv: "TV y entretenimiento",
-    headlinesBtn: "Actuales",
+    headlinesBtn: "Titulares",
     headlinesTitle: "Portadas Top",
     headlinesLegendHot: "Viral",
     headlinesLegendWarm: "Tendencia",

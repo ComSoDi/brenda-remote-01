@@ -61,12 +61,14 @@ export class MedicationManager {
       changeReasonInput: document.getElementById("medChangeReasonInput"),
       timezoneInput:     document.getElementById("medTimezoneInput"),
       formCancelBtn:     document.getElementById("medFormCancelBtn"),
+      formCloseBtn:      document.getElementById("medFormCloseBtn"),
       formScheduleBtn:   document.getElementById("medFormScheduleBtn"),
       formSaveBtn:       document.getElementById("medFormSaveBtn"),
       formStatus:        document.getElementById("medFormStatus"),
       // schedule
       schedule:          document.getElementById("medSchedule"),
       scheduleTitle:     document.getElementById("medScheduleTitle"),
+      scheduleCloseBtn:  document.getElementById("medScheduleCloseBtn"),
       scheduleContent:   document.getElementById("medScheduleContent"),
       scheduleBackBtn:   document.getElementById("medScheduleBackBtn"),
       schedulePrintBtn:  document.getElementById("medSchedulePrintBtn"),
@@ -603,11 +605,15 @@ ${content}
       this._showPanel(this.medications.length ? "main" : "disclaimer");
     });
 
+    this._els.formCloseBtn?.addEventListener("click", () => this.close());
+
     this._els.formScheduleBtn?.addEventListener("click", () => this._openSchedule());
 
     this._els.formSaveBtn?.addEventListener("click", () => this._saveForm());
 
     // Schedule
+    this._els.scheduleCloseBtn?.addEventListener("click", () => this.close());
+
     this._els.scheduleBackBtn?.addEventListener("click", () => {
       this._showPanel(this.medications.length ? "main" : "form");
     });

@@ -1,6 +1,6 @@
 // api/weather.js
 // Fetch weather data from OpenWeatherMap API
-import { requireSession } from "../lib/auth.js";
+import { requireSession, setSessionCookie } from "../lib/auth.js";
 import { getDb } from "../lib/mongo.js";
 
 function json(res, status, body) {
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
 
   try {
     const body = await readBody(req);
-    const { action, city, state, country, lat, lon, skipSavedLocation } = body;
+    const { action, city, state, country, lat, lon, skipSavedLocation, gender } = body;
 
     const db = await getDb();
 
@@ -238,6 +238,8 @@ export default async function handler(req, res) {
       const shouldPersistLocation =
         (effectiveSaveLocation && weatherCity && weatherLat && weatherLon) || needsCountryUpdate;
 
+      const validGender = ["Woman", "Man", "Other"].includes(gender) ? gender : null;
+
       if (shouldPersistLocation) {
         console.log(
           needsCountryUpdate
@@ -256,8 +258,17 @@ export default async function handler(req, res) {
             lon: weatherLon,
           });
           console.log("✅ Location saved successfully to MongoDB");
+
+          if (validGender && !s.isAnonymous) {
+            await db.collection("users").updateOne(
+              { userId: s.userId },
+              { $set: { "preferences.gender": validGender } }
+            );
+            setSessionCookie(res, { ...s, gender: validGender, iat: Date.now() });
+            console.log("✅ Gender saved:", validGender);
+          }
         } catch (error) {
-          console.error("❌ Failed to save location:", error.message);
+          console.error("❌ Failed to save:", error.message);
           console.error(error);
         }
       } else {
@@ -280,6 +291,7 @@ export default async function handler(req, res) {
 
       return json(res, 200, {
         ok: true,
+        savedGender: validGender || null,
         location: {
           city: weatherCity,
           state: weatherState,

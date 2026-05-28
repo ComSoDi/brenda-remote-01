@@ -117,8 +117,8 @@ body {
   width: 100px;
   padding: 6px 6px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: #bfe1f8;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
   color: #0f172a;
   font-weight: 700;
   font-size: 16px;
@@ -164,8 +164,8 @@ body {
   padding: 2px 6px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.12);
-  background: #fff;
-  color: #0f172a;
+  background: #ff0121;
+  color: #fff;
   font-weight: 700;
   font-size: 16px;
   cursor: pointer;
@@ -176,6 +176,7 @@ body {
 
 .help-btn:hover {
   background: #7eff7e;
+  color: #000;
   border-color: rgba(27, 148, 78, 0.32);
 }
 
@@ -437,7 +438,7 @@ body {
 /* ========================================================
 .btn-toggle-talk:hover,
 .btn-toggle-text:hover {
-  background:#7eff7e;
+  background: #8c25d3;
   border-color:rgba(27, 148, 78, 0.32);
   color: #2b2b2b; 
 }
@@ -451,8 +452,8 @@ body {
 }
 
 .btn-connect-talk {
-  background: #16a34a;
-  color: #fff;
+  background: #ffb278;
+  color: #000;
 }
 
 .btn-disconnect-talk {
@@ -461,7 +462,7 @@ body {
 }
 
 .btn-connect-text {
-  background: #5b5db1;
+  background: #8c25d3;
   color: #fff;
 }
 
@@ -761,8 +762,8 @@ body {
   height: 32px;
   padding: 6px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #d9d9d9;
+  background: #fff;
   color: #0f172a;
   font-weight: 700;
   font-size: 16px;
@@ -771,10 +772,10 @@ body {
 
 .account-btn:hover {
   background: #7eff7e;
-  border-color: rgba(27, 148, 78, 0.32);
+  border-color: #d9d9d9;
 }
 
-.location-btn {
+.my-info-btn {
   flex-shrink: 0;
   height: 32px;
   padding: 6px 12px;
@@ -787,7 +788,7 @@ body {
   cursor: pointer;
 }
 
-.location-btn:hover {
+.my-info-btn:hover {
   background: #7eff7e;
   border-color: rgba(27, 148, 78, 0.32);
 }
@@ -834,17 +835,8 @@ body {
 /* Optional close button (if you show it) */
 .auth-close {
   position: absolute;
-  /* Was relative */
   top: 15px;
   right: 15px;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: #fff;
-  color: #111;
-  font-size: 22px;
-  cursor: pointer;
 }
 
 /* =========================================================
@@ -1377,13 +1369,13 @@ body {
   border: none;
   cursor: pointer;
 
-  background: linear-gradient(90deg, #17BF5A 0%, #2F7CF1 100%);
+  background: #17BF5A;
   color: #fff;
 
   font-family: "Open Sans", sans-serif;
   /* Semi-Bold 600 */
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: 800;
+  font-size: 20px;
 
   margin-top: 4px;
   /* Was 6px */
@@ -1479,9 +1471,9 @@ body {
 }
 
 /* =========================================================
-   12) SUBJECTS OVERLAY
+   12) POPUP OVERLAY (shared by subjects, myInfo, latest, headlines, med panels)
 ========================================================= */
-.subjects-overlay {
+.popup-overlay {
   position: absolute;
   inset: 0;
   z-index: 70;
@@ -1491,7 +1483,7 @@ body {
   background: rgba(0, 0, 0, 0.45);
 }
 
-.subjects-card {
+.popup-card {
   width: min(90vw, 320px);
   background: #ffffff;
   border: 1px solid #d4d4d8;
@@ -1503,31 +1495,37 @@ body {
   gap: 10px;
 }
 
-.subjects-card-header {
+.popup-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.subjects-card-header h1 {
+.popup-card-header h1 {
   margin: 0;
   font-size: 20px;
   color: #111;
 }
 
-.subjects-close-btn {
+.popup-close-btn,
+.sidenav-close-x {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.22);
   background: #fff;
   color: #111;
-  font-size: 18px;
+  font-size: 26px;
+  line-height: 1;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
-.subjects-subtitle {
+.popup-subtitle {
   margin: 0 0 4px;
   font-size: 14px;
   color: #444;
@@ -1535,13 +1533,13 @@ body {
   line-height: 1.3;
 }
 
-.subjects-form {
+.popup-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.subject-field {
+.popup-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1549,12 +1547,12 @@ body {
   color: #333;
 }
 
-.subject-label {
+.popup-label {
   font-weight: 700;
   color: #1f2937;
 }
 
-.subject-field input {
+.popup-field input {
   height: 42px;
   border-radius: 10px;
   border: 1px solid #cbd5e1;
@@ -1564,7 +1562,7 @@ body {
   background: #fff;
 }
 
-.subject-field select {
+.popup-field select {
   height: 42px;
   border-radius: 10px;
   border: 1px solid #cbd5e1;
@@ -1577,14 +1575,14 @@ body {
   appearance: none;
 }
 
-.subjects-actions {
+.popup-actions {
   display: flex;
   gap: 10px;
   margin-top: 8px;
 }
 
-.subjects-btn-cancel,
-.subjects-btn-save {
+.popup-btn-cancel,
+.popup-btn-save {
   flex: 1;
   height: 44px;
   border-radius: 10px;
@@ -1594,18 +1592,18 @@ body {
   font-size: 15px;
 }
 
-.subjects-btn-cancel {
+.popup-btn-cancel {
   background: #f3f4f6;
   color: #111827;
   border-color: #e5e7eb;
 }
 
-.subjects-btn-save {
-  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
+.popup-btn-save {
+  background: linear-gradient(90deg, #22c55e 0%, #2f7cf1 100%);
   color: #fff;
 }
 
-.subjects-status {
+.popup-status {
   min-height: 18px;
   font-size: 12px;
   color: #2563eb;
@@ -1633,9 +1631,9 @@ body {
   height: 32px;
   width: 100px;
   padding: 6px 6px;
-  background: #bfe1f8;
+  background: #fff;
   color: #0f172a;
-  border: 1px solid rgba(0,0,0,0.12);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 8px;
   font-size: 16px;
   font-weight: 700;
@@ -1655,9 +1653,8 @@ body {
   height: 32px;
   width: 100px;
   padding: 6px 6px;
-  background: #ffff00;
-  background: #db2777;
-  color: #ffffff;
+  background: #ff74c4;
+  color: #000;
   
   border: 1px solid #e0cc00;
   border-radius: 8px;
@@ -2028,22 +2025,6 @@ body {
   color: #1a1a2e;
 }
 
-.sidenav-close-x {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  background: #fff;
-  border-radius: 50%;
-  border: 1px solid #bbb;
-  font-size: 15px;
-  font-weight: 800;
-  color: #1a1a2e;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
 /* Intro text (sideNavHome only) */
 .sidenav-intro {
   text-align: center;
@@ -2106,14 +2087,18 @@ body {
   font-family: inherit;
 }
 
-.snp-light      { background: #f5f5f5;  color: #1a1a2e; }
-.snp-salmon     { background: #F4A460;  color: #1a1a2e; }
-.snp-blue       { background: #ADD8E6;  color: #1a1a2e; }
-.snp-yellow     { background: #FFD700;  color: #1a1a2e; }
-.snp-periwinkle { background: #b0c4de;  color: #1a1a2e; }
-.snp-magenta    { background: #FF1493;  color: #fff;    }
-.snp-green      { background: #228B22;  color: #fff;    }
-.snp-purple     { background: #6A0DAD;  color: #fff;    }
+.snp-light        { background: #f5f5f5;  color: #1a1a2e; }
+.snp-salmon       { background: #F4A460;  color: #1a1a2e; }
+.snp-light-blue   { background: #B7DDF8;  color: #1a1a2e; }
+.snp-blue         { background: #ADD8E6;  color: #1a1a2e; }
+.snp-dark-blue    { background: #5B5DB1;  color: #fff; }
+.snp-fucsia-pink  { background: #F700F7;  color: #1a1a2e; }
+.snp-yellow       { background: #FFFF00;  color: #1a1a2e; }
+.snp-periwinkle   { background: #b0c4de;  color: #1a1a2e; }
+.snp-magenta      { background: #FF1493;  color: #fff;    }
+.snp-green        { background: #228B22;  color: #fff;    }
+.snp-red          { background: #ff0019;  color: #fff;    }
+.snp-purple       { background: #6A0DAD;  color: #fff;    }
 
 /* ── Detail panel title row ───────────────────────────────────────────── */
 
@@ -2162,19 +2147,30 @@ body {
   margin: 4px 0;
 }
 
-.sidenav-img-wrap {
+.sidenav-round-img-wrap {
   display: flex;
   justify-content: center;
   margin: 6px 0;
 }
 
-.sidenav-img-wrap img {
+.sidenav-round-img-wrap img {
   width: 84px;
   height: 84px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid rgba(255,255,255,0.8);
   box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.sidenav-rectangular-img-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 6px 0;
+}
+
+.sidenav-rectangular-img-wrap img {
+  height: 42px;
+  width: auto;
 }
 
 @media (max-width: 720px) {

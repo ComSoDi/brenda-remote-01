@@ -8,13 +8,25 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+async function readBody(req) {
+  if (req.body && typeof req.body === "object") return req.body;
+  return new Promise((resolve, reject) => {
+    let raw = "";
+    req.on("data", (c) => (raw += c));
+    req.on("end", () => {
+      try { resolve(JSON.parse(raw || "{}")); } catch { resolve({}); }
+    });
+    req.on("error", reject);
+  });
+}
+
 export default async function handler(req, res) {
   const s = getSession(req);
 
   // PATCH — update gender preference
   if (req.method === "PATCH") {
     if (!s?.userId || s.isAnonymous) return json(res, 401, { error: "Unauthorized" });
-    const { gender } = req.body || {};
+    const { gender } = await readBody(req);
     if (!["Woman", "Man", "Other"].includes(gender)) return json(res, 400, { error: "Invalid gender" });
     try {
       const db = await getDb();

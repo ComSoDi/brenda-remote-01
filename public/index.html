@@ -29,7 +29,7 @@
           <div class="header-top">
             <h1>Soy iaBrenda</h1>
             <div class="header-top-buttons">
-              <button id="locationBtn" class="location-btn" type="button"></button>
+              <button id="myInfoBtn" class="my-info-btn" type="button"></button>
               <button id="accountBtn" class="account-btn" type="button"></button>
             </div>
           </div>
@@ -169,7 +169,7 @@
     <!-- AUTH OVERLAY (Sign in / Sign up) -->
     <div id="authOverlay" class="auth-overlay hidden" aria-hidden="true">
       <div class="auth-card">
-        <button id="authCloseBtn" class="auth-close hidden" type="button" aria-label="Close">×</button>
+        <button id="authCloseBtn" class="popup-close-btn auth-close hidden" type="button" aria-label="Close">×</button>
 
         <div class="auth-top">
           <img src="images/brenda-avatar.png" alt="Brenda" class="auth-avatar" />
@@ -200,42 +200,42 @@
     </div>
 
     <!-- SUBJECTS POPUP -->
-    <div id="subjectsOverlay" class="subjects-overlay hidden" aria-hidden="true">
-      <div class="subjects-card" role="dialog" aria-modal="true" aria-labelledby="subjectsTitle">
-        <div class="subjects-card-header">
+    <div id="subjectsOverlay" class="popup-overlay hidden" aria-hidden="true">
+      <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="subjectsTitle">
+        <div class="popup-card-header">
           <h1 id="subjectsTitle"></h1>
-          <button id="subjectsCloseBtn" class="subjects-close-btn" type="button" aria-label="Close">×</button>
+          <button id="subjectsCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
         </div>
-        <h2 id="subjectsSubtitle" class="subjects-subtitle"></h2>
+        <h2 id="subjectsSubtitle" class="popup-subtitle"></h2>
 
-        <form id="subjectsForm" class="subjects-form">
-          <label class="subject-field">
-            <span id="subjectLabel1" class="subject-label"></span>
+        <form id="subjectsForm" class="popup-form">
+          <label class="popup-field">
+            <span id="subjectLabel1" class="popup-label"></span>
             <input id="subjectInput1" name="subject1" type="text" maxlength="120" />
           </label>
-          <label class="subject-field">
-            <span id="subjectLabel2" class="subject-label"></span>
+          <label class="popup-field">
+            <span id="subjectLabel2" class="popup-label"></span>
             <input id="subjectInput2" name="subject2" type="text" maxlength="120" />
           </label>
-          <label class="subject-field">
-            <span id="subjectLabel3" class="subject-label"></span>
+          <label class="popup-field">
+            <span id="subjectLabel3" class="popup-label"></span>
             <input id="subjectInput3" name="subject3" type="text" maxlength="120" />
           </label>
-          <label class="subject-field">
-            <span id="subjectLabel4" class="subject-label"></span>
+          <label class="popup-field">
+            <span id="subjectLabel4" class="popup-label"></span>
             <input id="subjectInput4" name="subject4" type="text" maxlength="120" />
           </label>
-          <label class="subject-field">
-            <span id="subjectLabel5" class="subject-label"></span>
+          <label class="popup-field">
+            <span id="subjectLabel5" class="popup-label"></span>
             <input id="subjectInput5" name="subject5" type="text" maxlength="120" />
           </label>
         </form>
 
-        <div class="subjects-actions">
-          <button id="subjectsCancelBtn" class="subjects-btn-cancel" type="button"></button>
-          <button id="subjectsSaveBtn" class="subjects-btn-save" type="button"></button>
+        <div class="popup-actions">
+          <button id="subjectsCancelBtn" class="popup-btn-cancel" type="button"></button>
+          <button id="subjectsSaveBtn" class="popup-btn-save" type="button"></button>
         </div>
-        <div id="subjectsStatus" class="subjects-status" role="status" aria-live="polite"></div>
+        <div id="subjectsStatus" class="popup-status" role="status" aria-live="polite"></div>
       </div>
     </div>
 
@@ -265,44 +265,44 @@
       </div>
     </div>
 
-    <!-- LOCATION OVERLAY -->
-    <div id="locationOverlay" class="subjects-overlay hidden" aria-hidden="true">
-      <div class="subjects-card" role="dialog" aria-modal="true" aria-labelledby="locationTitle">
-        <div class="subjects-card-header">
-          <h1 id="locationTitle"></h1>
-          <button id="locationCloseBtn" class="subjects-close-btn" type="button" aria-label="Close">×</button>
+    <!-- MY INFO OVERLAY -->
+    <div id="myInfoOverlay" class="popup-overlay hidden" aria-hidden="true">
+      <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="myInfoTitle">
+        <div class="popup-card-header">
+          <h1 id="myInfoTitle"></h1>
+          <button id="myInfoCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
         </div>
-        <h2 id="locationSubtitle" class="subjects-subtitle"></h2>
+        <h2 id="myInfoSubtitle" class="popup-subtitle"></h2>
 
-        <form id="locationForm" class="subjects-form">
-          <label class="subject-field">
-            <span id="locationTownLabel" class="subject-label"></span>
-            <input id="locationTownInput" name="town" type="text" maxlength="100" autocomplete="address-level2" />
+        <form id="myInfoForm" class="popup-form">
+          <label class="popup-field">
+            <span id="myInfoTownLabel" class="popup-label"></span>
+            <input id="myInfoTownInput" name="town" type="text" maxlength="100" autocomplete="address-level2" />
           </label>
-          <label class="subject-field">
-            <span id="locationStateLabel" class="subject-label"></span>
-            <input id="locationStateInput" name="state" type="text" maxlength="100" autocomplete="address-level1" />
+          <label class="popup-field">
+            <span id="myInfoStateLabel" class="popup-label"></span>
+            <input id="myInfoStateInput" name="state" type="text" maxlength="100" autocomplete="address-level1" />
           </label>
-          <label class="subject-field">
-            <span id="locationCountryLabel" class="subject-label"></span>
-            <input id="locationCountryInput" name="country" type="text" maxlength="100" autocomplete="country-name" />
+          <label class="popup-field">
+            <span id="myInfoCountryLabel" class="popup-label"></span>
+            <input id="myInfoCountryInput" name="country" type="text" maxlength="100" autocomplete="country-name" />
           </label>
-          <label class="subject-field">
-            <span id="locationGenderLabel" class="subject-label"></span>
-            <select id="locationGender" class="location-gender-select">
-              <option value="" id="locationGenderDefault" style="display:none"></option>
-              <option value="Woman" id="locationGenderWoman"></option>
-              <option value="Man" id="locationGenderMan"></option>
-              <option value="Other" id="locationGenderOther"></option>
+          <label class="popup-field">
+            <span id="myInfoGenderLabel" class="popup-label"></span>
+            <select id="myInfoGender" class="my-info-gender-select">
+              <option value="" id="myInfoGenderDefault" style="display:none"></option>
+              <option value="Woman" id="myInfoGenderWoman"></option>
+              <option value="Man" id="myInfoGenderMan"></option>
+              <option value="Other" id="myInfoGenderOther"></option>
             </select>
           </label>
         </form>
 
-        <div class="subjects-actions">
-          <button id="locationCancelBtn" class="subjects-btn-cancel" type="button"></button>
-          <button id="locationSaveBtn" class="subjects-btn-save" type="button"></button>
+        <div class="popup-actions">
+          <button id="myInfoCancelBtn" class="popup-btn-cancel" type="button"></button>
+          <button id="myInfoSaveBtn" class="popup-btn-save" type="button"></button>
         </div>
-        <div id="locationStatus" class="subjects-status" role="status" aria-live="polite"></div>
+        <div id="myInfoStatus" class="popup-status" role="status" aria-live="polite"></div>
       </div>
     </div>
 
@@ -321,7 +321,7 @@
         <div id="medMain" class="med-panel" style="display:none">
           <div class="med-panel-header">
             <h2 id="medMainTitle" class="med-panel-title"></h2>
-            <button id="medCloseBtn" class="med-close-btn" type="button" aria-label="Close">×</button>
+            <button id="medCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
           </div>
           <p id="medPersistentNote" class="med-persistent-note"></p>
           <div id="medNotifPrompt" class="med-notif-prompt" style="display:none">
@@ -339,6 +339,7 @@
         <div id="medForm" class="med-panel med-form-panel" style="display:none">
           <div class="med-panel-header">
             <h2 id="medFormTitle" class="med-panel-title"></h2>
+            <button id="medFormCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
           </div>
 
           <!-- Correct / Record-change toggle (only when editing) -->
@@ -458,6 +459,10 @@
 
         <!-- ── SCHEDULE PANEL ── -->
         <div id="medSchedule" class="med-panel med-schedule-panel" style="display:none">
+          <div class="med-panel-header">
+            <h2 id="medScheduleTitle" class="med-panel-title"></h2>
+            <button id="medScheduleCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+          </div>
           <div id="medScheduleContent" class="med-schedule-content"></div>
           <div class="med-form-actions">
             <button id="medScheduleBackBtn"  class="med-secondary-btn" type="button"></button>
@@ -469,13 +474,13 @@
     </div>
 
     <!-- LATEST (MY NEWS CATEGORIES) OVERLAY -->
-    <div id="latestOverlay" class="subjects-overlay hidden" aria-hidden="true">
-      <div class="subjects-card" role="dialog" aria-modal="true" aria-labelledby="latestTitle">
-        <div class="subjects-card-header">
+    <div id="latestOverlay" class="popup-overlay hidden" aria-hidden="true">
+      <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="latestTitle">
+        <div class="popup-card-header">
           <h1 id="latestTitle"></h1>
-          <button id="latestCloseBtn" class="subjects-close-btn" type="button" aria-label="Close">×</button>
+          <button id="latestCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
         </div>
-        <h2 id="latestSubtitle" class="subjects-subtitle"></h2>
+        <h2 id="latestSubtitle" class="popup-subtitle"></h2>
 
         <div class="latest-categories">
           <label class="latest-cat-item">
@@ -500,22 +505,22 @@
           </label>
         </div>
 
-        <div class="subjects-actions">
-          <button id="latestCancelBtn" class="subjects-btn-cancel" type="button"></button>
-          <button id="latestSaveBtn" class="subjects-btn-save" type="button"></button>
+        <div class="popup-actions">
+          <button id="latestCancelBtn" class="popup-btn-cancel" type="button"></button>
+          <button id="latestSaveBtn" class="popup-btn-save" type="button"></button>
         </div>
-        <div id="latestStatus" class="subjects-status" role="status" aria-live="polite"></div>
+        <div id="latestStatus" class="popup-status" role="status" aria-live="polite"></div>
       </div>
     </div>
 
     <!-- HEADLINES OVERLAY -->
-    <div id="headlinesOverlay" class="subjects-overlay hidden" aria-hidden="true">
+    <div id="headlinesOverlay" class="popup-overlay hidden" aria-hidden="true">
       <div class="headlines-card" role="dialog" aria-modal="true" aria-labelledby="headlinesTitle">
 
         <!-- Header -->
-        <div class="subjects-card-header">
+        <div class="popup-card-header">
           <h1 id="headlinesTitle"></h1>
-          <button id="headlinesCloseBtn" class="subjects-close-btn" type="button" aria-label="Close">×</button>
+          <button id="headlinesCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
         </div>
 
         <!-- Heat tier legend -->
@@ -581,6 +586,31 @@
 
     <!-- SIDENAV CUENTA (detail) -->
     <div id="sideNavCuenta" class="sidenav-panel sidenav-detail" aria-hidden="true">
+      <div class="sidenav-inner"></div>
+    </div>
+
+    <!-- SIDENAV WRITE / ESCRIBIR (detail) -->
+    <div id="sideNavWrite" class="sidenav-panel sidenav-detail" aria-hidden="true">
+      <div class="sidenav-inner"></div>
+    </div>
+
+    <!-- SIDENAV TALK / HABLAR (detail) -->
+    <div id="sideNavTalk" class="sidenav-panel sidenav-detail" aria-hidden="true">
+      <div class="sidenav-inner"></div>
+    </div>
+
+    <!-- SIDENAV NEWS / SECCIONES (detail) -->
+    <div id="sideNavNews" class="sidenav-panel sidenav-detail" aria-hidden="true">
+      <div class="sidenav-inner"></div>
+    </div>
+
+    <!-- SIDENAV LATEST / TITULARES (detail) -->
+    <div id="sideNavLatest" class="sidenav-panel sidenav-detail" aria-hidden="true">
+      <div class="sidenav-inner"></div>
+    </div>
+
+    <!-- SIDENAV MIS TEMAS (detail) -->
+    <div id="sideNavMisTemas" class="sidenav-panel sidenav-detail" aria-hidden="true">
       <div class="sidenav-inner"></div>
     </div>
 

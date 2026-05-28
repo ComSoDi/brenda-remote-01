@@ -164,26 +164,26 @@ class BrendaApp {
       subjectsStatus: document.getElementById("subjectsStatus"),
 
       // Location UI
-      locationBtn: document.getElementById("locationBtn"),
-      locationOverlay: document.getElementById("locationOverlay"),
-      locationCloseBtn: document.getElementById("locationCloseBtn"),
-      locationTitle: document.getElementById("locationTitle"),
-      locationSubtitle: document.getElementById("locationSubtitle"),
-      locationTownLabel: document.getElementById("locationTownLabel"),
-      locationStateLabel: document.getElementById("locationStateLabel"),
-      locationCountryLabel: document.getElementById("locationCountryLabel"),
-      locationTownInput: document.getElementById("locationTownInput"),
-      locationStateInput: document.getElementById("locationStateInput"),
-      locationCountryInput: document.getElementById("locationCountryInput"),
-      locationCancelBtn: document.getElementById("locationCancelBtn"),
-      locationSaveBtn: document.getElementById("locationSaveBtn"),
-      locationStatus: document.getElementById("locationStatus"),
-      locationGender: document.getElementById("locationGender"),
-      locationGenderLabel: document.getElementById("locationGenderLabel"),
-      locationGenderDefault: document.getElementById("locationGenderDefault"),
-      locationGenderWoman: document.getElementById("locationGenderWoman"),
-      locationGenderMan: document.getElementById("locationGenderMan"),
-      locationGenderOther: document.getElementById("locationGenderOther"),
+      myInfoBtn: document.getElementById("myInfoBtn"),
+      myInfoOverlay: document.getElementById("myInfoOverlay"),
+      myInfoCloseBtn: document.getElementById("myInfoCloseBtn"),
+      myInfoTitle: document.getElementById("myInfoTitle"),
+      myInfoSubtitle: document.getElementById("myInfoSubtitle"),
+      myInfoTownLabel: document.getElementById("myInfoTownLabel"),
+      myInfoStateLabel: document.getElementById("myInfoStateLabel"),
+      myInfoCountryLabel: document.getElementById("myInfoCountryLabel"),
+      myInfoTownInput: document.getElementById("myInfoTownInput"),
+      myInfoStateInput: document.getElementById("myInfoStateInput"),
+      myInfoCountryInput: document.getElementById("myInfoCountryInput"),
+      myInfoCancelBtn: document.getElementById("myInfoCancelBtn"),
+      myInfoSaveBtn: document.getElementById("myInfoSaveBtn"),
+      myInfoStatus: document.getElementById("myInfoStatus"),
+      myInfoGender: document.getElementById("myInfoGender"),
+      myInfoGenderLabel: document.getElementById("myInfoGenderLabel"),
+      myInfoGenderDefault: document.getElementById("myInfoGenderDefault"),
+      myInfoGenderWoman: document.getElementById("myInfoGenderWoman"),
+      myInfoGenderMan: document.getElementById("myInfoGenderMan"),
+      myInfoGenderOther: document.getElementById("myInfoGenderOther"),
 
       // Help UI
       helpBtn: document.getElementById("helpBtn"),
@@ -276,7 +276,7 @@ class BrendaApp {
 
     // Subjects UI labels
     this.localizeSubjectsUI();
-    this.localizeLocationUI();
+    this.localizeMyInfoUI();
 
     // Mode button labels (i18n)
     if (this.elements.toggleBtnText) {
@@ -328,10 +328,10 @@ class BrendaApp {
     this.elements.subjectsSaveBtn?.addEventListener("click", () => this.onSubjectsSave());
 
     // Location overlay
-    this.elements.locationBtn?.addEventListener("click", () => this.onLocationButton());
-    this.elements.locationCloseBtn?.addEventListener("click", () => this.closeLocationOverlay());
-    this.elements.locationCancelBtn?.addEventListener("click", () => this.closeLocationOverlay());
-    this.elements.locationSaveBtn?.addEventListener("click", () => this.onLocationSave());
+    this.elements.myInfoBtn?.addEventListener("click", () => this.onMyInfoButton());
+    this.elements.myInfoCloseBtn?.addEventListener("click", () => this.closeMyInfoOverlay());
+    this.elements.myInfoCancelBtn?.addEventListener("click", () => this.closeMyInfoOverlay());
+    this.elements.myInfoSaveBtn?.addEventListener("click", () => this.onMyInfoSave());
 
     // Help button → opens new SideNav system
     this.elements.helpBtn?.addEventListener("click", () => this.openSideNavHome());
@@ -1034,39 +1034,39 @@ class BrendaApp {
   /* --------------------
      LOCATION OVERLAY
   -------------------- */
-  localizeLocationUI() {
+  localizeMyInfoUI() {
     const v = this.locale.variant;
-    if (this.elements.locationBtn) this.elements.locationBtn.textContent = t(v, "locationButton");
-    if (this.elements.locationTitle) this.elements.locationTitle.textContent = t(v, "locationTitle");
-    if (this.elements.locationSubtitle) this.elements.locationSubtitle.textContent = t(v, "locationSubtitle");
-    if (this.elements.locationTownLabel) this.elements.locationTownLabel.textContent = t(v, "locationTown");
-    if (this.elements.locationStateLabel) this.elements.locationStateLabel.textContent = t(v, "locationState");
-    if (this.elements.locationCountryLabel) this.elements.locationCountryLabel.textContent = t(v, "locationCountry");
-    if (this.elements.locationGenderLabel) this.elements.locationGenderLabel.textContent = t(v, "authGenderLabel");
-    if (this.elements.locationGenderDefault) this.elements.locationGenderDefault.textContent = t(v, "authGenderDefault");
-    if (this.elements.locationGenderWoman) this.elements.locationGenderWoman.textContent = t(v, "authGenderWoman");
-    if (this.elements.locationGenderMan) this.elements.locationGenderMan.textContent = t(v, "authGenderMan");
-    if (this.elements.locationGenderOther) this.elements.locationGenderOther.textContent = t(v, "authGenderOther");
-    if (this.elements.locationSaveBtn) this.elements.locationSaveBtn.textContent = t(v, "locationSave");
-    if (this.elements.locationCancelBtn) this.elements.locationCancelBtn.textContent = t(v, "locationCancel");
+    if (this.elements.myInfoBtn) this.elements.myInfoBtn.textContent = t(v, "myInfoButton");
+    if (this.elements.myInfoTitle) this.elements.myInfoTitle.textContent = t(v, "myInfoTitle");
+    if (this.elements.myInfoSubtitle) this.elements.myInfoSubtitle.textContent = t(v, "myInfoSubtitle");
+    if (this.elements.myInfoTownLabel) this.elements.myInfoTownLabel.textContent = t(v, "myInfoTown");
+    if (this.elements.myInfoStateLabel) this.elements.myInfoStateLabel.textContent = t(v, "myInfoState");
+    if (this.elements.myInfoCountryLabel) this.elements.myInfoCountryLabel.textContent = t(v, "myInfoCountry");
+    if (this.elements.myInfoGenderLabel) this.elements.myInfoGenderLabel.textContent = t(v, "authGenderLabel");
+    if (this.elements.myInfoGenderDefault) this.elements.myInfoGenderDefault.textContent = t(v, "authGenderDefault");
+    if (this.elements.myInfoGenderWoman) this.elements.myInfoGenderWoman.textContent = t(v, "authGenderWoman");
+    if (this.elements.myInfoGenderMan) this.elements.myInfoGenderMan.textContent = t(v, "authGenderMan");
+    if (this.elements.myInfoGenderOther) this.elements.myInfoGenderOther.textContent = t(v, "authGenderOther");
+    if (this.elements.myInfoSaveBtn) this.elements.myInfoSaveBtn.textContent = t(v, "myInfoSave");
+    if (this.elements.myInfoCancelBtn) this.elements.myInfoCancelBtn.textContent = t(v, "myInfoCancel");
   }
 
-  setLocationStatus(msg, isError = false) {
-    if (this.elements.locationStatus) {
-      this.elements.locationStatus.textContent = msg || "";
-      this.elements.locationStatus.style.color = isError ? "#b00020" : "#2563eb";
+  setMyInfoStatus(msg, isError = false) {
+    if (this.elements.myInfoStatus) {
+      this.elements.myInfoStatus.textContent = msg || "";
+      this.elements.myInfoStatus.style.color = isError ? "#b00020" : "#2563eb";
     }
   }
 
-  setLocationBusy(isBusy) {
-    [this.elements.locationTownInput, this.elements.locationStateInput, this.elements.locationCountryInput, this.elements.locationGender].forEach((el) => {
+  setMyInfoBusy(isBusy) {
+    [this.elements.myInfoTownInput, this.elements.myInfoStateInput, this.elements.myInfoCountryInput, this.elements.myInfoGender].forEach((el) => {
       if (el) el.disabled = isBusy;
     });
-    if (this.elements.locationSaveBtn) this.elements.locationSaveBtn.disabled = isBusy;
-    if (this.elements.locationCancelBtn) this.elements.locationCancelBtn.disabled = isBusy;
+    if (this.elements.myInfoSaveBtn) this.elements.myInfoSaveBtn.disabled = isBusy;
+    if (this.elements.myInfoCancelBtn) this.elements.myInfoCancelBtn.disabled = isBusy;
   }
 
-  async populateLocationForm() {
+  async populateMyInfoForm() {
     // Pre-fill with saved location if the user has one
     if (!this.user || this.user.isAnonymous) return;
     try {
@@ -1079,100 +1079,84 @@ class BrendaApp {
       if (!res.ok) return;
       const data = await res.json().catch(() => ({}));
       if (data?.location) {
-        if (this.elements.locationTownInput) this.elements.locationTownInput.value = data.location.city || "";
-        if (this.elements.locationStateInput) this.elements.locationStateInput.value = data.location.state || "";
-        if (this.elements.locationCountryInput) this.elements.locationCountryInput.value = data.location.country || "";
+        if (this.elements.myInfoTownInput) this.elements.myInfoTownInput.value = data.location.city || "";
+        if (this.elements.myInfoStateInput) this.elements.myInfoStateInput.value = data.location.state || "";
+        if (this.elements.myInfoCountryInput) this.elements.myInfoCountryInput.value = data.location.country || "";
       }
     } catch {
       // ignore — form stays empty
     }
     // Pre-fill gender from in-memory user state (no extra API call needed)
-    if (this.elements.locationGender) {
+    if (this.elements.myInfoGender) {
       const g = this.user.gender;
       const genderKey = { Woman: "authGenderWoman", Man: "authGenderMan", Other: "authGenderOther" }[g];
-      if (genderKey && this.elements.locationGenderDefault) {
-        this.elements.locationGenderDefault.value = g;
-        this.elements.locationGenderDefault.textContent = t(this.locale.variant, genderKey);
-        this.elements.locationGender.value = g;
+      if (genderKey && this.elements.myInfoGenderDefault) {
+        this.elements.myInfoGenderDefault.value = g;
+        this.elements.myInfoGenderDefault.textContent = t(this.locale.variant, genderKey);
+        this.elements.myInfoGender.value = g;
       }
     }
   }
 
-  async openLocationOverlay() {
-    const o = this.elements.locationOverlay;
+  async openMyInfoOverlay() {
+    const o = this.elements.myInfoOverlay;
     if (!o) return;
-    this.setLocationStatus("");
+    this.setMyInfoStatus("");
     // Clear fields first, then populate with saved data
-    if (this.elements.locationTownInput) this.elements.locationTownInput.value = "";
-    if (this.elements.locationStateInput) this.elements.locationStateInput.value = "";
-    if (this.elements.locationCountryInput) this.elements.locationCountryInput.value = "";
-    if (this.elements.locationGender) this.elements.locationGender.value = "";
+    if (this.elements.myInfoTownInput) this.elements.myInfoTownInput.value = "";
+    if (this.elements.myInfoStateInput) this.elements.myInfoStateInput.value = "";
+    if (this.elements.myInfoCountryInput) this.elements.myInfoCountryInput.value = "";
+    if (this.elements.myInfoGender) this.elements.myInfoGender.value = "";
     o.classList.remove("hidden");
     o.setAttribute("aria-hidden", "false");
-    await this.populateLocationForm();
-    setTimeout(() => this.elements.locationTownInput?.focus(), 30);
+    await this.populateMyInfoForm();
+    setTimeout(() => this.elements.myInfoTownInput?.focus(), 30);
   }
 
-  closeLocationOverlay() {
-    const o = this.elements.locationOverlay;
+  closeMyInfoOverlay() {
+    const o = this.elements.myInfoOverlay;
     if (!o) return;
     o.classList.add("hidden");
     o.setAttribute("aria-hidden", "true");
-    this.setLocationStatus("");
-    this.setLocationBusy(false);
+    this.setMyInfoStatus("");
+    this.setMyInfoBusy(false);
   }
 
-  onLocationButton() {
+  onMyInfoButton() {
     if (!this.user) {
       this.openAuthOverlay({ closable: false, resetFields: true });
       return;
     }
-    this.openLocationOverlay();
+    this.openMyInfoOverlay();
   }
 
-  async onLocationSave() {
+  async onMyInfoSave() {
     if (!this.user) {
       this.openAuthOverlay({ closable: false, resetFields: true });
       return;
     }
-    const city = (this.elements.locationTownInput?.value || "").trim();
-    const state = (this.elements.locationStateInput?.value || "").trim();
-    const country = (this.elements.locationCountryInput?.value || "").trim();
-    const gender = (this.elements.locationGender?.value || "").trim();
+    const city = (this.elements.myInfoTownInput?.value || "").trim();
+    const state = (this.elements.myInfoStateInput?.value || "").trim();
+    const country = (this.elements.myInfoCountryInput?.value || "").trim();
+    const gender = (this.elements.myInfoGender?.value || "").trim();
     const v = this.locale.variant;
 
     if (!city) {
-      this.setLocationStatus(t(v, "locationTown") + " is required", true);
-      this.elements.locationTownInput?.focus();
+      this.setMyInfoStatus(t(v, "myInfoTown") + " is required", true);
+      this.elements.myInfoTownInput?.focus();
       return;
     }
 
-    this.setLocationBusy(true);
-    this.setLocationStatus("");
+    this.setMyInfoBusy(true);
+    this.setMyInfoStatus("");
 
     try {
-      // Save gender if provided and user is not anonymous
-      if (gender && !this.user.isAnonymous) {
-        const gRes = await fetch("/api/auth/me", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ gender }),
-        });
-        if (!gRes.ok) {
-          const gData = await gRes.json().catch(() => ({}));
-          this.setLocationStatus(gData.error || t(v, "locationSaveError"), true);
-          return;
-        }
-        this.user.gender = gender;
-      }
-
-      // Save location
+      // Save location + gender in a single request
       const res = await fetch("/api/weather", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ action: "get_forecast", city, state, country, saveLocation: true }),
+        body: JSON.stringify({ action: "get_forecast", city, state, country, saveLocation: true, gender }),
       });
       const data = await res.json().catch(() => ({}));
 
@@ -1181,22 +1165,24 @@ class BrendaApp {
           const options = (data.candidates || [])
             .map((c) => [c.city, c.state, c.country].filter(Boolean).join(", "))
             .join(" / ");
-          this.setLocationStatus(`Multiple matches: ${options}. Please be more specific.`, true);
+          this.setMyInfoStatus(`Multiple matches: ${options}. Please be more specific.`, true);
         } else if (data.code === "city_not_found") {
-          this.setLocationStatus(v.startsWith("es") ? "Ciudad no encontrada. Intenta de nuevo." : "City not found. Please try again.", true);
+          this.setMyInfoStatus(v.startsWith("es") ? "Ciudad no encontrada. Intenta de nuevo." : "City not found. Please try again.", true);
         } else {
-          this.setLocationStatus(data.error || t(v, "locationSaveError"), true);
+          this.setMyInfoStatus(data.error || `HTTP ${res.status} – ${t(v, "myInfoSaveError")}`, true);
         }
         return;
       }
 
-      this.setLocationStatus(t(v, "locationSaved"));
-      setTimeout(() => this.closeLocationOverlay(), 600);
+      if (data.savedGender && this.user) this.user.gender = data.savedGender;
+
+      this.setMyInfoStatus(t(v, "myInfoSaved"));
+      setTimeout(() => this.closeMyInfoOverlay(), 600);
     } catch (e) {
       console.error(e);
-      this.setLocationStatus(e?.message || t(v, "locationSaveError"), true);
+      this.setMyInfoStatus(e?.message || t(v, "myInfoSaveError"), true);
     } finally {
-      this.setLocationBusy(false);
+      this.setMyInfoBusy(false);
     }
   }
 
@@ -1341,7 +1327,7 @@ class BrendaApp {
       <div class="sidenav-close-row">
         <button class="sidenav-close-btn js-snav-home-close">
           <span class="sidenav-close-label">${this._snEsc(t(v, "sideNavCloseLabel"))}</span>
-          <span class="sidenav-close-x">X</span>
+          <span class="sidenav-close-x">×</span>
         </button>
       </div>
       <p class="sidenav-intro">${this._snEsc(t(v, "sideNavIntro"))}</p>
@@ -1376,7 +1362,8 @@ class BrendaApp {
         </div>`;
       }
       if (block.type === "image") {
-        return `<div class="sidenav-img-wrap">
+        const imgWrap = block.wrapClass ?? "sidenav-round-img-wrap";
+        return `<div class="${imgWrap}">
           <img src="${block.src}" alt="Brenda" />
         </div>`;
       }
@@ -1387,7 +1374,7 @@ class BrendaApp {
       <div class="sidenav-close-row">
         <button class="sidenav-close-btn js-snav-detail-close">
           <span class="sidenav-close-label">${this._snEsc(t(v, "sideNavCloseLabel"))}</span>
-          <span class="sidenav-close-x">X</span>
+          <span class="sidenav-close-x">×</span>
         </button>
       </div>
       <div class="sidenav-title-row">
@@ -3094,19 +3081,18 @@ class BrendaApp {
   }
 }
 
-// ── SideNav Help Config ─────────────────────────────────────────────────────
-
+// ── SideNav Help Config ────── Change order of the pills here ────── 
 const SIDENAV_HOME_PILLS = [
   { pillKey: "sideNavPillHelp",     pillClass: "snp-light",      labelKey: "sideNavLabelHelp",     nav: null },
   { pillKey: "sideNavPillMyInfo",   pillClass: "snp-light",      labelKey: "sideNavLabelMyInfo",   nav: "miInfo" },
   // account pill is inserted here dynamically
   { pillKey: "sideNavPillTomas",    pillClass: "snp-salmon",     labelKey: "sideNavLabelTomas",    nav: "tomas" },
-  { pillKey: "sideNavPillMisTemas", pillClass: "snp-blue",       labelKey: "sideNavLabelMisTemas", nav: null },
   { pillKey: "sideNavPillInit",     pillClass: "snp-yellow",     labelKey: "sideNavLabelInit",     nav: "iniciaTu" },
-  { pillKey: "sideNavPillNews",     pillClass: "snp-periwinkle", labelKey: "sideNavLabelNews",     nav: null },
-  { pillKey: "sideNavPillLatest",   pillClass: "snp-magenta",    labelKey: "sideNavLabelLatest",   nav: null },
-  { pillKey: "sideNavPillTalk",     pillClass: "snp-green",      labelKey: "sideNavLabelTalk",     nav: null },
-  { pillKey: "sideNavPillWrite",    pillClass: "snp-purple",     labelKey: "sideNavLabelWrite",    nav: null },
+  { pillKey: "sideNavPillMisTemas", pillClass: "snp-light", labelKey: "sideNavLabelMisTemas", nav: "misTemas" },
+  { pillKey: "sideNavPillLatest",   pillClass: "snp-magenta",    labelKey: "sideNavLabelLatest",   nav: "latest" },
+  { pillKey: "sideNavPillNews",     pillClass: "snp-light", labelKey: "sideNavLabelNews",     nav: "news" },
+  { pillKey: "sideNavPillTalk",     pillClass: "snp-green",      labelKey: "sideNavLabelTalk",     nav: "talk" },
+  { pillKey: "sideNavPillWrite",    pillClass: "snp-dark-blue",  labelKey: "sideNavLabelWrite",    nav: "write" },
 ];
 
 const SIDENAV_DETAIL_CONFIGS = {
@@ -3174,6 +3160,73 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",  key: "sideNavAnonText8" },
     ],
   },
+  misTemas: {
+    pillKey:   "sideNavPillMisTemas",
+    pillClass: "snp-light-blue",
+    titleKey:  "sideNavLabelMisTemas",
+    blocks: [
+      { type: "text",  key: "sideNavMisTemasText1" },
+      { type: "text",  key: "sideNavMisTemasText2" },
+      { type: "text",  key: "sideNavMisTemasText3" },
+      { type: "text",  key: "sideNavMisTemasText4" },
+      { type: "text",     key: "sideNavMisTemasText5" },
+      { type: "pill-btn", key: "sideNavPillInit", pillClass: "snp-yellow" },
+    ],
+  },
+  write: {
+    pillKey:   "sideNavPillWrite",
+    pillClass: "snp-dark-blue",
+    titleKey:  "sideNavLabelWrite",
+    blocks: [
+      { type: "text", key: "sideNavWriteText1" },
+      { type: "text", key: "sideNavWriteText2" },
+      { type: "text", key: "sideNavWriteText3" },
+      { type: "text", key: "sideNavWriteText4" },
+      { type: "text", key: "sideNavWriteText5" },
+      { type: "text", key: "sideNavWriteText6" },
+      { type: "text", key: "sideNavWriteText7" },
+    ],
+  },
+  talk: {
+    pillKey:   "sideNavPillTalk",
+    pillClass: "snp-green",
+    titleKey:  "sideNavTalkTitleText",
+    blocks: [
+      { type: "text", key: "sideNavTalkText1" },
+      { type: "text", key: "sideNavTalkText2" },
+      { type: "text", key: "sideNavTalkText3" },
+      { type: "text", key: "sideNavTalkText4" },
+      { type: "text", key: "sideNavTalkText5" },
+      { type: "text", key: "sideNavTalkText6" },
+      { type: "text", key: "sideNavTalkText7" },
+    ],
+  },
+  news: {
+    pillKey:   "sideNavPillNews",
+    pillClass: "snp-light",
+    titleKey:  "sideNavNewsTitleText",
+    blocks: [
+      { type: "text", key: "sideNavNewsText1" },
+      { type: "text", key: "sideNavNewsText2" },
+      { type: "text", key: "sideNavNewsText3" },
+      { type: "text", key: "sideNavNewsText4" },
+      { type: "text", key: "sideNavNewsText5" },
+      { type: "text", key: "sideNavNewsText6" },
+    ],
+  },
+  latest: {
+    pillKey:   "sideNavPillLatest",
+    pillClass: "snp-magenta",
+    titleKey:  "sideNavLabelLatest",
+    blocks: [
+      { type: "text",  key: "sideNavLatestText1" },
+      { type: "text",  key: "sideNavLatestText2" },
+      { type: "text",  key: "sideNavLatestText3" },
+      { type: "text",  key: "sideNavLatestText4" },
+      { type: "text",     key: "sideNavLatestText5" },
+      { type: "pill-btn", key: "sideNavPillNews", pillClass: "snp-light" },
+    ],
+  },
   iniciaTu: {
     pillKey:  "sideNavPillInit",
     pillClass: "snp-yellow",
@@ -3185,7 +3238,7 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",  key: "sideNavInitText4" },
       { type: "text",  key: "sideNavInitText5" },
       { type: "text",  key: "sideNavInitText6" },
-      { type: "image", src: "images/mis_temas_01.png" },
+      { type: "image", src: "images/mis_temas_01.png", wrapClass: "sidenav-rectangular-img-wrap" },
     ],
   },
 };

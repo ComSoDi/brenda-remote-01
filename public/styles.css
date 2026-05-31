@@ -85,8 +85,7 @@ body {
 .header-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 6px;
 }
 
 .header-actions {
@@ -164,8 +163,8 @@ body {
 }
 
 .help-btn {
-  align-self: flex-start;
-  height: 45px;  
+  flex-shrink: 0;
+  height: 45px;
   width: 45px;
   font-size: 30px;
   padding: 2px 6px;
@@ -174,9 +173,7 @@ body {
   background: #ff0121;
   color: #fff;
   font-weight: 800;
-
   cursor: pointer;
-
   min-width: 26px;
   line-height: 1;
 }
@@ -761,15 +758,18 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-end;
 }
 
 .account-btn {
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
   height: 45px;
-  font-size: 24px;
-  width:fit-content;
-  max-width: 180px;
+  font-size: clamp(14px, 4vw, 24px);
+  width: fit-content;
+  max-width: clamp(80px, 28vw, 180px);
   padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid #d9d9d9;
@@ -777,6 +777,9 @@ body {
   color: #0f172a;
   font-weight: 700;
   cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .account-btn:hover {

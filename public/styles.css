@@ -68,8 +68,10 @@ body {
 .header-left {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  column-gap: 12px;
+  row-gap: 6px;
   width: 100%;
+  flex-wrap: wrap;
 }
 
 .header-title-block {
@@ -90,9 +92,10 @@ body {
 .header-actions {
   display: flex;
   align-items: center;
-  column-gap: 8px; 
+  column-gap: 8px;
   row-gap: 6px;
   flex-wrap: wrap;
+  flex-basis: 100%;
 }
 
 .avatar {

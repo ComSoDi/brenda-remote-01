@@ -768,7 +768,7 @@ const STRINGS = {
     sideNavWriteText7: "Si pulsas el botón amarillo \"Inicia\" mientras escribimos, iniciaré la conversación con uno de tus temas favoritos.",
 
     // I am Brenda Overlay
-    brendaTitle: "Soy iaBrenda",
+    brendaTitle: "iaBrenda",
     brendaSubtitle: "Tu compañera amistosa. Disponible para conversar siempre que quieras",
     brendaContent: `
       <p><strong>iaBrenda.com</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche, estés donde estés.</p>
@@ -1058,7 +1058,7 @@ const STRINGS = {
     sideNavWriteText7: "Si pulsas el botón amarillo \"Inicia\" mientras escribimos, iniciaré la conversación con uno de tus temas favoritos.",
 
     // I am Brenda Overlay
-    brendaTitle: "Soy iaBrenda",
+    brendaTitle: "iaBrenda",
     brendaSubtitle: "Tu compañera amistosa. Disponible siempre que quieras conversar",
     brendaContent: `
             <p><strong>iaBrenda.com</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche, estés donde estés.</p>

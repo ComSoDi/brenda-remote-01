@@ -9,6 +9,8 @@ import { ObjectId } from "mongodb";
 import { requireSession } from "../lib/auth.js";
 import { getDb } from "../lib/mongo.js";
 import { ObjectId } from "mongodb";
+import { randomUUID } from "crypto";
+import { recordChatUsage } from "../lib/usage.js";
 
 // Expanded time keywords — catches common natural language patterns in both languages
 const TIME_KEYWORDS = {
@@ -677,6 +679,19 @@ export default async function handler(req, res) {
 
     // Load conversation history from Mongo
     const db = await getDb();
+
+    // Usage tracking — one chatRequestId per HTTP request, callIndex per Gemini call
+    const chatRequestId = randomUUID();
+    let _callIdx = 0;
+    const _chatRecord = (d) => {
+      if (!d?.usageMetadata || !db) return;
+      recordChatUsage({
+        db, userId: session.userId, chatRequestId,
+        callIndex: _callIdx++, model: GEMINI_CHAT_MODEL,
+        usage: d.usageMetadata,
+      }).catch(e => console.error("[chat/usage]", e.message));
+    };
+
     const conv = await db.collection("conversations").findOne(
       { userId: session.userId },
       { projection: { messages: { $slice: -50 } } }
@@ -1002,6 +1017,7 @@ export default async function handler(req, res) {
                 const autoFormatText = await autoFormatR.text().catch(() => "{}");
                 let autoFormatData;
                 try { autoFormatData = JSON.parse(autoFormatText); } catch { autoFormatData = {}; }
+                _chatRecord(autoFormatData);
                 const { text: autoReplyText } = extractGemini(autoFormatData);
                 const autoReply = autoReplyText || (lang === "es" ? "No pude obtener el tiempo." : "I couldn't get the weather.");
                 const autoMsgs = [
@@ -1066,6 +1082,7 @@ export default async function handler(req, res) {
       const wFormatText = await weatherFormatR.text().catch(() => "{}");
       let wFormatData;
       try { wFormatData = JSON.parse(wFormatText); } catch { wFormatData = {}; }
+      _chatRecord(wFormatData);
       const { text: weatherReplyText } = extractGemini(wFormatData);
       const weatherReply = weatherReplyText || (lang === "es" ? "No pude obtener el tiempo." : "I couldn't get the weather.");
 
@@ -1116,6 +1133,7 @@ export default async function handler(req, res) {
       return json(res, 502, { error: "Bad JSON from Gemini", detail: raw.slice(0, 2000) });
     }
 
+    _chatRecord(data);
     const { text: geminiReplyText, functionCall, contentObj } = extractGemini(data);
     if (!contentObj) {
       return json(res, 502, { error: "No content in Gemini response", detail: data });
@@ -1157,6 +1175,7 @@ export default async function handler(req, res) {
         } catch {
           secondData = {};
         }
+        _chatRecord(secondData);
         const { text: secondReplyText } = extractGemini(secondData);
         const reply = secondReplyText || fallbackReply;
 

@@ -3,6 +3,7 @@ import express from "express";
 import { fileURLToPath } from "url";
 import path from "path";
 import dns from "dns";
+import { randomUUID } from "crypto";
 import { WebSocket, WebSocketServer } from "ws";
 import chatHandler from "./api/chat.js";
 import subjectsHandler from "./api/subjects.js";
@@ -24,6 +25,7 @@ import greetNewsHandler from "./api/brenda/greet.js";
 import searchHandler from "./api/brenda/search.js";
 import { getSession } from "./lib/auth.js";
 import { getDb } from "./lib/mongo.js";
+import { recordVoiceUsage } from "./lib/usage.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -180,11 +182,13 @@ server.on("upgrade", async (req, socket, head) => {
     }
     const locale = url.searchParams.get("locale") || "es-ES";
 
-    // Resolve gender + medications from session cookie / DB (non-fatal)
+    // Resolve userId, gender + medications from session cookie / DB (non-fatal)
     let gender = null;
     let activeMeds = [];
+    let userId = null;
     try {
       const session = getSession(req);
+      if (session?.userId) userId = session.userId;
       if (session?.gender) gender = session.gender;
       if (session?.userId && !session.isAnonymous) {
         const db = await getDb();
@@ -203,6 +207,7 @@ server.on("upgrade", async (req, socket, head) => {
     }
 
     wss.handleUpgrade(req, socket, head, (ws) => {
+      ws.userId = userId;
       ws.userLocale = locale;
       ws.userGender = gender;
       ws.activeMeds = activeMeds;
@@ -218,7 +223,12 @@ server.on("upgrade", async (req, socket, head) => {
 wss.on("connection", (ws) => {
   console.log("🔌 Proxy: Client connected. Opening Gemini upstream...");
 
-  const MODEL = process.env.GEMINI_LIVE_MODEL || process.env.GEMINI_MODEL || "gemini-2.5-flash-native-audio-preview-12-2025";
+  const voiceSessionId = randomUUID();
+  let voiceResponseCounter = 0;
+  const userId = ws.userId || null;
+  console.log(`[voice-proxy] session=${voiceSessionId} userId=${userId ?? "null"}`);
+
+  const MODEL = process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-12-2025";
   const modelPath = MODEL.startsWith("models/") ? MODEL : `models/${MODEL}`;
 
   const locale = ws.userLocale || "es-ES";
@@ -237,6 +247,10 @@ wss.on("connection", (ws) => {
     isReady = true;
     console.log(`✅ Gemini upstream ready — model: ${MODEL}, voice: ${VOICE}`);
 
+    const compressionTargetTokens = process.env.GEMINI_CONTEXT_COMPRESSION_TOKENS
+      ? Number(process.env.GEMINI_CONTEXT_COMPRESSION_TOKENS)
+      : null;
+
     const setupMessage = {
       setup: {
         model: modelPath,
@@ -252,6 +266,9 @@ wss.on("connection", (ws) => {
           parts: [{ text: systemText }]
         },
         tools: [{ google_search: {} }],
+        ...(compressionTargetTokens
+          ? { context_window_compression: { sliding_window: { target_tokens: compressionTargetTokens } } }
+          : {}),
       }
     };
     geminiWs.send(JSON.stringify(setupMessage));
@@ -275,6 +292,15 @@ wss.on("connection", (ws) => {
       const parsed = JSON.parse(text);
       if (parsed?.error) {
         console.error("❌ Gemini upstream error payload:", JSON.stringify(parsed.error));
+      }
+      if (parsed?.usageMetadata) {
+        console.log(`[voice-proxy] usageMetadata seen userId=${userId ?? "null"}`, JSON.stringify(parsed.usageMetadata));
+      }
+      if (parsed?.usageMetadata && userId) {
+        const responseId = `${voiceSessionId}_${voiceResponseCounter++}`;
+        getDb()
+          .then(db => db && recordVoiceUsage({ db, userId, voiceSessionId, responseId, model: MODEL, usage: parsed.usageMetadata }))
+          .catch(e => console.error("[voice-proxy/usage]", e.message));
       }
     } catch { }
     if (ws.readyState === WebSocket.OPEN) {

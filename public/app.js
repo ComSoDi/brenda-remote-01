@@ -30,13 +30,14 @@ class BrendaApp {
     this._pendingUserTranscript = "";
     this._lastVoiceStatus = "disconnected";
     this._voiceGreetingSent = false;
+    this._voiceGreetingEverSent = false; // true once spoken; not reset on reconnect
     this._voiceGreetingTimer = null;
     this._voiceGreetingDelayMs = 3000;
 
     // Greeting state — populated by checkAndShowGreeting() after auth.
     this._greetingType  = null;   // "full" | "short" | "none" | null (null = unchecked)
     this._greetingText  = null;   // pre-built greeting string
-    this._greetingShown = false;  // true once shown in any channel (prevents double-show)
+    this._greetingShown = false;  // true once shown in text channel
 
     // Heartbeat handles — cleared by stopGreetingHeartbeat()
     this._heartbeatInterval  = null;
@@ -2446,6 +2447,7 @@ class BrendaApp {
 
   async maybeSendVoiceGreeting() {
     if (this._voiceGreetingSent) return;
+    if (this._voiceGreetingEverSent) return;
 
     // Use the server-determined greeting type, populated by checkAndShowGreeting().
     // _greetingType is null if the checkin hasn't resolved yet; in that case skip.
@@ -2454,13 +2456,11 @@ class BrendaApp {
       return;
     }
 
-    // Already shown in text mode — don't repeat in voice.
-    if (this._greetingShown) return;
-
     const greetingText = this._greetingText;
     if (!greetingText) return;
 
     this._voiceGreetingSent = true;
+    this._voiceGreetingEverSent = true;
     this._greetingShown = true;
 
     try {
@@ -2894,8 +2894,9 @@ class BrendaApp {
       const data = await this.apiJSON("/api/greeting", { method: "GET" });
       const greetingType = data?.greetingType || "none";
 
-      this._greetingType  = greetingType;
-      this._greetingShown = false;
+      this._greetingType        = greetingType;
+      this._greetingShown       = false;
+      this._voiceGreetingEverSent = false;
 
       // Deliver pending medication reminders (non-fatal)
       if (data?.pendingReminders?.length) {

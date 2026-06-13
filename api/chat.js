@@ -682,11 +682,12 @@ export default async function handler(req, res) {
 
     // Usage tracking — one chatRequestId per HTTP request, callIndex per Gemini call
     const chatRequestId = randomUUID();
+    const chatSessionId = typeof body.chatSessionId === "string" ? body.chatSessionId : null;
     let _callIdx = 0;
     const _chatRecord = (d) => {
       if (!d?.usageMetadata || !db) return;
       recordChatUsage({
-        db, userId: session.userId, chatRequestId,
+        db, userId: session.userId, chatRequestId, chatSessionId,
         callIndex: _callIdx++, model: GEMINI_CHAT_MODEL,
         usage: d.usageMetadata,
       }).catch(e => console.error("[chat/usage]", e.message));

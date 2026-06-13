@@ -39,6 +39,10 @@ class BrendaApp {
     this._greetingText  = null;   // pre-built greeting string
     this._greetingShown = false;  // true once shown in text channel
 
+    // Chat session ID — groups all chat requests in one continuous visit.
+    // Reset on new day / 12-hour gap (same threshold as greeting logic).
+    this._chatSessionId = null;
+
     // Heartbeat handles — cleared by stopGreetingHeartbeat()
     this._heartbeatInterval  = null;
     this._visibilityHandler  = null;
@@ -2294,6 +2298,7 @@ class BrendaApp {
   }
 
   async chatRequest(payload, timeoutMs = 25000) {
+    if (this._chatSessionId) payload.chatSessionId = this._chatSessionId;
     const controller = new AbortController();
     const to = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -2894,9 +2899,12 @@ class BrendaApp {
       const data = await this.apiJSON("/api/greeting", { method: "GET" });
       const greetingType = data?.greetingType || "none";
 
-      this._greetingType        = greetingType;
-      this._greetingShown       = false;
+      this._greetingType          = greetingType;
+      this._greetingShown         = false;
       this._voiceGreetingEverSent = false;
+      if (greetingType !== "none" || !this._chatSessionId) {
+        this._chatSessionId = crypto.randomUUID();
+      }
 
       // Deliver pending medication reminders (non-fatal)
       if (data?.pendingReminders?.length) {

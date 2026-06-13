@@ -1,0 +1,225 @@
+:root {
+  --color-voice:        #00FF00;
+  --color-chat:         #00FFFF;
+  --color-totals:       #FFFF00;
+  --color-thoughts:     #FF9900;
+  --color-border:       #ccc;
+  --color-border-outer: #999;
+  --color-bg:           #ffffff;
+  --color-text:         #000000;
+  --color-pagination-bg:#f5f5f5;
+  --color-model-bg:     #ffffff;
+  --font-size-table:    11px;
+  --font-size-header:   17px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  padding: 16px;
+}
+
+/* ── Page title ─────────────────────────────────────────── */
+h1.page-title {
+  font-size: var(--font-size-header);
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+/* ── Filter bar ─────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.filter-bar label {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.filter-bar .filter-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filter-bar input[type="datetime-local"],
+.filter-bar select {
+  border: 1px solid #bbb;
+  background: #fff;
+  padding: 3px 6px;
+  font-size: 13px;
+  height: 26px;
+}
+
+.filter-bar select {
+  padding-right: 22px;
+  appearance: auto;
+}
+
+#user-filter-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+#user-filter-wrap .filter-triangle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 10px;
+}
+
+/* ── Table container ────────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border-outer);
+}
+
+/* ── Main table ─────────────────────────────────────────── */
+table.dashboard-table {
+  border-collapse: collapse;
+  font-size: var(--font-size-table);
+  white-space: nowrap;
+  min-width: 100%;
+  background: var(--color-bg);
+}
+
+table.dashboard-table th,
+table.dashboard-table td {
+  border: 1px solid var(--color-border);
+  padding: 3px 6px;
+  text-align: right;
+}
+
+/* Group header row */
+table.dashboard-table thead tr.row-groups th {
+  text-align: center;
+  font-weight: bold;
+  background: var(--color-bg);
+  border-bottom: none;
+}
+
+/* Column header row */
+table.dashboard-table thead tr.row-cols th {
+  text-align: center;
+  font-weight: normal;
+  background: var(--color-bg);
+}
+
+/* Center Date/Time columns (class-based, avoids colspan nth-child collisions) */
+table.dashboard-table th.col-dt,
+table.dashboard-table td.col-dt {
+  text-align: center;
+}
+
+/* Sticky first two columns */
+table.dashboard-table th:nth-child(1),
+table.dashboard-table td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: inherit;
+}
+
+table.dashboard-table th:nth-child(2),
+table.dashboard-table td:nth-child(2) {
+  position: sticky;
+  left: 72px;
+  z-index: 2;
+  background: inherit;
+}
+
+/* Ensure sticky headers are on top */
+table.dashboard-table thead th:nth-child(1),
+table.dashboard-table thead th:nth-child(2) {
+  z-index: 3;
+  background: var(--color-bg);
+}
+
+/* ── Subtotal rows ───────────────────────────────────────── */
+tr.row-voice-subtotal td {
+  background: var(--color-voice);
+  font-weight: bold;
+}
+
+tr.row-chat-subtotal td {
+  background: var(--color-chat);
+  font-weight: bold;
+}
+
+/* ── Combined totals row ────────────────────────────────── */
+tr.row-totals td {
+  background: var(--color-totals);
+  font-weight: bold;
+}
+
+/* ── Event rows ─────────────────────────────────────────── */
+tr.row-event td {
+  background: var(--color-bg);
+}
+
+/* ── Model row ──────────────────────────────────────────── */
+tr.row-model td {
+  background: var(--color-model-bg);
+  font-style: italic;
+  text-align: left;
+}
+
+/* ── Pagination row ─────────────────────────────────────── */
+tr.row-pagination td {
+  background: var(--color-pagination-bg);
+  text-align: center;
+  padding: 4px 8px;
+}
+
+.pagination-btn {
+  cursor: pointer;
+  background: none;
+  border: 1px solid #bbb;
+  padding: 2px 8px;
+  font-size: 11px;
+  margin: 0 4px;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pagination-label {
+  font-size: 11px;
+}
+
+/* ── Per-column cell colors (subtotals, totals, and thoughts in event rows) ── */
+td.col-blue   { background: #00FFFF !important; }
+td.col-green  { background: #00FF00 !important; }
+td.col-white  { background: #FFFFFF !important; color: #000; }
+td.col-orange { background: #F9CB9C !important; }
+td.col-yellow { background: #FFFF00 !important; }
+
+/* ── Toggle button in label cell ────────────────────────── */
+.toggle-btn {
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 11px;
+  margin-left: 6px;
+  vertical-align: middle;
+  padding: 0;
+}
+
+/* ── Loading / error state ──────────────────────────────── */
+#status-msg {
+  padding: 12px 0;
+  font-style: italic;
+  color: #555;
+}

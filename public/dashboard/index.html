@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VOICE &amp; CHAT Events</title>
+  <link rel="stylesheet" href="/dashboard/dashboard.css" />
+</head>
+<body>
+
+  <h1 class="page-title">VOICE &amp; CHAT Events</h1>
+
+  <div class="filter-bar">
+    <!-- User filter -->
+    <div class="filter-group">
+      <label for="filter-user">user:</label>
+      <select id="filter-user">
+        <option value="">ALL</option>
+      </select>
+    </div>
+
+    <!-- From date/time -->
+    <div class="filter-group">
+      <label for="filter-from">From:</label>
+      <input type="datetime-local" id="filter-from" />
+    </div>
+
+    <!-- To date/time -->
+    <div class="filter-group">
+      <label for="filter-to">To:</label>
+      <input type="datetime-local" id="filter-to" />
+    </div>
+
+    <button id="btn-refresh" style="padding:3px 10px;font-size:13px;cursor:pointer;">Refresh</button>
+  </div>
+
+  <div id="status-msg"></div>
+
+  <div class="table-wrap">
+    <table class="dashboard-table">
+      <thead>
+        <tr class="row-groups">
+          <th colspan="2">Created</th>
+          <th colspan="8">Tokens</th>
+          <th colspan="5">price / 1000k tokens</th>
+          <th colspan="8">Cost</th>
+        </tr>
+        <tr class="row-cols">
+          <th class="col-dt">Date</th>
+          <th class="col-dt">Time</th>
+          <!-- Tokens -->
+          <th>text Input</th>
+          <th>audio Input</th>
+          <th>text Output</th>
+          <th>audio Output</th>
+          <th>thoughts</th>
+          <th>total Input</th>
+          <th>total Output</th>
+          <th>total</th>
+          <!-- Price / 1000k -->
+          <th>text Input</th>
+          <th>audio Input</th>
+          <th>text Output</th>
+          <th>audio Output</th>
+          <th>thoughts</th>
+          <!-- Cost -->
+          <th>text Input</th>
+          <th>audio Input</th>
+          <th>text Output</th>
+          <th>audio Output</th>
+          <th>thoughts</th>
+          <th>total Input</th>
+          <th>total Output</th>
+          <th>total</th>
+        </tr>
+      </thead>
+      <tbody id="dashboard-tbody">
+        <!-- Rows populated by dashboard.js -->
+      </tbody>
+    </table>
+  </div>
+
+  <script src="/dashboard/dashboard.js"></script>
+  <script>
+    const app = new DashboardApp();
+    app.init();
+  </script>
+</body>
+</html>

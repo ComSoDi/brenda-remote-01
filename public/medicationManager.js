@@ -2,7 +2,7 @@
 // Medication Reminder Module — UI manager
 // Instantiated by app.js: new MedicationManager(app)
 
-import { t } from "./i18n.js";
+import { t } from "./i18n/index.js";
 
 const DAYS_KEYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const DAYS_VALUES = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];

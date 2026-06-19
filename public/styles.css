@@ -1685,6 +1685,30 @@ body {
   border-color: rgba(27, 148, 78, 0.32);
 }
 
+/* ── RDS Chat button — row 2 of header-actions (same row as latest-btn / headlines-btn) ── */
+
+.chat-rds-btn {
+  order: 5;
+  align-self: flex-start;
+  height: 45px;
+  font-size: 24px;
+  width: 120px;
+  padding: 6px 6px;
+  background: #99CCFF;
+  color: #000000;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.chat-rds-btn:hover {
+  background: #7eb8ff;
+  border-color: rgba(0, 80, 200, 0.3);
+}
+
 /* ── Latest overlay — category checkboxes ───────────────────────────────────── */
 
 .latest-categories {

@@ -11,6 +11,10 @@ import { getDb } from "../lib/mongo.js";
 import { ObjectId } from "mongodb";
 import { randomUUID } from "crypto";
 import { recordChatUsage } from "../lib/usage.js";
+import {
+  getRdsProfile, buildRdsSystemAddendum, detectRdsIntent, buildMemoryNarrative,
+  extractRdsItems, addRdsItem, removeRdsItem, parseForgetTag,
+} from "../lib/rdsService.js";
 
 // Expanded time keywords — catches common natural language patterns in both languages
 const TIME_KEYWORDS = {
@@ -272,6 +276,7 @@ GENERAL CONVERSATION:
 - Be warm, concise, and natural — never stiff or robotic.
 
 WEATHER (when the user asks about weather, temperature, forecast, rain, wind, etc.):
+0. When calling any tool (weather lookup, location update), go directly to the function call — NEVER output filler text before it ("¡Seguro! Lo busco", "Dame un momento", "One moment", "Just a second", "Let me check", "Looking it up", or similar). The function result will be returned and you will compose your full reply then.
 1. If no location is provided and there is no saved location, ask for the city (and country/state if needed).
 2. If multiple locations match, ask which one they mean, offering short options (city, state, country).
 3. Use the get_weather function to fetch current conditions and forecast.
@@ -710,8 +715,41 @@ export default async function handler(req, res) {
     );
     const userGender = userPrefsDoc?.preferences?.gender || null;
 
-    const system = brendaSystemPrompt(localeVariant, userGender);
+    // Load RDS profile (non-fatal — companion memory layer)
+    let rdsProfile = null;
+    const rdsUsername = session.displayName || session.username || "";
+    if (!session.isAnonymous) {
+      try { rdsProfile = await getRdsProfile(db, session.userId); } catch { /* non-fatal */ }
+    }
+
+    const system = brendaSystemPrompt(localeVariant, userGender) +
+      (rdsProfile ? "\n\n" + buildRdsSystemAddendum(rdsProfile, localeVariant, rdsUsername) : "");
     const lastUserText = [...inputMessages].reverse().find((m) => m.role === "user")?.content || "";
+
+    // RDS: memory query — bypass Gemini, build narrative directly from stored profile
+    if (!session.isAnonymous && rdsProfile && detectRdsIntent(lastUserText).isMemoryQuery) {
+      const narrative = buildMemoryNarrative(rdsProfile, localeVariant, rdsUsername);
+      await db.collection("conversations").updateOne(
+        { userId: session.userId },
+        {
+          $setOnInsert: { userId: session.userId, createdAt: new Date() },
+          $push: {
+            messages: {
+              $each: [
+                ...inputMessages.map(m => ({
+                  id: new ObjectId(), role: m.role, content: m.content,
+                  timestamp: new Date(), fromChannel: "text",
+                })),
+                { id: new ObjectId(), role: "assistant", content: narrative, timestamp: new Date(), fromChannel: "text" },
+              ],
+            },
+          },
+          $set: { updatedAt: new Date() },
+        },
+        { upsert: true }
+      );
+      return json(res, 200, { reply: narrative });
+    }
 
     const weatherIntent = isWeatherQuery(lastUserText, localeVariant) || !!body.weatherPending;
     const timeIntent = detectTimeIntent(lastUserText, localeVariant);
@@ -1420,9 +1458,20 @@ export default async function handler(req, res) {
     // ────────────────────────────────────────────────────────────────────────
     // NORMAL (non-tool) response
     // ────────────────────────────────────────────────────────────────────────
-    const reply = geminiReplyText || "";
+    let reply = geminiReplyText || "";
 
     if (!reply) return json(res, 502, { error: "No reply content", detail: data });
+
+    // RDS: strip [FORGET: ...] tag from reply and schedule item removal
+    let forgetDescription = null;
+    if (rdsProfile) {
+      const { cleanText, forgetDescription: fd } = parseForgetTag(reply);
+      if (fd) {
+        forgetDescription = fd;
+        reply = cleanText;
+        removeRdsItem(db, session.userId, fd).catch(e => console.error("[rds/forget]", e.message));
+      }
+    }
 
     // Persist user + assistant messages into Mongo
     const newMessages = [
@@ -1451,6 +1500,21 @@ export default async function handler(req, res) {
       },
       { upsert: true }
     );
+
+    // RDS: async extraction of new personal facts from this turn (fire-and-forget)
+    // Use lastUserText (from messages array) — body.message is empty when frontend sends messages[]
+    if (rdsProfile && !session.isAnonymous && lastUserText && reply && !forgetDescription) {
+      extractRdsItems(GEMINI_API_KEY, GEMINI_CHAT_MODEL, lastUserText, reply, rdsUsername)
+        .then(async ({ extractions }) => {
+          for (const ex of (extractions || [])) {
+            if (ex?.domain && ex?.item) {
+              await addRdsItem(db, session.userId, ex.domain, ex.item)
+                .catch(e => console.error("[rds/addItem]", e.message));
+            }
+          }
+        })
+        .catch(e => console.error("[rds/extract]", e.message));
+    }
 
     return json(res, 200, { reply });
   } catch (err) {

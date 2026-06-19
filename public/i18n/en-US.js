@@ -284,6 +284,7 @@ export default {
     latestCatPolitica: "Politics",
     latestCatTv: "TV & Entertainment",
     headlinesBtn: "Headlines",
+    chatBtn: "Chat",
     headlinesTitle: "Top Headlines",
     headlinesLegendHot: "Hot",
     headlinesLegendWarm: "Trending",

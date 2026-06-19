@@ -225,6 +225,7 @@ class BrendaApp {
 
       // News & Gossip — Headlines feed
       headlinesBtn: document.getElementById("headlinesBtn"),
+      chatBtn: document.getElementById("chatBtn"),
       headlinesOverlay: document.getElementById("headlinesOverlay"),
       headlinesCloseBtn: document.getElementById("headlinesCloseBtn"),
       headlinesTitle: document.getElementById("headlinesTitle"),
@@ -355,6 +356,9 @@ class BrendaApp {
 
     // News & Gossip — Headlines overlay
     this.elements.headlinesBtn?.addEventListener("click", () => this.onHeadlinesButton());
+
+    // RDS — Chat / Let's chat button
+    this.elements.chatBtn?.addEventListener("click", () => this.onChatButton());
     this.elements.headlinesCloseBtn?.addEventListener("click", () => this.closeHeadlinesOverlay());
     this.elements.headlinesRefreshBtn?.addEventListener("click", () => this.fetchAndRenderHeadlines(true));
 
@@ -733,6 +737,7 @@ class BrendaApp {
     if (e.legendCool) e.legendCool.textContent = t(v, "headlinesLegendCool");
     if (e.headlinesRefreshBtn) e.headlinesRefreshBtn.textContent = t(v, "headlinesRefresh");
     if (e.headlinesLoadingText) e.headlinesLoadingText.textContent = t(v, "headlinesLoading");
+    if (e.chatBtn) e.chatBtn.textContent = t(v, "chatBtn");
   }
 
   /* --------------------
@@ -1374,8 +1379,8 @@ class BrendaApp {
   _emitThinkingBridgePhrase() {
     const isEs = (this.locale?.variant || "").toLowerCase().startsWith("es");
     const phrases = isEs
-      ? ["Dame un momento", "¡Seguro! Lo busco", "¡Déjame revisar!"]
-      : ["Give me a moment", "Sure! I'll look it up", "Let me check!"];
+      ? ["Un momento...", "Déjame ver...", "Enseguida..."]
+      : ["One moment...", "Let me think...", "Just a second..."];
     const phrase = phrases[Math.floor(Math.random() * phrases.length)];
     this._pendingBridgePhrase = phrase; // voice paths speak it after clearing the audio queue
 
@@ -2763,15 +2768,28 @@ class BrendaApp {
         await this.medicationManager.deliverReminders(data.pendingReminders, displayName, this.locale.variant);
       }
 
+      // RDS first-time intro — must run before any early return so it fires on every greetingType
+      const displayName = this.user.isAnonymous
+        ? ""
+        : (this.user.displayName || this.user.username || "").trim();
+
+      if (data?.rdsIntroNeeded && !this.user?.isAnonymous) {
+        const introText = this._buildRdsIntro(displayName);
+        await this.emitAssistantLine({ text: introText, channel: "text" });
+        this.apiJSON("/api/rds/state", {
+          method: "POST",
+          body: { action: "intro-shown" },
+        }).then(() => console.log("[rds] intro-shown confirmed"))
+          .catch(e => console.error("[rds] intro-shown POST failed:", e.message));
+      }
+
+      // RDS idle-timeout proactive initiation (opt-in, default off)
+      this._startRdsIdleTimer();
+
       if (greetingType === "none") {
         this._greetingText = null;
         return;
       }
-
-      // Anonymous users get nameless greetings.
-      const displayName = this.user.isAnonymous
-        ? ""
-        : (this.user.displayName || this.user.username || "").trim();
 
       if (greetingType === "full") {
         this._greetingText = this.buildFullGreeting(displayName);
@@ -2811,6 +2829,87 @@ class BrendaApp {
     } catch (e) {
       console.warn("[greet/news] failed (non-fatal):", e?.message || e);
     }
+  }
+
+  // ── RDS helpers ───────────────────────────────────────────────────────────
+
+  _buildRdsIntro(displayName) {
+    const v    = this.locale.variant;
+    const name = (displayName || "").trim();
+    const isEs = v.startsWith("es");
+    if (isEs) {
+      return (name ? `Hola, ${name}.\n\n` : "Hola.\n\n") +
+        "Soy Brenda, tu vecina virtual. Me alegra mucho conocerte.\n\n" +
+        "Antes de que empecemos a charlar, me gustaría contarte un poco sobre mí: me encantan las buenas conversaciones, " +
+        "escuchar las historias de la gente y compartir esos pequeños detalles que dicen quién es uno — la familia, la comida favorita, " +
+        "la música y los recuerdos, los lugares donde se ha vivido, las cosas que se hacían de joven y cómo se piensa y se siente hoy. Ese tipo de cosas.\n\n" +
+        "Algo importante: yo no soy una Red Social. Nuestras conversaciones son totalmente privadas. " +
+        "No las compartiré conscientemente con nadie más. Dicho esto, es mejor ser precavida en Internet. " +
+        "Por favor, no compartas datos delicados como información bancaria, cuentas, asuntos legales o médicos, etc. " +
+        "Haré todo lo posible por guardar todo con discreción, pero en Internet nunca se sabe del todo. No tengas miedo, pero no te expongas.\n\n" +
+        "Por eso mismo, ten en cuenta que recuerdo lo que hablamos de una conversación a otra, para que nuestra relación crezca cada vez que charlamos. " +
+        "Si alguna vez recuerdo algo mal, o hay algo que prefieres que no guarde, dímelo. " +
+        "Si, por ejemplo, menciono que te gusta la piña en la pizza, puedes decirme «olvida eso» y lo borraré de mi memoria sin preguntas.\n\n" +
+        "También tengo costumbre de irme por las ramas con historias de mi propia vida de vez en cuando. " +
+        "No dudes en interrumpirme o cambiar de tema cuando quieras. " +
+        "Espero que disfrutes de nuestra conversación tanto como yo.\n\n" +
+        "¡Vamos allá!";
+    }
+    return (name ? `Hello, ${name}.\n\n` : "Hello.\n\n") +
+      "I'm Brenda, your friendly virtual neighbor. It's lovely to meet you.\n\n" +
+      "I'd like to tell you a little about myself before we start chatting away — " +
+      "I enjoy good conversations, hearing people's stories, and sharing the small details that tell you who someone is. " +
+      "Family, favorite foods, music and memories, the places people have lived, the things they got up to when they were young " +
+      "and how they think and feel today. That sort of thing.\n\n" +
+      "Very important: I am not Social Media. Our conversations are totally private. " +
+      "I won't knowingly share them with anybody else. Nonetheless, it's better to be extra careful on the Internet. " +
+      "Please do not share any risky or private information such as banking details, accounts, legal or medical matters, etc. " +
+      "I promise I'll do my best to keep everything in the vault but one never knows what can happen. " +
+      "Don't be afraid, but don't be at risk.\n\n" +
+      "For that reason, keep in mind that I remember what we talk about, conversation to conversation, " +
+      "so our relationship grows every time we talk or write to each other. " +
+      "Should I ever remember something wrong, or there's something you'd rather I do not remember, just tell me. " +
+      "If, for example, I mention you like pineapple on your pizza, you can say \"forget that\" and I'll erase it from my memory, no explanation needed.\n\n" +
+      "I also have a habit of wandering off into stories from my own life now and then. " +
+      "Please jump in and interrupt or change the subject whenever you want. " +
+      "In any case, I hope you can enjoy my conversation as much as I enjoy yours.\n\n" +
+      "Let's get to it!";
+  }
+
+  // Explicit "Chat" button — triggers an RDS warm-up conversation turn
+  async onChatButton() {
+    if (this.user?.isAnonymous) return;   // RDS requires a logged-in user
+    this._textWeatherPending = false;     // clear any stale weather follow-up state
+    const v    = this.locale.variant;
+    const isEs = v.startsWith("es");
+    const trigger = isEs ? "Cuéntame algo" : "Let's chat";
+    this.elements.chatInput.value = trigger;
+    await this.sendTextMessage();
+  }
+
+  // Proactive idle-timer — opt-in via localStorage, default off
+  _startRdsIdleTimer() {
+    if (this._rdsIdleTimer) clearTimeout(this._rdsIdleTimer);
+    this._rdsIdleDeclinedThisSession = false;
+
+    const enabled = localStorage.getItem("brenda_rds_proactive") === "1";
+    if (!enabled || this.user?.isAnonymous) return;
+
+    const thresholdMs = parseInt(localStorage.getItem("brenda_rds_idle_ms") || "1800000", 10); // 30 min default
+    const hour = new Date().getHours();
+    if (hour < 8 || hour >= 22) return;   // respect quiet hours
+
+    this._rdsIdleTimer = setTimeout(async () => {
+      if (this._rdsIdleDeclinedThisSession) return;
+      const v    = this.locale.variant;
+      const isEs = v.startsWith("es");
+      const name = this.user?.displayName || this.user?.username || "";
+      const opener = isEs
+        ? `¡Hola${name ? ", " + name : ""}! ¿Tienes un momento para charlar?`
+        : `Hi${name ? ", " + name : ""}! Would you like to chat now, or are you busy?`;
+      await this.emitAssistantLine({ text: opener, channel: "text" });
+      this._rdsProactiveShown = true;
+    }, thresholdMs);
   }
 
   /**

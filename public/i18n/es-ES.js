@@ -278,6 +278,7 @@ export default {
     latestCatPolitica: "Política",
     latestCatTv: "TV y entretenimiento",
     headlinesBtn: "Titulares",
+    chatBtn: "Charlar",
     headlinesTitle: "Titulares Top",
     headlinesLegendHot: "Viral",
     headlinesLegendWarm: "Tendencia",

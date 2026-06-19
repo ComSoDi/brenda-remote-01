@@ -23,9 +23,18 @@ import headlinesHandler from "./api/brenda/headlines.js";
 import gossipHandler from "./api/brenda/gossip.js";
 import greetNewsHandler from "./api/brenda/greet.js";
 import searchHandler from "./api/brenda/search.js";
+
+import googleHandler         from "./api/auth/google.js";
+import googleCallbackHandler from "./api/auth/google-callback.js";
+import dashUsersHandler      from "./api/dashboard/users.js";
+import dashVoiceHandler      from "./api/dashboard/voice-events.js";
+import dashChatHandler       from "./api/dashboard/chat-events.js";
+import rdsStateHandler       from "./api/rds/state.js";
+
 import { getSession } from "./lib/auth.js";
 import { getDb } from "./lib/mongo.js";
 import { recordVoiceUsage } from "./lib/usage.js";
+import { getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem } from "./lib/rdsService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,6 +74,15 @@ app.post("/api/brenda/greet", greetNewsHandler);
 app.post("/api/brenda/search", searchHandler);
 
 app.post("/api/transcript/correct", transcriptCorrectHandler);
+
+app.get("/api/auth/google",          (req, res) => googleHandler(req, res));
+app.get("/api/auth/google-callback", (req, res) => googleCallbackHandler(req, res));
+app.get("/api/dashboard/users",       (req, res) => dashUsersHandler(req, res));
+app.get("/api/dashboard/voice-events",(req, res) => dashVoiceHandler(req, res));
+app.get("/api/dashboard/chat-events", (req, res) => dashChatHandler(req, res));
+
+app.get("/api/rds/state",  (req, res) => rdsStateHandler(req, res));
+app.post("/api/rds/state", (req, res) => rdsStateHandler(req, res));
 
 app.get("*", (_req, res) => res.sendFile(path.join(STATIC_DIR, "index.html")));
 
@@ -182,25 +200,32 @@ server.on("upgrade", async (req, socket, head) => {
     }
     const locale = url.searchParams.get("locale") || "es-ES";
 
-    // Resolve userId, gender + medications from session cookie / DB (non-fatal)
+    // Resolve userId, gender, medications, and RDS profile from session / DB (non-fatal)
     let gender = null;
     let activeMeds = [];
     let userId = null;
+    let isAuthenticated = false;
+    let rdsProfile = null;
+    let rdsUsername = "";
     try {
       const session = getSession(req);
       if (session?.userId) userId = session.userId;
       if (session?.gender) gender = session.gender;
       if (session?.userId && !session.isAnonymous) {
+        isAuthenticated = true;
+        rdsUsername = session.displayName || session.username || "";
         const db = await getDb();
-        const [userDoc, meds] = await Promise.all([
+        const [userDoc, meds, profile] = await Promise.all([
           db.collection("users").findOne(
             { userId: session.userId },
             { projection: { "preferences.gender": 1 } }
           ),
           db.collection("medications").find({ userId: session.userId, active: true }).sort({ name: 1 }).toArray(),
+          getRdsProfile(db, session.userId),
         ]);
         if (!gender) gender = userDoc?.preferences?.gender || null;
         activeMeds = meds || [];
+        rdsProfile = profile || null;
       }
     } catch {
       // non-fatal
@@ -211,6 +236,9 @@ server.on("upgrade", async (req, socket, head) => {
       ws.userLocale = locale;
       ws.userGender = gender;
       ws.activeMeds = activeMeds;
+      ws.isAuthenticated = isAuthenticated;
+      ws.rdsProfile = rdsProfile;
+      ws.rdsUsername = rdsUsername;
       console.log(`📡 WS upgraded — locale: ${locale}, gender: ${gender || "unknown"}`);
       wss.emit("connection", ws, req);
     });
@@ -235,13 +263,17 @@ wss.on("connection", (ws) => {
   const voiceMap = { "en-US": "Aoede", "en-GB": "Aoede", "es-ES": "Vindemiatrix", "es-419": "Vindemiatrix" };
   const VOICE = process.env.GEMINI_LIVE_VOICE || voiceMap[locale] || "Vindemiatrix";
 
-  const systemText = buildSystemInstruction(locale, ws.userGender || null) + buildMedSystemBlock(ws.activeMeds || [], locale);
+  const systemText = buildSystemInstruction(locale, ws.userGender || null)
+    + buildMedSystemBlock(ws.activeMeds || [], locale)
+    + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "");
 
   const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
   const geminiWs = new WebSocket(geminiUrl);
 
   const messageBuffer = [];
   let isReady = false;
+  let inputTranscriptBuf = "";
+  let outputTranscriptBuf = "";
 
   geminiWs.on("open", () => {
     isReady = true;
@@ -288,11 +320,17 @@ wss.on("connection", (ws) => {
 
   geminiWs.on("message", (data) => {
     const text = data.toString();
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(text);
+    }
     try {
       const parsed = JSON.parse(text);
+
       if (parsed?.error) {
         console.error("❌ Gemini upstream error payload:", JSON.stringify(parsed.error));
       }
+
+      // Usage tracking
       if (parsed?.usageMetadata) {
         console.log(`[voice-proxy] usageMetadata seen userId=${userId ?? "null"}`, JSON.stringify(parsed.usageMetadata));
       }
@@ -302,10 +340,38 @@ wss.on("connection", (ws) => {
           .then(db => db && recordVoiceUsage({ db, userId, voiceSessionId, responseId, model: MODEL, usage: parsed.usageMetadata }))
           .catch(e => console.error("[voice-proxy/usage]", e.message));
       }
+
+      // RDS: accumulate transcripts and extract on turn complete
+      const sc = parsed?.serverContent;
+      if (sc && ws.isAuthenticated && userId && ws.rdsProfile) {
+        if (sc.inputTranscription?.text)  inputTranscriptBuf  += sc.inputTranscription.text;
+        if (sc.outputTranscription?.text) outputTranscriptBuf += sc.outputTranscription.text;
+
+        if (sc.turnComplete) {
+          const userMsg = inputTranscriptBuf.trim();
+          const aiReply = outputTranscriptBuf.trim();
+          inputTranscriptBuf  = "";
+          outputTranscriptBuf = "";
+
+          if (userMsg && aiReply) {
+            const extractModel = process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash";
+            extractRdsItems(GEMINI_API_KEY, extractModel, userMsg, aiReply, ws.rdsUsername || "")
+              .then(async ({ extractions }) => {
+                if (!extractions?.length) return;
+                const db = await getDb();
+                if (!db) return;
+                for (const ex of extractions) {
+                  if (ex?.domain && ex?.item) {
+                    await addRdsItem(db, userId, ex.domain, ex.item)
+                      .catch(e => console.error("[rds/voice/addItem]", e.message));
+                  }
+                }
+              })
+              .catch(e => console.error("[rds/voice/extract]", e.message));
+          }
+        }
+      }
     } catch { }
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(text);
-    }
   });
 
   geminiWs.on("close", (code, reason) => {

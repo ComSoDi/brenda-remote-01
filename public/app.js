@@ -2883,8 +2883,24 @@ class BrendaApp {
     const v    = this.locale.variant;
     const isEs = v.startsWith("es");
     const trigger = isEs ? "Cuéntame algo" : "Let's chat";
-    this.elements.chatInput.value = trigger;
-    await this.sendTextMessage();
+
+    const canVoice = this.mode === "talk"
+      && this._lastVoiceStatus !== "disconnected"
+      && typeof this.agent?.speakText === "function";
+
+    if (canVoice) {
+      // TALK mode: show trigger in transcript then route through Gemini Live
+      this.addMessage({ role: "user", channel: "voice", text: trigger, status: "final" });
+      this._pendingUserTranscript = "";
+      this._awaitingUserTranscript = false;
+      this.render();
+      this.setThinkingIndicator(true);
+      await this.agent.speakText(trigger);
+    } else {
+      // TEXT mode: use the normal text pipeline
+      this.elements.chatInput.value = trigger;
+      await this.sendTextMessage();
+    }
   }
 
   // Proactive idle-timer — opt-in via localStorage, default off

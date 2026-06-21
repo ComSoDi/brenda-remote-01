@@ -5,6 +5,7 @@
 
 /* Nav button */
 .med-btn {
+  order: 3;
   margin-left: auto;
   align-self: flex-start;
   height: 45px;

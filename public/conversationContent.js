@@ -53,16 +53,16 @@ const CONTENT = {
     // 8+ hours. Casual, warm, brief. {user} optional.
     // ------------------------------------------------------------------
     shortGreetings: [
-      "Hey, {user}!",
-      "Welcome back!",
-      "Hey there, {user}! Good to see you.",
-      "Look who's back!",
-      "Hi again, {user}!",
-      "Back again? Great!",
-      "Hey! Missed you.",
+      "Hi, {user}. Nice to hear from you again!",
       "Good to have you back, {user}!",
-      "Hey, {user} — back so soon? Not complaining!",
-      "Oh hey! Welcome back."
+      "{user}! Great to hear from you.",
+      "Hi there, {user}. Lovely to have you back!",
+      "Oh, {user}! So glad you're here again.",
+      "Welcome back, {user}! I was just thinking about you.",
+      "{user}! There you are — wonderful.",
+      "Hi {user}! It's always a pleasure.",
+      "Hello again, {user}. So nice to have you back.",
+      "There's {user}! How lovely."
     ],
     greetings: [
       "Hi {user}!",
@@ -78,9 +78,11 @@ const CONTENT = {
       "How are we doing?",
       "How's everything?",
       "I just had to come over and say hi.",
-      "I was just thinking about you.",
+      "Thinking about you!",
       "Brenda here!",
-      "Good morning!"
+      "Good morning!",
+      "Morning!"
+
     ],
     openings: [
       "I was thinking",
@@ -230,16 +232,16 @@ const CONTENT = {
     // SHORT greetings — regreso el mismo día tras 8+ horas. Breves.
     // ------------------------------------------------------------------
     shortGreetings: [
-      "¡Hola, {user}!",
-      "¡Bienvenido de vuelta!",
-      "¡Hola, {user}! Qué bueno verte.",
-      "¡Mira quién volvió!",
-      "¡Hola de nuevo, {user}!",
-      "¿Ya de vuelta? ¡Genial!",
-      "¡Hola! Te había echado de menos.",
+      "¡Hola, {user}! ¡Qué alegría escucharte de nuevo!",
       "¡Qué bueno tenerte de vuelta, {user}!",
-      "¡Hola, {user}! ¡Volviste! Perfecto.",
-      "¡Oh, hola! Bienvenido de vuelta."
+      "¡{user}! Qué gusto que estés aquí.",
+      "¡Hola, {user}! Me alegra mucho tenerte de vuelta.",
+      "¡{user}! Estaba pensando en ti.",
+      "¡Bienvenido de vuelta, {user}! Te echaba de menos.",
+      "¡Ahí está {user}! Estupendo.",
+      "¡Hola, {user}! Siempre es un placer.",
+      "Hola de nuevo, {user}. Qué bien que hayas vuelto.",
+      "¡Mira quién volvió! Hola, {user}."
     ],
     greetings: [
       "Hola {user}!",
@@ -256,8 +258,7 @@ const CONTENT = {
       "Pensaba en ti.",
       "¡Soy Brenda!",
       "¿Qué tal el día?",
-      "¡Buen día!",
-      "Hola {user}, qué gusto verte."
+      "¡Buen día!"
     ],
     openings: [
       "Estaba pensando",

@@ -6,7 +6,6 @@ import dns from "dns";
 import { randomUUID } from "crypto";
 import { WebSocket, WebSocketServer } from "ws";
 import chatHandler from "./api/chat.js";
-import subjectsHandler from "./api/subjects.js";
 import loginHandler from "./api/auth/login.js";
 import meHandler from "./api/auth/me.js";
 import anonymousHandler from "./api/auth/anonymous.js";
@@ -30,6 +29,7 @@ import dashUsersHandler      from "./api/dashboard/users.js";
 import dashVoiceHandler      from "./api/dashboard/voice-events.js";
 import dashChatHandler       from "./api/dashboard/chat-events.js";
 import rdsStateHandler       from "./api/rds/state.js";
+import rdsInterestsHandler   from "./api/rds/interests.js";
 
 import { getSession } from "./lib/auth.js";
 import { getDb } from "./lib/mongo.js";
@@ -59,7 +59,6 @@ app.post("/api/conversation/append", appendHandler);
 app.get("/api/history", historyHandler);
 
 app.post("/api/chat", chatHandler);
-app.all("/api/subjects", subjectsHandler);
 app.post("/api/weather", weatherHandler);
 app.post("/api/voice/realtime-key", realtimeKeyHandler);
 
@@ -81,8 +80,10 @@ app.get("/api/dashboard/users",       (req, res) => dashUsersHandler(req, res));
 app.get("/api/dashboard/voice-events",(req, res) => dashVoiceHandler(req, res));
 app.get("/api/dashboard/chat-events", (req, res) => dashChatHandler(req, res));
 
-app.get("/api/rds/state",  (req, res) => rdsStateHandler(req, res));
-app.post("/api/rds/state", (req, res) => rdsStateHandler(req, res));
+app.get("/api/rds/state",       (req, res) => rdsStateHandler(req, res));
+app.post("/api/rds/state",      (req, res) => rdsStateHandler(req, res));
+app.get("/api/rds/interests",   (req, res) => rdsInterestsHandler(req, res));
+app.post("/api/rds/interests",  (req, res) => rdsInterestsHandler(req, res));
 
 app.get("*", (_req, res) => res.sendFile(path.join(STATIC_DIR, "index.html")));
 

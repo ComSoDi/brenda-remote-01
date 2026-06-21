@@ -8,8 +8,6 @@ export default {
     connecting: "Connecting",
     warming: "Starting up...",
     thinking: "Thinking",
-    startButton: "Start",
-    startButtonBusy: "Starting...",
 
     // Hints / placeholders
     hintTalk: "Tap to speak",
@@ -284,7 +282,7 @@ export default {
     latestCatPolitica: "Politics",
     latestCatTv: "TV & Entertainment",
     headlinesBtn: "Headlines",
-    chatBtn: "Chat",
+    chatBtn: "Change Topic",
     headlinesTitle: "Top Headlines",
     headlinesLegendHot: "Hot",
     headlinesLegendWarm: "Trending",

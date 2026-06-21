@@ -4,7 +4,7 @@
 
 import { getDb } from "../lib/mongo.js";
 import { requireSession } from "../lib/auth.js";
-import { getRdsProfile, incrementRdsSession } from "../lib/rdsService.js";
+import { getRdsProfile, incrementRdsSession, setDeclaredInterests } from "../lib/rdsService.js";
 
 const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
 
@@ -93,10 +93,12 @@ export default async function handler(req, res) {
 
       // RDS: load profile, set intro flag, increment session counter
       let rdsIntroNeeded = false;
+      let declaredInterests = [];
       if (!session.isAnonymous) {
         try {
           const rdsProfile = await getRdsProfile(db, session.userId);
           rdsIntroNeeded = !rdsProfile.introShown;
+          declaredInterests = rdsProfile.declaredInterests || [];
           await incrementRdsSession(db, session.userId);
         } catch (e) { console.error("[greeting/rds]", e.message); }
       }
@@ -110,6 +112,7 @@ export default async function handler(req, res) {
           reminderType:   r.reminderType,
         })),
         rdsIntroNeeded,
+        declaredInterests,
       });
     } catch (e) {
       console.error("[greeting/checkin]", e.message);

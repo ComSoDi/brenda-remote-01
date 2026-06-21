@@ -115,6 +115,7 @@ body {
 }
 
 .subjects-btn {
+  order: 1;
   align-self: flex-start;
   height: 45px;
   font-size: 24px;
@@ -133,35 +134,6 @@ body {
   border-color: rgba(27, 148, 78, 0.32);
 }
 
-.start-btn {
-  align-self: flex-start;
-  font-size: 24px;
-  height: 45px;
-  width: 120px;
-  padding: 6px 6px;
-  border-radius: 8px;
-  border: 1px solid rgba(37, 99, 235, 0.22);
-  background: #ffff00;
-  color: #0f172a;
-  font-weight: 700;
-  cursor: pointer;
-
-}
-
-.start-btn:hover {
-  background: #7eff7e;
-  border-color: rgba(27, 148, 78, 0.32);
-}
-
-.start-btn:active {
-  transform: translateY(1px);
-}
-
-.start-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
 
 .help-btn {
   flex-shrink: 0;
@@ -1627,7 +1599,7 @@ body {
 
 /* ── News & Gossip — header buttons ────────────────────────────────────────── */
 
-/* Invisible flex line-break: pushes latestBtn + headlinesBtn to row 2 */
+/* Invisible flex line-break: separates row 1 (subjects, latest, med) from row 2 (headlines, chat) */
 .header-actions::before {
   content: '';
   display: block;
@@ -1636,12 +1608,13 @@ body {
   order: 4;
 }
 
-.latest-btn,
 .headlines-btn {
   order: 5;
 }
 
 .latest-btn {
+  order: 2;
+
   align-self: flex-start;
   height: 45px;
   font-size: 24px;
@@ -1692,7 +1665,7 @@ body {
   align-self: flex-start;
   height: 45px;
   font-size: 24px;
-  width: 120px;
+  width: 170px;
   padding: 6px 6px;
   background: #99CCFF;
   color: #000000;
@@ -1705,7 +1678,7 @@ body {
 }
 
 .chat-rds-btn:hover {
-  background: #7eb8ff;
+  background: #7eff7e;
   border-color: rgba(0, 80, 200, 0.3);
 }
 

@@ -17,8 +17,8 @@ class BrendaApp {
     // Unified timeline
     this.messages = []; // [{id, role, channel, text, status, ts}]
 
-    // Conversation subjects
-    this.subjects = this.defaultSubjects();
+    // Declared interests (seed topics — loaded from rds_profiles via greeting)
+    this.declaredInterests = [];
 
     // Persist guard (avoid double-writing)
     this._persisted = new Set();
@@ -33,7 +33,9 @@ class BrendaApp {
     this._voiceGreetingSent = false;
     this._voiceGreetingEverSent = false; // true once spoken; not reset on reconnect
     this._voiceGreetingTimer = null;
-    this._voiceGreetingDelayMs = 3000;
+    this._voiceGreetingDelayMs = 1000;
+    this._talkDisconnectedByUser = false; // true when user explicitly switches to WRITE mid-session
+    this._userSpokenThisSession = false;  // true once user sends any message this session
 
     // Greeting state — populated by checkAndShowGreeting() after auth.
     this._greetingType  = null;   // "full" | "short" | "none" | null (null = unchecked)
@@ -292,9 +294,6 @@ class BrendaApp {
     if (this.elements.toggleBtnText) {
       this.elements.toggleBtnText.textContent = t(this.locale.variant, "textMode");
     }
-    if (this.elements.startBtn) {
-      this.elements.startBtn.textContent = t(this.locale.variant, "startButton");
-    }
     if (this.elements.medBtn) {
       this.elements.medBtn.textContent = t(this.locale.variant, "medBtn");
     }
@@ -308,7 +307,6 @@ class BrendaApp {
     // Buttons
     this.elements.toggleBtnTalk.addEventListener("click", () => this.onTalkButton());
     this.elements.toggleBtnText.addEventListener("click", () => this.onTextButton());
-    this.elements.startBtn?.addEventListener("click", () => this.startConversation());
     this.elements.medBtn?.addEventListener("click", () => this.medicationManager.open());
 
     // Text send
@@ -463,7 +461,6 @@ class BrendaApp {
         await this.setUser(me);
         this.closeAuthOverlay();
         await this.loadHistoryAndRender();
-        await this.loadSubjectsForCurrentUser();
         await this.checkAndShowGreeting();
         this.startGreetingHeartbeat();
         this.setTalkButtonState({ connected: false, disabled: false });
@@ -536,7 +533,7 @@ class BrendaApp {
       : null;
 
     if (!meOrNull || meOrNull.userId !== prevUserId) {
-      this.subjects = this.defaultSubjects();
+      this.declaredInterests = [];
     }
 
     // Update account button text
@@ -596,7 +593,6 @@ class BrendaApp {
 
       // Switch user: replace transcript with their last N
       await this.loadHistoryAndRender();
-      await this.loadSubjectsForCurrentUser();
       await this.checkAndShowGreeting();
       this.startGreetingHeartbeat();
 
@@ -620,7 +616,6 @@ class BrendaApp {
 
       // New anon user has no history; still load (empty)
       await this.loadHistoryAndRender();
-      await this.loadSubjectsForCurrentUser();
       await this.checkAndShowGreeting();
       this.startGreetingHeartbeat();
 
@@ -918,38 +913,23 @@ class BrendaApp {
 
   async onHeadlineCardTap(headline) {
     this.closeHeadlinesOverlay();
-
-    const needsConnect = this._lastVoiceStatus === "disconnected";
-    if (this.mode !== "talk") this.setMode("talk");
-    if (needsConnect) this.connectVoice();
-
+    const inTalk = this.mode === "talk" && this._lastVoiceStatus !== "disconnected";
     try {
-      const [data] = await Promise.all([
-        this.apiJSON("/api/brenda/gossip", {
-          method: "POST",
-          body: {
-            headline: headline.headline,
-            snippet:  headline.snippet || "",
-            locale:   this.locale.variant,
-            history:  [],
-          },
-        }),
-        needsConnect ? this._waitForVoice(15000) : Promise.resolve(),
-      ]);
-      if (data?.reply) {
-        // Speak Part 1 exactly — Gemini says the gossip text, transcript adds it to chat
+      const data = await this.apiJSON("/api/brenda/gossip", {
+        method: "POST",
+        body: {
+          headline: headline.headline,
+          snippet:  headline.snippet || "",
+          locale:   this.locale.variant,
+          history:  [],
+        },
+      });
+      if (!data?.reply) return;
+      if (inTalk) {
         const spoken = await this.speakExactLine(data.reply);
-
-        if (spoken) {
-          // Wait for Part 1 to finish, then let Gemini react naturally (Part 2)
-          await this._waitForSpeechEnd(45000);
-          await new Promise(r => setTimeout(r, 1500));
-          await this.agent.speakText(data.reply);
-        } else {
-          // Voice not available — show in chat + browser TTS, skip Part 2
-          await this.emitAssistantLine({ text: data.reply, channel: "text" });
-          await this.speakText(data.reply, { forceLocal: true });
-        }
+        if (!spoken) await this.emitAssistantLine({ text: data.reply, channel: "text" });
+      } else {
+        await this.emitAssistantLine({ text: data.reply, channel: "text" });
       }
     } catch (e) {
       console.warn("[gossip/tap]", e?.message || e);
@@ -997,7 +977,7 @@ class BrendaApp {
   }
 
   populateSubjectsForm() {
-    const arr = this.normalizeSubjects(this.subjects);
+    const arr = this.normalizeSubjects(this.declaredInterests);
     const inputs = this.elements.subjectsInputs || [];
     inputs.forEach((input, idx) => {
       if (input) input.value = arr[idx] || "";
@@ -1252,51 +1232,8 @@ class BrendaApp {
     o.setAttribute("aria-hidden", "true");
   }
 
-  getAnonSubjectsKey() {
-    return `subjects_${this.user?.userId || "anon"}`;
-  }
-
-  saveSubjectsAnon(values) {
-    try {
-      sessionStorage.setItem(this.getAnonSubjectsKey(), JSON.stringify(values));
-    } catch {
-      // ignore storage errors
-    }
-  }
-
-  async loadSubjectsForCurrentUser() {
-    const defaults = this.defaultSubjects();
-    if (!this.user) {
-      this.subjects = defaults;
-      return;
-    }
-
-    if (this.user.isAnonymous) {
-      try {
-        const raw = sessionStorage.getItem(this.getAnonSubjectsKey());
-        if (raw) {
-          this.subjects = this.normalizeSubjects(JSON.parse(raw));
-          return;
-        }
-      } catch {
-        // ignore parse errors
-      }
-      this.subjects = defaults;
-      return;
-    }
-
-    try {
-      const res = await this.apiJSON("/api/subjects", { method: "GET" });
-      const arr = Array.isArray(res?.subjects) ? res.subjects : defaults;
-      this.subjects = this.normalizeSubjects(arr);
-    } catch (e) {
-      console.warn("Failed to load subjects", e?.message || e);
-      this.subjects = defaults;
-    }
-  }
-
   onSubjectsButton() {
-    if (!this.user) {
+    if (!this.user || this.user.isAnonymous) {
       this.openAuthOverlay({ closable: false, resetFields: true });
       return;
     }
@@ -1305,7 +1242,7 @@ class BrendaApp {
   }
 
   async onSubjectsSave() {
-    if (!this.user) {
+    if (!this.user || this.user.isAnonymous) {
       this.openAuthOverlay({ closable: false, resetFields: true });
       return;
     }
@@ -1313,18 +1250,9 @@ class BrendaApp {
     const v = this.locale.variant;
 
     this.setSubjectsBusy(true);
-    if (this.user.isAnonymous) {
-      this.subjects = values;
-      this.saveSubjectsAnon(values);
-      this.setSubjectsStatus(t(v, "subjectsSaved"));
-      setTimeout(() => this.closeSubjectsOverlay(), 400);
-      this.setSubjectsBusy(false);
-      return;
-    }
-
     try {
-      await this.apiJSON("/api/subjects", { method: "POST", body: { subjects: values } });
-      this.subjects = values;
+      const res = await this.apiJSON("/api/rds/interests", { method: "POST", body: { interests: values } });
+      this.declaredInterests = res.interests ?? values;
       this.setSubjectsStatus(t(v, "subjectsSaved"));
       setTimeout(() => this.closeSubjectsOverlay(), 400);
     } catch (e) {
@@ -1477,11 +1405,16 @@ class BrendaApp {
   onTextButton() {
     if (!this.user) { this.openAuthOverlay({ closable: false, resetFields: true }); return; }
 
-    // If user switches to text during a call: hang up + close call UI
     if (this._lastVoiceStatus !== "disconnected") {
+      this._talkDisconnectedByUser = true;
       this.hangUp();
     }
     this.setMode("text");
+
+    // Cold start in WRITE mode: Brenda initiates conversation (only if user hasn't spoken yet this session)
+    if (!this._userSpokenThisSession && !this.user?.isAnonymous) {
+      setTimeout(() => this.startConversation().catch(e => console.warn("[rds/text-start]", e)), 300);
+    }
   }
 
   /* --------------------
@@ -1651,14 +1584,14 @@ class BrendaApp {
 
     if (status === "connected" || status === "speaking") {
       this.setTalkButtonState({ connected: true, disabled: false });
-      this.setConnectingIndicator(false);
       if (this.callUI === "closed") this.setCallUI("open");
       this.recordVoiceActivity();
       if (status === "speaking" && prevStatus !== "speaking") {
+        this.setConnectingIndicator(false); // hide pill only when Brenda actually starts speaking
         this.setThinkingIndicator(false);
         this.flushPendingUserTranscript();
       }
-      if (status === "connected" && (prevStatus === "disconnected" || prevStatus === "connecting") && !this._voiceGreetingSent) {
+      if (status === "connected" && (prevStatus === "disconnected" || prevStatus === "connecting" || prevStatus === "warming") && !this._voiceGreetingSent) {
         this.scheduleVoiceGreeting();
       }
     } else if (status === "connecting" || status === "warming") {
@@ -1820,6 +1753,7 @@ class BrendaApp {
       return lastMsg;
     }
 
+    this._userSpokenThisSession = true;
     const userMsg = this.addMessage({ role: "user", channel: "voice", text: cleaned, status: "final" });
     this.persistMessage(userMsg);
     this.render();
@@ -2089,6 +2023,7 @@ class BrendaApp {
     const btn = this.elements.chatSendBtn;
     const text = (input.value || "").trim();
     if (!text) return;
+    this._userSpokenThisSession = true;
     const userMsg = this.addMessage({ role: "user", channel: "text", text, status: "final" });
 
     input.value = "";
@@ -2306,37 +2241,65 @@ class BrendaApp {
 
   async maybeSendVoiceGreeting() {
     if (this._voiceGreetingSent) return;
-    if (this._voiceGreetingEverSent) return;
 
-    // Use the server-determined greeting type, populated by checkAndShowGreeting().
-    // _greetingType is null if the checkin hasn't resolved yet; in that case skip.
-    if (!this._greetingType || this._greetingType === "none") {
-      console.log("[greeting] Skipping voice greeting (type=none or not yet resolved)");
+    // ── Reconnect (after timeout or hang-up) ──────────────────────────────
+    if (this._voiceGreetingEverSent) {
+      this._voiceGreetingSent = true;
+      const wasByUser = this._talkDisconnectedByUser;
+      this._talkDisconnectedByUser = false;
+      // Only send micro-greeting on timeout reconnect, not on explicit mode switch
+      if (!wasByUser && this.mode === "talk" && this._lastVoiceStatus !== "disconnected" && typeof this.agent?.speakText === "function") {
+        await this.agent.speakText(this._pickMicroGreeting(), true);
+      }
       return;
     }
 
-    const greetingText = this._greetingText;
-    if (!greetingText) return;
+    // ── First connect this session ─────────────────────────────────────────
+    // _greetingType is null if checkin hasn't resolved yet — bail without marking sent
+    if (!this._greetingType) return;
 
     this._voiceGreetingSent = true;
     this._voiceGreetingEverSent = true;
     this._greetingShown = true;
 
-    try {
-      if (this.mode === "talk" && this._lastVoiceStatus !== "disconnected" && typeof this.agent?.speakText === "function") {
-        await this.agent.speakText(greetingText, true);
-      } else {
-        await this.emitAssistantLine({ text: greetingText, channel: "voice", forceNewDateSeparator: true });
+    const sendGreeting = this._greetingType !== "none" && !!this._greetingText;
+    if (sendGreeting) {
+      try {
+        if (this.mode === "talk" && this._lastVoiceStatus !== "disconnected" && typeof this.agent?.speakText === "function") {
+          await this.agent.speakText(this._greetingText, true);
+        } else {
+          await this.emitAssistantLine({ text: this._greetingText, channel: "voice", forceNewDateSeparator: true });
+        }
+      } catch (e) {
+        console.warn("[greeting] Voice greeting failed:", e);
       }
-    } catch (e) {
-      console.warn("[greeting] Voice greeting failed:", e);
     }
+
+    // Cold start: start RDS conversation after greeting finishes (only if user hasn't spoken yet this session)
+    if (!this._userSpokenThisSession && !this.user?.isAnonymous) {
+      if (sendGreeting) {
+        await new Promise(r => setTimeout(r, 500));   // let Gemini begin speaking
+        await this._waitForSpeechEnd(15000);           // wait for greeting to finish
+        await new Promise(r => setTimeout(r, 600));   // brief pause
+      } else {
+        await new Promise(r => setTimeout(r, 800));
+      }
+      this.startConversation().catch(e => console.warn("[rds/auto-start]", e));
+    }
+  }
+
+  _pickMicroGreeting() {
+    const isEs = String(this.locale.variant || "").toLowerCase().startsWith("es");
+    const pool = isEs
+      ? ["¡Aquí estoy!", "¿Sí?", "¡Dime!", "Te escucho.", "¿Qué me cuentas?"]
+      : ["I'm here!", "Yes?", "Go ahead!", "I'm listening.", "What's up?", "Here!"];
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   pickSubject() {
     const content = getConversationContent(this.locale.variant);
-    const customSubjects = (this.subjects || []).map((s) => (s || "").trim()).filter(Boolean);
-    if (customSubjects.length > 0) return this.randomItem(customSubjects);
+    const declared = (this.declaredInterests || []).filter(Boolean);
+    if (declared.length > 0) return this.randomItem(declared);
     const fallback = this.randomItem(content.defaultSubjects);
     return fallback?.subject || "something interesting";
   }
@@ -2466,17 +2429,8 @@ class BrendaApp {
     return false;
   }
 
-  setStartButtonBusy(isBusy) {
-    const btn = this.elements.startBtn;
-    if (!btn) return;
-    btn.disabled = !!isBusy;
-    const key = isBusy ? "startButtonBusy" : "startButton";
-    btn.textContent = t(this.locale.variant, key);
-  }
-
   async startConversation() {
     const isVoiceMode = this.mode === "talk";
-    // Allow anonymous in voice mode so we can greet even if not logged in.
     if (!this.user && !isVoiceMode) {
       this.openAuthOverlay({ closable: false, resetFields: true });
       return;
@@ -2484,18 +2438,12 @@ class BrendaApp {
     if (this._startingConversation) return;
 
     this._startingConversation = true;
-    this.setStartButtonBusy(true);
     const channel = this.mode === "text" ? "text" : "voice";
 
     try {
-      // 1. Pick a subject
       const subject = this.pickSubject();
-
-      // 2. Generate 2-step starter (Statement + Question)
-      // No greeting here (as requested)
       const { statement, question } = await this.generateTopicStarter(subject);
 
-      // 3. Speak/Send Statement
       if (isVoiceMode) {
         const ok = await this.speakExactLine(statement);
         if (!ok) await this.agent.speakText(statement);
@@ -2503,23 +2451,19 @@ class BrendaApp {
         await this.emitAssistantLine({ text: statement, channel });
       }
 
-      // Voice Fix: Add delay to separate statement and question in talk mode
       if (isVoiceMode) await new Promise(r => setTimeout(r, 600));
 
-      // 4. Speak/Send Question (Prompt)
       if (isVoiceMode) {
         const ok = await this.speakExactLine(question);
         if (!ok) await this.agent.speakText(question);
       } else {
         await this.emitAssistantLine({ text: question, channel });
       }
-
     } catch (e) {
       console.error(e);
       this.showError(e);
     } finally {
       this._startingConversation = false;
-      this.setStartButtonBusy(false);
     }
   }
 
@@ -2753,9 +2697,16 @@ class BrendaApp {
       const data = await this.apiJSON("/api/greeting", { method: "GET" });
       const greetingType = data?.greetingType || "none";
 
-      this._greetingType          = greetingType;
-      this._greetingShown         = false;
-      this._voiceGreetingEverSent = false;
+      this._greetingType            = greetingType;
+      this._greetingShown           = false;
+      this._voiceGreetingEverSent   = false;
+      this._talkDisconnectedByUser  = false;
+      this._userSpokenThisSession   = false;
+
+      // Store declared interests from rds_profiles
+      if (Array.isArray(data?.declaredInterests)) {
+        this.declaredInterests = data.declaredInterests;
+      }
       if (greetingType !== "none" || !this._chatSessionId) {
         this._chatSessionId = crypto.randomUUID();
       }
@@ -2876,31 +2827,10 @@ class BrendaApp {
       "Let's get to it!";
   }
 
-  // Explicit "Chat" button — triggers an RDS warm-up conversation turn
+  // "New Topic" button — pick a fresh RDS subject in whatever mode is active
   async onChatButton() {
-    if (this.user?.isAnonymous) return;   // RDS requires a logged-in user
-    this._textWeatherPending = false;     // clear any stale weather follow-up state
-    const v    = this.locale.variant;
-    const isEs = v.startsWith("es");
-    const trigger = isEs ? "Cuéntame algo" : "Let's chat";
-
-    const canVoice = this.mode === "talk"
-      && this._lastVoiceStatus !== "disconnected"
-      && typeof this.agent?.speakText === "function";
-
-    if (canVoice) {
-      // TALK mode: show trigger in transcript then route through Gemini Live
-      this.addMessage({ role: "user", channel: "voice", text: trigger, status: "final" });
-      this._pendingUserTranscript = "";
-      this._awaitingUserTranscript = false;
-      this.render();
-      this.setThinkingIndicator(true);
-      await this.agent.speakText(trigger);
-    } else {
-      // TEXT mode: use the normal text pipeline
-      this.elements.chatInput.value = trigger;
-      await this.sendTextMessage();
-    }
+    if (!this.user || this.user.isAnonymous) return;
+    await this.startConversation();
   }
 
   // Proactive idle-timer — opt-in via localStorage, default off

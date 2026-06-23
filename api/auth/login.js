@@ -9,6 +9,16 @@ function json(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+// Normalize to Proper case, ASCII only (strips accents/UTF-8)
+function normalizeUsername(raw) {
+  const ascii = String(raw || "")
+    .normalize("NFKD")
+    .replace(/[^\x00-\x7F]/g, "")
+    .trim();
+  if (!ascii) return "";
+  return ascii.charAt(0).toUpperCase() + ascii.slice(1).toLowerCase();
+}
+
 function isValidUsername(u) {
   return /^[A-Za-z0-9_]{4,20}$/.test(u);
 }
@@ -23,7 +33,7 @@ async function nextUserSuffix(db, username) {
     { $inc: { seq: 1 } },
     { upsert: true, returnDocument: "after" }
   );
-  return r.value?.seq || 1;
+  return r.seq || 1;
 }
 
 export default async function handler(req, res) {
@@ -31,7 +41,8 @@ export default async function handler(req, res) {
 
   try {
     // Express req.body
-    const { username, pin, gender: rawGender } = req.body || {};
+    const { username: rawUsername, pin, gender: rawGender } = req.body || {};
+    const username = normalizeUsername(rawUsername);
     const gender = ["Woman", "Man", "Other"].includes(rawGender) ? rawGender : null;
 
     if (!isValidUsername(username)) return json(res, 400, { error: "Invalid username" });

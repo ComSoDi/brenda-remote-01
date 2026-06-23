@@ -14,7 +14,7 @@ async function nextAnonSeq(db) {
     { $inc: { seq: 1 } },
     { upsert: true, returnDocument: "after" }
   );
-  return r.value?.seq || 1;
+  return r.seq || 1;
 }
 
 export default async function handler(req, res) {

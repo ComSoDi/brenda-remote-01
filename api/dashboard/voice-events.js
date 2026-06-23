@@ -103,7 +103,16 @@ export default async function handler(req, res) {
   const match = buildMatch(userId, from, to);
 
   try {
-    const db         = await getDb();
+    const db = await getDb();
+
+    // ALL-users view: restrict to userIds that exist in the users collection
+    if (!userId) {
+      const validUsers = await db.collection("users")
+        .find({}, { projection: { userId: 1 } })
+        .toArray();
+      match.userId = { $in: validUsers.map(u => u.userId) };
+    }
+
     const collection = db.collection("gemini_voice_usage_events");
 
     const [subtotals, total] = await Promise.all([

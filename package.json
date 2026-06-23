@@ -8,13 +8,14 @@
     "start": "node --env-file=.env server.js",
     "vercel-dev": "vercel dev --listen 3000",
     "test:gemini-key": "node --env-file=.env scripts/test-gemini-key.js",
-    "test:gemini-live": "node --env-file=.env scripts/test-gemini-live.js"
+    "test:gemini-live": "node --env-file=.env scripts/test-gemini-live.js",
+    "migrate:cleanup": "node --env-file=.env scripts/cleanup-migrate.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
-    "mongodb": "^7.0.0",
+    "mongodb": "^7.3.0",
     "ws": "^8.19.0"
   },
   "devDependencies": {

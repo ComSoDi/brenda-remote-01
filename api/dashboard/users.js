@@ -14,13 +14,14 @@ export default async function handler(req, res) {
     const db    = await getDb();
     const users = await db.collection("users")
       .find({}, { projection: { userId: 1, username: 1, displayName: 1 } })
-      .sort({ userId: 1 })
       .toArray();
 
-    const result = users.map((u) => ({
-      userId:      u.userId,
-      displayName: u.displayName || u.username || u.userId.replace(/^user_/, ""),
-    }));
+    const result = users
+      .map((u) => ({
+        userId:      u.userId,
+        displayName: u.displayName || u.username || u.userId.replace(/^user_/, ""),
+      }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }));
 
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json");

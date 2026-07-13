@@ -949,13 +949,13 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0px;
-  padding-top: 0px;
+  padding-top: 10px;
 }
 
 .auth-avatar {
-  width: 150px;
+  width: 100px;
   /* Was 92px */
-  height: 150px;
+  height: 100px;
   /* Was 92px */
   border-radius: 50%;
   object-fit: cover;

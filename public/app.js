@@ -2322,62 +2322,25 @@ class BrendaApp {
   }
 
   async generateTopicStarter(subject) {
-    const tempRaw = Number(window.Config?.AI_TEMPERATURE);
-    const temp = Number.isFinite(tempRaw) ? tempRaw : 1;
-    const opening = this.pickOpening();
+    const opening   = this.pickOpening();
     const isSpanish = String(this.locale.variant || "").toLowerCase().startsWith("es");
 
-    // Prompt for JSON: statement + question
-    const systemPrompt =
-      `You are a helpful AI assistant. Generate a natural, casual conversation starter about "${subject}". ` +
-      `The statement MUST start with the exact opening phrase: "${opening}". ` +
-      `Do not repeat the opening phrase later in the statement. ` +
-      `Return ONLY a valid JSON object with the following structure:\n` +
-      `{\n` +
-      `  "statement": "A casual fact, observation, or personal remark about the subject.",\n` +
-      `  "question": "A follow-up question to the user to get their opinion."\n` +
-      `}\n` +
-      `The tone should be friendly and human-like. Use the user's name sparingly if at all in the question. ` +
-      `If you use an introductory phrase like 'I wanted to ask you', put it in the 'question' field, NOT the 'statement' field. ` +
-      `${isSpanish ? "Write in Spanish." : "Write in English."} ` +
-      `Any other 'non-question' opening phrases DO GO in the 'statement' field.`;
-
     try {
-      const data = await this.chatRequest({
-        localeVariant: this.locale.variant,
-        messages: [{ role: "user", content: systemPrompt }],
-        temperature: temp,
+      const data = await this.apiJSON("/api/rds/topic-starter", {
+        method: "POST",
+        body: { subject, localeVariant: this.locale.variant },
       });
 
-      // Parse JSON from reply
-      let json = {};
-      try {
-        // Strip markdown code blocks if present
-        const raw = (data.reply || "").replace(/```json/g, "").replace(/```/g, "").trim();
-        json = JSON.parse(raw);
-      } catch (e) {
-        console.warn("Failed to parse starter JSON, falling back to raw text", e);
-        // Fallback: treat whole reply as statement, asking generic question
-        return {
-          statement: this.ensureOpening(opening, data.reply || ""),
-          question: isSpanish ? "¿Qué opinas tú?" : "What do you think about it?"
-        };
-      }
-
-      const statement = this.ensureOpening(opening, json.statement || "");
+      const statement = this.ensureOpening(opening, data.statement || "");
       return {
         statement: statement || this.ensureOpening(opening, isSpanish ? `sobre ${subject}.` : `about ${subject}.`),
-        question: json.question || (isSpanish ? "¿Qué opinas tú?" : "What's your take on it?")
+        question: data.question || (isSpanish ? "¿Qué opinas tú?" : "What's your take on it?"),
       };
-
     } catch (e) {
       console.error("Error generating topic starter:", e);
-      const fallbackStatement = isSpanish
-        ? `sobre ${subject}.`
-        : `about ${subject}.`;
       return {
-        statement: this.ensureOpening(opening, fallbackStatement),
-        question: isSpanish ? "¿Qué te parece?" : "Do you have any thoughts on that?"
+        statement: this.ensureOpening(opening, isSpanish ? `sobre ${subject}.` : `about ${subject}.`),
+        question: isSpanish ? "¿Qué te parece?" : "Do you have any thoughts on that?",
       };
     }
   }
@@ -2697,13 +2660,13 @@ class BrendaApp {
       const data = await this.apiJSON("/api/greeting", { method: "GET" });
       const greetingType = data?.greetingType || "none";
 
-      this._greetingType            = greetingType;
-      this._greetingShown           = false;
-      this._voiceGreetingEverSent   = false;
-      this._talkDisconnectedByUser  = false;
-      this._userSpokenThisSession   = false;
+      // Reset session-level state (but NOT _greetingType/_greetingText yet —
+      // those must be set atomically below to avoid the voice-greeting race).
+      this._greetingShown          = false;
+      this._voiceGreetingEverSent  = false;
+      this._talkDisconnectedByUser = false;
+      this._userSpokenThisSession  = false;
 
-      // Store declared interests from rds_profiles
       if (Array.isArray(data?.declaredInterests)) {
         this.declaredInterests = data.declaredInterests;
       }
@@ -2711,19 +2674,40 @@ class BrendaApp {
         this._chatSessionId = crypto.randomUUID();
       }
 
-      // Deliver pending medication reminders (non-fatal)
-      if (data?.pendingReminders?.length) {
-        const displayName = this.user.isAnonymous
-          ? ""
-          : (this.user.displayName || this.user.username || "").trim();
-        await this.medicationManager.deliverReminders(data.pendingReminders, displayName, this.locale.variant);
-      }
-
-      // RDS first-time intro — must run before any early return so it fires on every greetingType
       const displayName = this.user.isAnonymous
         ? ""
         : (this.user.displayName || this.user.username || "").trim();
 
+      // Build greeting text synchronously (no awaits) BEFORE setting _greetingType,
+      // so the voice greeting timer can never observe _greetingType set but _greetingText null.
+      let greetingText = null;
+      if (greetingType === "full") {
+        greetingText = this.buildFullGreeting(displayName);
+      } else if (greetingType === "short") {
+        greetingText = this.buildShortGreeting(displayName);
+      }
+
+      // Atomic: both fields written with no await between them.
+      this._greetingText = greetingText;
+      this._greetingType = greetingType;
+
+      // Secondary race guard: if voice already connected and the 1-second greeting
+      // timer fired before this resolved (e.g. on cold-start Render), re-trigger it.
+      if (greetingType !== "none"
+          && this.mode === "talk"
+          && !this._voiceGreetingSent
+          && !this._voiceGreetingEverSent
+          && !this._voiceGreetingTimer
+          && (this._lastVoiceStatus === "connected" || this._lastVoiceStatus === "speaking")) {
+        this.scheduleVoiceGreeting();
+      }
+
+      // Deliver pending medication reminders (non-fatal)
+      if (data?.pendingReminders?.length) {
+        await this.medicationManager.deliverReminders(data.pendingReminders, displayName, this.locale.variant);
+      }
+
+      // RDS first-time intro
       if (data?.rdsIntroNeeded && !this.user?.isAnonymous) {
         const introText = this._buildRdsIntro(displayName);
         await this.emitAssistantLine({ text: introText, channel: "text" });
@@ -2737,19 +2721,10 @@ class BrendaApp {
       // RDS idle-timeout proactive initiation (opt-in, default off)
       this._startRdsIdleTimer();
 
-      if (greetingType === "none") {
-        this._greetingText = null;
-        return;
-      }
-
-      if (greetingType === "full") {
-        this._greetingText = this.buildFullGreeting(displayName);
-      } else {
-        this._greetingText = this.buildShortGreeting(displayName);
-      }
+      if (greetingType === "none") return;
 
       // Text mode: emit right now, after history is already rendered.
-      // Voice mode: stored above; scheduleVoiceGreeting() will pick it up.
+      // Voice mode: _greetingText is already stored; scheduleVoiceGreeting() picks it up.
       if (this.mode === "text" && this._greetingText) {
         this._greetingShown = true;
         await this.emitAssistantLine({ text: this._greetingText, channel: "text", forceNewDateSeparator: true });
@@ -2865,10 +2840,18 @@ class BrendaApp {
   buildFullGreeting(displayName) {
     const hour = new Date().getHours();
     let bucket;
-    if      (hour >= 5  && hour < 12) bucket = "morning";
-    else if (hour >= 12 && hour < 18) bucket = "afternoon";
-    else if (hour >= 18 && hour < 21) bucket = "evening";
-    else                               bucket = "night";
+    if (this.locale.variant === "es-ES") {
+      // Spain schedule: lunch extends morning; siesta shifts afternoon later
+      if      (hour >= 5  && hour < 14) bucket = "morning";
+      else if (hour >= 14 && hour < 20) bucket = "afternoon";
+      else if (hour >= 20 && hour < 22) bucket = "evening";
+      else                               bucket = "night";
+    } else {
+      if      (hour >= 5  && hour < 12) bucket = "morning";
+      else if (hour >= 12 && hour < 18) bucket = "afternoon";
+      else if (hour >= 18 && hour < 21) bucket = "evening";
+      else                               bucket = "night";
+    }
 
     const content = getConversationContent(this.locale.variant);
     const pool    = content?.fullGreetings?.[bucket];

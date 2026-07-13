@@ -6,15 +6,8 @@ import { getDb } from "../lib/mongo.js";
 import { requireSession } from "../lib/auth.js";
 import { getRdsProfile, incrementRdsSession, setDeclaredInterests } from "../lib/rdsService.js";
 
-const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
-
-function isSameCalendarDay(a, b) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth()    === b.getMonth()    &&
-    a.getDate()     === b.getDate()
-  );
-}
+const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
+const THIRTY_MIN_MS  = 30 * 60 * 1000;
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -60,9 +53,9 @@ export default async function handler(req, res) {
         greetingType = "full";
       } else {
         const gapMs = now - lastSeen;
-        if (!isSameCalendarDay(now, lastSeen)) {
+        if (gapMs >= EIGHT_HOURS_MS) {
           greetingType = "full";
-        } else if (gapMs >= TWELVE_HOURS_MS) {
+        } else if (gapMs >= THIRTY_MIN_MS) {
           greetingType = "short";
         }
       }

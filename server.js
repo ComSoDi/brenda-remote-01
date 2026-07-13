@@ -30,6 +30,7 @@ import dashVoiceHandler      from "./api/dashboard/voice-events.js";
 import dashChatHandler       from "./api/dashboard/chat-events.js";
 import rdsStateHandler       from "./api/rds/state.js";
 import rdsInterestsHandler   from "./api/rds/interests.js";
+import rdsTopicStarterHandler from "./api/rds/topic-starter.js";
 
 import { getSession } from "./lib/auth.js";
 import { getDb } from "./lib/mongo.js";
@@ -80,10 +81,11 @@ app.get("/api/dashboard/users",       (req, res) => dashUsersHandler(req, res));
 app.get("/api/dashboard/voice-events",(req, res) => dashVoiceHandler(req, res));
 app.get("/api/dashboard/chat-events", (req, res) => dashChatHandler(req, res));
 
-app.get("/api/rds/state",       (req, res) => rdsStateHandler(req, res));
-app.post("/api/rds/state",      (req, res) => rdsStateHandler(req, res));
-app.get("/api/rds/interests",   (req, res) => rdsInterestsHandler(req, res));
-app.post("/api/rds/interests",  (req, res) => rdsInterestsHandler(req, res));
+app.get("/api/rds/state",          (req, res) => rdsStateHandler(req, res));
+app.post("/api/rds/state",         (req, res) => rdsStateHandler(req, res));
+app.get("/api/rds/interests",      (req, res) => rdsInterestsHandler(req, res));
+app.post("/api/rds/interests",     (req, res) => rdsInterestsHandler(req, res));
+app.post("/api/rds/topic-starter", (req, res) => rdsTopicStarterHandler(req, res));
 
 app.get("*", (_req, res) => res.sendFile(path.join(STATIC_DIR, "index.html")));
 
@@ -186,6 +188,46 @@ function buildMedSystemBlock(meds, locale) {
 }
 
 // ── WebSocket proxy (Gemini Live) ───────────────────────────────────────────
+
+// Gemini 3.1 Live no longer accepts client_content mid-session — text must go
+// through realtime_input.text instead. client_content is only valid for seeding
+// initial history in 3.1 (which Brenda doesn't use). For 2.5, pass through as-is.
+function processClientMessage(rawData, isGemini31) {
+  if (!isGemini31) return rawData;
+  try {
+    const str = typeof rawData === "string" ? rawData : rawData.toString();
+    const msg = JSON.parse(str);
+
+    // media_chunks deprecated in 3.1 — use realtime_input.audio instead
+    if (msg.realtime_input?.media_chunks?.length) {
+      const chunk = msg.realtime_input.media_chunks[0];
+      return JSON.stringify({
+        realtime_input: {
+          audio: {
+            mime_type: chunk.mime_type || "audio/pcm;rate=16000",
+            data: chunk.data,
+          },
+        },
+      });
+    }
+
+    // client_content mid-session invalid in 3.1 — use realtime_input.text instead
+    if (msg.client_content) {
+      const text = (msg.client_content.turns || [])
+        .flatMap(t => t.parts || [])
+        .filter(p => typeof p.text === "string")
+        .map(p => p.text)
+        .join(" ")
+        .trim();
+      if (text) {
+        console.log("[voice-proxy] 3.1: client_content → realtime_input.text");
+        return JSON.stringify({ realtime_input: { text } });
+      }
+    }
+  } catch { }
+  return rawData;
+}
+
 const wss = new WebSocketServer({ noServer: true });
 
 server.on("upgrade", async (req, socket, head) => {
@@ -219,7 +261,7 @@ server.on("upgrade", async (req, socket, head) => {
         const [userDoc, meds, profile] = await Promise.all([
           db.collection("users").findOne(
             { userId: session.userId },
-            { projection: { "preferences.gender": 1 } }
+            { projection: { "preferences.gender": 1, "preferences.location": 1 } }
           ),
           db.collection("medications").find({ userId: session.userId, active: true }).sort({ name: 1 }).toArray(),
           getRdsProfile(db, session.userId),
@@ -227,6 +269,8 @@ server.on("upgrade", async (req, socket, head) => {
         if (!gender) gender = userDoc?.preferences?.gender || null;
         activeMeds = meds || [];
         rdsProfile = profile || null;
+        const savedLoc = userDoc?.preferences?.location || null;
+        ws.savedLocation = savedLoc;
       }
     } catch {
       // non-fatal
@@ -255,17 +299,24 @@ wss.on("connection", (ws) => {
   const voiceSessionId = randomUUID();
   let voiceResponseCounter = 0;
   const userId = ws.userId || null;
-  console.log(`[voice-proxy] session=${voiceSessionId} userId=${userId ?? "null"}`);
 
   const MODEL = process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-12-2025";
   const modelPath = MODEL.startsWith("models/") ? MODEL : `models/${MODEL}`;
+  const IS_GEMINI_31 = MODEL.startsWith("gemini-3") || MODEL.includes("3.1-flash-live");
+  console.log(`[voice-proxy] session=${voiceSessionId} userId=${userId ?? "null"} model=${MODEL}`);
 
   const locale = ws.userLocale || "es-ES";
   const voiceMap = { "en-US": "Aoede", "en-GB": "Aoede", "es-ES": "Vindemiatrix", "es-419": "Vindemiatrix" };
   const VOICE = process.env.GEMINI_LIVE_VOICE || voiceMap[locale] || "Vindemiatrix";
 
+  const savedLoc = ws.savedLocation || null;
+  const locationLine = savedLoc?.city
+    ? `\n\nThe user's saved home location is ${savedLoc.city}${savedLoc.country ? `, ${savedLoc.country}` : ""}. Use this city for weather and time queries when no city is specified.`
+    : "";
+
   const systemText = buildSystemInstruction(locale, ws.userGender || null)
     + buildMedSystemBlock(ws.activeMeds || [], locale)
+    + locationLine
     + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "");
 
   const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
@@ -273,26 +324,29 @@ wss.on("connection", (ws) => {
 
   const messageBuffer = [];
   let isReady = false;
+  let setupFallbackTimer = null;
   let inputTranscriptBuf = "";
   let outputTranscriptBuf = "";
 
   geminiWs.on("open", () => {
-    isReady = true;
-    console.log(`✅ Gemini upstream ready — model: ${MODEL}, voice: ${VOICE}`);
+    console.log(`📡 Gemini WS open — sending setup. model: ${MODEL}, voice: ${VOICE}`);
 
     const compressionTargetTokens = process.env.GEMINI_CONTEXT_COMPRESSION_TOKENS
       ? Number(process.env.GEMINI_CONTEXT_COMPRESSION_TOKENS)
       : null;
 
+    const generation_config = {
+      response_modalities: ["AUDIO"],
+      speech_config: {
+        voice_config: { prebuilt_voice_config: { voice_name: VOICE } },
+      },
+      ...(IS_GEMINI_31 ? { thinking_config: { thinking_level: "low" } } : {}),
+    };
+
     const setupMessage = {
       setup: {
         model: modelPath,
-        generation_config: {
-          response_modalities: ["AUDIO"],
-          speech_config: {
-            voice_config: { prebuilt_voice_config: { voice_name: VOICE } }
-          }
-        },
+        generation_config,
         input_audio_transcription: {},
         output_audio_transcription: {},
         system_instruction: {
@@ -306,16 +360,25 @@ wss.on("connection", (ws) => {
     };
     geminiWs.send(JSON.stringify(setupMessage));
 
-    while (messageBuffer.length > 0) {
-      geminiWs.send(messageBuffer.shift());
-    }
+    // Do NOT flush the buffer or set isReady yet. Gemini must send setupComplete
+    // before it is ready to accept client_content turns. Flushing immediately
+    // causes the first client message (e.g. the proactive greeting) to be dropped.
+    // Fallback: force ready after 6 s in case setupComplete never arrives.
+    setupFallbackTimer = setTimeout(() => {
+      if (!isReady) {
+        console.warn("[voice-proxy] setupComplete not received within 6 s — forcing ready");
+        isReady = true;
+        while (messageBuffer.length > 0) geminiWs.send(messageBuffer.shift());
+      }
+    }, 6000);
   });
 
   ws.on("message", (data) => {
+    const processed = processClientMessage(data, IS_GEMINI_31);
     if (isReady) {
-      geminiWs.send(data);
+      geminiWs.send(processed);
     } else {
-      messageBuffer.push(data);
+      messageBuffer.push(processed);
     }
   });
 
@@ -327,19 +390,29 @@ wss.on("connection", (ws) => {
     try {
       const parsed = JSON.parse(text);
 
+      // Gemini signals setup is accepted — now safe to forward client content turns
+      if (!isReady && parsed?.setupComplete !== undefined) {
+        isReady = true;
+        if (setupFallbackTimer) { clearTimeout(setupFallbackTimer); setupFallbackTimer = null; }
+        console.log("✅ Gemini setup complete — flushing message buffer");
+        while (messageBuffer.length > 0) geminiWs.send(messageBuffer.shift());
+      }
+
       if (parsed?.error) {
         console.error("❌ Gemini upstream error payload:", JSON.stringify(parsed.error));
       }
 
-      // Usage tracking
-      if (parsed?.usageMetadata) {
-        console.log(`[voice-proxy] usageMetadata seen userId=${userId ?? "null"}`, JSON.stringify(parsed.usageMetadata));
-      }
-      if (parsed?.usageMetadata && userId) {
-        const responseId = `${voiceSessionId}_${voiceResponseCounter++}`;
-        getDb()
-          .then(db => db && recordVoiceUsage({ db, userId, voiceSessionId, responseId, model: MODEL, usage: parsed.usageMetadata }))
-          .catch(e => console.error("[voice-proxy/usage]", e.message));
+      // Usage tracking — check both top-level and serverContent-nested locations
+      // (3.1 Live may deliver usageMetadata inside serverContent rather than top-level)
+      const usageMeta = parsed?.usageMetadata ?? parsed?.serverContent?.usageMetadata ?? null;
+      if (usageMeta) {
+        console.log(`[voice-proxy] usageMetadata userId=${userId ?? "null"}`, JSON.stringify(usageMeta));
+        if (userId) {
+          const responseId = `${voiceSessionId}_${voiceResponseCounter++}`;
+          getDb()
+            .then(db => db && recordVoiceUsage({ db, userId, voiceSessionId, responseId, model: MODEL, usage: usageMeta }))
+            .catch(e => console.error("[voice-proxy/usage]", e.message));
+        }
       }
 
       // RDS: accumulate transcripts and extract on turn complete

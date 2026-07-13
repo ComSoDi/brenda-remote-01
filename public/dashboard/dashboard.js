@@ -223,8 +223,11 @@ class DashboardApp {
         <span style="font-weight:normal;font-size:10px;margin-left:4px">(${this._fmtInt(total)} events)</span>
       </td>
       ${this._tokenCells(u, true)}
+      ${this._voiceMinCells(u, true)}
       ${this._priceCells(p, tprc, true)}
+      ${this._voicePriceCells(p, true)}
       ${this._costCells(c, true)}
+      ${this._voiceCostCells(c, true)}
     </tr>`;
   }
 
@@ -238,8 +241,11 @@ class DashboardApp {
     return `<tr class="${cls}" style="opacity:0.75;">
       <td colspan="2" style="text-align:left;padding-left:14px;font-style:italic">${this._esc(label)}</td>
       ${this._tokenCells(u, true)}
+      ${this._voiceMinCells(u, true)}
       ${this._priceCells(p, tprc, true)}
+      ${this._voicePriceCells(p, true)}
       ${this._costCells(c, true)}
+      ${this._voiceCostCells(c, true)}
     </tr>`;
   }
 
@@ -259,8 +265,11 @@ class DashboardApp {
       <td class="col-dt">${d ? this._fmtDate(d) : ""}</td>
       <td class="col-dt">${d ? this._fmtTime(d) : ""}</td>
       ${this._tokenCells(u)}
+      ${this._voiceMinCells(u)}
       ${this._priceCells(p, tprc)}
+      ${this._voicePriceCells(p)}
       ${this._costCells(c)}
+      ${this._voiceCostCells(c)}
     </tr>`;
   }
 
@@ -268,7 +277,7 @@ class DashboardApp {
     const label = type === "voice" ? "Voice model:" : "Chat model:";
     const value = (models || []).filter(Boolean).sort().join(", ") || "—";
     return `<tr class="row-model">
-      <td colspan="23">${label} ${this._esc(value)}</td>
+      <td colspan="31">${label} ${this._esc(value)}</td>
     </tr>`;
   }
 
@@ -276,7 +285,7 @@ class DashboardApp {
     const prevDis = page <= 1 ? "disabled" : "";
     const nextDis = page >= totalPages ? "disabled" : "";
     return `<tr class="row-pagination">
-      <td colspan="23">
+      <td colspan="31">
         <button class="pagination-btn js-prev-page" data-block="${type}" ${prevDis}>&#8592; Previous</button>
         <span class="pagination-label">Page ${page} of ${totalPages} &nbsp;(${this._fmtInt(total)} total)</span>
         <button class="pagination-btn js-next-page" data-block="${type}" ${nextDis}>Next &#8594;</button>
@@ -329,8 +338,11 @@ class DashboardApp {
       <td class="col-dt">${this._esc(dateCell)}</td>
       <td class="col-dt">${this._esc(timeCell)}</td>
       ${this._tokenCells(u, true)}
+      ${this._voiceMinCells(u, true)}
       ${this._priceCells(p, tprc, true)}
+      ${this._voicePriceCells(p, true)}
       ${this._costCells(c, true)}
+      ${this._voiceCostCells(c, true)}
     </tr>`;
   }
 
@@ -338,7 +350,7 @@ class DashboardApp {
 
   _tokenCells(u, isSubtotal = false) {
     const cls = isSubtotal
-      ? ["col-blue","col-blue","col-green","col-green","col-white","col-blue","col-green","col-white"]
+      ? ["col-blue","col-blue","col-green","col-green","col-yellow","col-blue","col-green","col-white"]
       : ["","","","","","","",""];
     return [
       u.textInputTokens, u.audioInputTokens, u.textOutputTokens, u.audioOutputTokens,
@@ -350,18 +362,44 @@ class DashboardApp {
     const baseCls = isSubtotal ? "col-orange" : "";
     return [
       p?.textInput, p?.audioInput, p?.textOutput, p?.audioOutput,
-    ].map((v) => `<td class="${baseCls}">${this._fmtPrice(v)}</td>`).join("")
-      + `<td class="col-yellow">${thoughtsPrice}</td>`;
+    ].map((v) => `<td class="${baseCls}">${this._fmtPricePerM(v)}</td>`).join("")
+      + `<td class="${isSubtotal ? "col-yellow" : ""}">${thoughtsPrice}</td>`;
   }
 
   _costCells(c, isSubtotal = false) {
     const cls = isSubtotal
-      ? ["col-blue","col-blue","col-green","col-green","col-white","col-blue","col-green","col-white"]
+      ? ["col-blue","col-blue","col-green","col-green","col-yellow","col-blue","col-green","col-white"]
       : ["","","","","","","",""];
     return [
       c.textInput, c.audioInput, c.textOutput, c.audioOutput,
       c.thoughts, c.totalInput, c.totalOutput, c.total,
     ].map((v, i) => `<td class="${cls[i]}">${this._fmtCost(v)}</td>`).join("");
+  }
+
+  _voiceMinCells(u, isSubtotal = false) {
+    const cls    = isSubtotal ? ["col-blue","col-green","col-white"] : ["","",""];
+    const inMin  = (u.audioInputTokens  || 0) / 1500;
+    const outMin = (u.audioOutputTokens || 0) / 1500;
+    const totMin = inMin + outMin;
+    return [inMin, outMin, totMin]
+      .map((v, i) => `<td class="${cls[i]}">${this._fmtMin(v)}</td>`).join("");
+  }
+
+  _voicePriceCells(p, isSubtotal = false) {
+    const baseCls  = isSubtotal ? "col-orange" : "";
+    const priceIn  = p?.audioInput  != null ? (p.audioInput  / 1000) * 25 * 60 : null;
+    const priceOut = p?.audioOutput != null ? (p.audioOutput / 1000) * 25 * 60 : null;
+    return [priceIn, priceOut]
+      .map((v) => `<td class="${baseCls}">${this._fmtSmartDecimal(v)}</td>`).join("");
+  }
+
+  _voiceCostCells(c, isSubtotal = false) {
+    const cls     = isSubtotal ? ["col-blue","col-green","col-white"] : ["","",""];
+    const costIn  = c.audioInput  || 0;
+    const costOut = c.audioOutput || 0;
+    const costTot = costIn + costOut;
+    return [costIn, costOut, costTot]
+      .map((v, i) => `<td class="${cls[i]}">${this._fmtCost(v)}</td>`).join("");
   }
 
   // ── Event wiring ─────────────────────────────────────────
@@ -403,9 +441,20 @@ class DashboardApp {
     return Math.round(v).toLocaleString("en-US");
   }
 
-  _fmtPrice(v) {
+  _fmtMin(v) {
+    if (v == null || isNaN(v)) return "0.00";
+    return Number(v).toFixed(2);
+  }
+
+  _fmtSmartDecimal(v) {
     if (v == null) return "—";
-    return Number(v).toFixed(6);
+    const n = Number(v);
+    return n >= 1 ? n.toFixed(2) : n.toFixed(3);
+  }
+
+  _fmtPricePerM(v) {
+    if (v == null) return "—";
+    return this._fmtSmartDecimal(Number(v) * 1000);
   }
 
   _fmtCost(v) {
@@ -428,7 +477,7 @@ class DashboardApp {
 
   _calcThoughtsPrice(costThoughts, thoughtsTokens) {
     if (!thoughtsTokens || thoughtsTokens === 0) return "—";
-    return ((costThoughts / thoughtsTokens) * 1000).toFixed(6);
+    return this._fmtSmartDecimal((costThoughts / thoughtsTokens) * 1000000);
   }
 
   _toLocalIso(d) {

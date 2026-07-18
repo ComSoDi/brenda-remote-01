@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Soy iaBrenda** is a multilingual AI chat and voice assistant deployed on Vercel. The AI persona is named "Brenda". It supports text chat (via Gemini) and real-time voice (via Gemini Live). The frontend is vanilla JS with no framework.
+**Soy IA Brenda** is a multilingual AI chat and voice assistant deployed on Vercel. The AI persona is named "Brenda". It supports text chat (via Gemini) and real-time voice (via Gemini Live). The frontend is vanilla JS with no framework.
 
 ---
 
@@ -49,7 +49,7 @@ lib/                        Shared utilities (bundled into Vercel functions via 
   usage.js                  Voice token usage normalization, cost calculation, DB rollups
 
 public/                     Static frontend (served as SPA)
-  index.html                Main app shell ("Soy iaBrenda")
+  index.html                Main app shell ("Soy IA Brenda")
   app.js                    Core application logic
   voiceAgent.js             Gemini Live voice agent (WebSocket + PCM audio)
   pcm-processor.js          AudioWorklet PCM processor (Web Audio API)

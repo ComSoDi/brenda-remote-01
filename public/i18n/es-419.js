@@ -1,5 +1,5 @@
 export default {
-    callTitle: "Hablando con iaBrenda",
+    callTitle: "Hablando con IA Brenda",
     voiceMode: "Hablar",
     textMode: "Escribir",
     connect: "Hablar",
@@ -14,11 +14,11 @@ export default {
     send: "Enviar",
     textInputPlaceholder: "Escribe aqui.",
     youLabel: "Tu",
-    assistantLabel: "iaBrenda",
+    assistantLabel: "IA Brenda",
 
     accountBtnAnonymous: "Anónimo",
 
-    authGreeting: "¡Hola! Soy iaBrenda",
+    authGreeting: "¡Hola! Soy IA Brenda",
     authExplain: "Crea tu cuenta para que nuestras conversaciones sean privadas y memorables",
     authNickLabel: "Apodo",
     authNickHelp: "Solo letras, numeros y guiones bajos (4-20 caracteres)",
@@ -64,8 +64,8 @@ export default {
     myInfoSaveError: "No puedo guardar la ubicación ahora mismo.",
 
     // Help
-    helpTitle: "aiBrenda Help",
-    helpGreeting: "¡Holai! Soy aiBrenda",
+    helpTitle: "IA Brenda Help",
+    helpGreeting: "¡Holai! Soy IA Brenda",
     helpExplain: "Crea tu cuenta para que nuestras conversaciones sean privadas y memorables",
 
     // SideNav Help
@@ -160,7 +160,7 @@ export default {
     sideNavTalkText1: "¡Este es el botón que más usarás!",
     sideNavTalkText2: "Pulsa \"Hablar\" cuando quieras que hablemos como si me llamas por teléfono.",
     sideNavTalkText3: "La primera vez que me llames te pediré permiso para usar tu micrófono. Selecciona",
-    sideNavTalkText4: "Mientras contesto, verás una señal amarilla animada que dice \"Conectando\". Cuando veas \"Hablando con iaBrenda\" y el círculo redondo rojo de colgar, ¡podemos hablar!",
+    sideNavTalkText4: "Mientras contesto, verás una señal amarilla animada que dice \"Conectando\". Cuando veas \"Hablando con IA Brenda\" y el círculo redondo rojo de colgar, ¡podemos hablar!",
     sideNavTalkText5: "Háblame con claridad en un lugar con poco ruido y entenderé perfectamente lo que me digas o preguntes.",
     sideNavTalkText6: "Si pulsas el botón amarillo \"Inicia\" mientras hablamos, iniciaré la conversación con uno de tus temas favoritos.",
     sideNavTalkText7: "Y, cuando quieras colgar, solo pulsa en el círculo rojo.",
@@ -175,10 +175,10 @@ export default {
     sideNavWriteText7: "Si pulsas el botón amarillo \"Inicia\" mientras escribimos, iniciaré la conversación con uno de tus temas favoritos.",
 
     // I am Brenda Overlay
-    brendaTitle: "iaBrenda",
+    brendaTitle: "IA Brenda",
     brendaSubtitle: "Tu compañera amistosa. Disponible siempre que quieras conversar",
     brendaContent: `
-            <p><strong>iaBrenda.com</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche, estés donde estés.</p>
+            <p><strong>IA Brenda.com</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche, estés donde estés.</p>
       <p>Considérame una buena amiga, una vecina cercana, una compañera del trabajo. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu dí­a, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
       <p>También puedo ayudarte con las preguntas típicas del día a día, como por ejemplo:</p>
       <ul>

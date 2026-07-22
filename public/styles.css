@@ -429,6 +429,15 @@ body {
   cursor: not-allowed;
 }
 
+/* Anonymous-session lock: stays clickable (so tapping it can show the
+   "open a free account" message) but must read as fully greyed-out —
+   overrides btn-connect-talk's orange regardless of class order. */
+.btn-toggle-talk.talk-locked {
+  background: #8a8a8a !important;
+  color: #dcdcdc !important;
+  cursor: not-allowed;
+}
+
 .btn-connect-talk {
   background: #ffb278;
   color: #000;
@@ -1591,10 +1600,329 @@ body {
 }
 
 .popup-status {
-  min-height: 18px;
+  min-height: 4px;
   font-size: 12px;
   color: #2563eb;
   margin-top: 4px;
+}
+
+/* ── Usage Monitor block (nested in the My Info popup-card) ─────────────── */
+
+.usage-monitor {
+  margin-top: 2px;
+  padding-top: 2px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.usage-monitor-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  color: #111827;
+}
+
+.usage-monitor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.usage-monitor-pct {
+  font-weight: 600;
+  color: #444;
+}
+
+.usage-monitor-track {
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: #cfe2f3;
+  overflow: hidden;
+}
+
+.usage-monitor-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.usage-monitor-bar--voice {
+  background: #f77a20;
+}
+
+.usage-monitor-bar--chat {
+  background: #7a20f7;
+}
+
+.usage-monitor-bar.exhausted {
+  background: #ff0000;
+}
+
+.usage-monitor-plan-line {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #444;
+  text-align: center;
+}
+
+.usage-monitor-plan-name {
+  font-weight: 700;
+  color: #0d9488;
+}
+
+/* ── Plan Selection overlay ───────────────────────────────────────────────── */
+
+.plan-selection-card {
+  width: min(92vw, 420px);
+  max-height: min(92vh, 720px);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.plan-selection-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.plan-promo-box {
+  border: 1px solid #d4d4d8;
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+
+.plan-promo-title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.plan-promo-body {
+  margin: 0;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.plan-promo-body strong {
+  font-weight: 800;
+}
+
+.plan-selection-header {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  text-align: center;
+  color: #111827;
+}
+
+.plan-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.plan-card {
+  position: relative;
+  border: 1px solid #d4d4d8;
+  border-radius: 14px;
+  padding: 16px 14px 14px;
+}
+
+.plan-card--popular {
+  border: 2px solid #dc2626;
+}
+
+.plan-card-badge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dc2626;
+  color: #fbbf24;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.plan-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.plan-card-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.plan-card-name {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.plan-card-minutes {
+  font-size: 16px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.plan-card-close {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: #111;
+}
+
+.plan-card-pricing {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.plan-price-full {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.plan-price-intro {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.plan-price-offer-text {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.plan-save-pill {
+  display: inline-block;
+  margin-top: 8px;
+  background: #f472b6;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: 999px;
+}
+
+.plan-card-table {
+  width: auto;
+  margin: 12px auto 0;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.plan-card-table th {
+  font-weight: 700;
+  color: #444;
+  padding: 0 10px 4px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.plan-card-table td {
+  padding: 4px 10px;
+  color: #333;
+}
+
+.plan-card-table th:first-child,
+.plan-card-table td:first-child {
+  text-align: left;
+  padding-left: 0;
+}
+
+.plan-card-table th:not(:first-child),
+.plan-card-table td:not(:first-child) {
+  text-align: right;
+}
+
+.plan-card-table th:last-child,
+.plan-card-table td:last-child {
+  padding-right: 0;
+}
+
+.plan-select-btn {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  background: linear-gradient(90deg, #22c55e 0%, #2f7cf1 100%);
+  color: #fff;
+}
+
+.plan-select-btn.plan-select-btn--current {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: default;
+}
+
+.plan-card-footnote {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: #888;
+  text-align: center;
+}
+
+.plan-notes {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plan-notes-p {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.plan-notes-link {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
 /* ── News & Gossip — header buttons ────────────────────────────────────────── */

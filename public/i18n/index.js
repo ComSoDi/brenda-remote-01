@@ -14,8 +14,14 @@ export async function preloadLocale(variant) {
   }));
 }
 
-export function t(localeVariant, key) {
+export function t(localeVariant, key, params) {
   const dict = _dicts[localeVariant] || {};
   const enUS = _dicts["en-US"] || {};
-  return dict[key] ?? enUS[key] ?? key;
+  let str = dict[key] ?? enUS[key] ?? key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      str = str.replaceAll(`{${k}}`, v);
+    }
+  }
+  return str;
 }

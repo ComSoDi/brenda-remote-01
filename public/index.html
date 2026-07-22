@@ -302,6 +302,64 @@
           <button id="myInfoSaveBtn" class="popup-btn-save" type="button"></button>
         </div>
         <div id="myInfoStatus" class="popup-status" role="status" aria-live="polite"></div>
+
+        <!-- USAGE MONITOR (hidden for anonymous users) -->
+        <div id="usageMonitor" class="usage-monitor hidden" aria-hidden="true">
+          <h3 id="usageMonitorTitle" class="usage-monitor-title"></h3>
+
+          <div class="usage-monitor-row">
+            <span id="usageVoiceLabel" class="usage-monitor-label"></span>
+            <span id="usageVoicePct" class="usage-monitor-pct"></span>
+          </div>
+          <div class="usage-monitor-track">
+            <div id="usageVoiceBar" class="usage-monitor-bar usage-monitor-bar--voice"></div>
+          </div>
+
+          <div class="usage-monitor-row">
+            <span id="usageChatLabel" class="usage-monitor-label"></span>
+            <span id="usageChatPct" class="usage-monitor-pct"></span>
+          </div>
+          <div class="usage-monitor-track">
+            <div id="usageChatBar" class="usage-monitor-bar usage-monitor-bar--chat"></div>
+          </div>
+
+          <p class="usage-monitor-plan-line">
+            <span id="usageCurrentPlanLabel"></span> <span id="usageCurrentPlanName" class="usage-monitor-plan-name"></span>
+          </p>
+
+          <div class="popup-actions">
+            <button id="usageCloseBtn" class="popup-btn-cancel" type="button"></button>
+            <button id="usageGetMoreTimeBtn" class="popup-btn-save" type="button"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PLAN SELECTION OVERLAY -->
+    <div id="planSelectionOverlay" class="popup-overlay hidden" aria-hidden="true">
+      <div class="plan-selection-card" role="dialog" aria-modal="true" aria-labelledby="planSelectionHeader">
+        <div class="plan-selection-scroll">
+
+          <div class="plan-promo-box">
+            <h2 id="planPromoTitle" class="plan-promo-title"></h2>
+            <p id="planPromoBody" class="plan-promo-body"></p>
+          </div>
+
+          <h1 id="planSelectionHeader" class="plan-selection-header"></h1>
+
+          <div id="planCardsContainer" class="plan-cards-container"></div>
+
+          <div class="plan-notes">
+            <p id="planNoteTerms" class="plan-notes-p"></p>
+            <p id="planNoteGP" class="plan-notes-p"></p>
+            <p id="planNoteChange" class="plan-notes-p"></p>
+            <p id="planNoteBrendy" class="plan-notes-p"></p>
+            <p id="planNoteRestrictions" class="plan-notes-p"></p>
+            <p id="planNoteAccept" class="plan-notes-p"></p>
+            <p class="plan-notes-p"><a id="planNotePrivacy" class="plan-notes-link" href="privacy.html" target="_blank" rel="noopener"></a></p>
+          </div>
+
+        </div>
       </div>
     </div>
 

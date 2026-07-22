@@ -19,6 +19,19 @@
       </select>
     </div>
 
+    <!-- Plan filter -->
+    <div class="filter-group">
+      <label for="filter-plan">plan:</label>
+      <select id="filter-plan">
+        <option value="">ALL</option>
+        <option value="brenda_anonymous">Anonymous</option>
+        <option value="brenda_free">Free</option>
+        <option value="brenda_basic">Basic</option>
+        <option value="brenda_superior">Superior</option>
+        <option value="brenda_advanced">Advanced</option>
+      </select>
+    </div>
+
     <!-- From date/time -->
     <div class="filter-group">
       <label for="filter-from">From:</label>
@@ -41,6 +54,7 @@
       <thead>
         <tr class="row-groups">
           <th colspan="2">Created</th>
+          <th rowspan="2">Plan</th>
           <th colspan="8">Tokens</th>
           <th colspan="3">Voice (min)</th>
           <th colspan="5">price / 1M tokens</th>

@@ -11,6 +11,9 @@ import meHandler from "./api/auth/me.js";
 import anonymousHandler from "./api/auth/anonymous.js";
 import logoutHandler from "./api/auth/logout.js";
 import historyHandler from "./api/history.js";
+import usageHandler from "./api/user/usage.js";
+import plansHandler from "./api/plans.js";
+import planSwitchHandler from "./api/user/plan.js";
 import weatherHandler from "./api/weather.js";
 import realtimeKeyHandler from "./api/voice/realtime-key.js";
 import appendHandler from "./api/conversation/append.js";
@@ -35,6 +38,8 @@ import rdsTopicStarterHandler from "./api/rds/topic-starter.js";
 import { getSession } from "./lib/auth.js";
 import { getDb } from "./lib/mongo.js";
 import { recordVoiceUsage } from "./lib/usage.js";
+import { resolvePlanForUsage } from "./lib/subscriptions.js";
+import { PLAN_ANONYMOUS } from "./lib/plans.js";
 import { getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem } from "./lib/rdsService.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -58,6 +63,9 @@ app.post("/api/auth/logout", logoutHandler);
 app.post("/api/conversation/append", appendHandler);
 
 app.get("/api/history", historyHandler);
+app.get("/api/user/usage", usageHandler);
+app.get("/api/plans", plansHandler);
+app.post("/api/user/plan", planSwitchHandler);
 
 app.post("/api/chat", chatHandler);
 app.post("/api/weather", weatherHandler);
@@ -250,6 +258,9 @@ server.on("upgrade", async (req, socket, head) => {
     let isAuthenticated = false;
     let rdsProfile = null;
     let rdsUsername = "";
+    let planId = PLAN_ANONYMOUS;
+    let planDisplayName = "Anonymous";
+    let savedLocation = null;
     try {
       const session = getSession(req);
       if (session?.userId) userId = session.userId;
@@ -258,22 +269,38 @@ server.on("upgrade", async (req, socket, head) => {
         isAuthenticated = true;
         rdsUsername = session.displayName || session.username || "";
         const db = await getDb();
-        const [userDoc, meds, profile] = await Promise.all([
+        // Each lookup is isolated with its own .catch() — one failing lookup
+        // (e.g. RDS profile) must not silently blank out the others, and a
+        // failed plan lookup must never be indistinguishable from a genuinely
+        // anonymous session (that's what caused plan to show "Anonymous" for
+        // authenticated users — see 2026-07-19 bugfix).
+        const [userDoc, meds, profile, planInfo] = await Promise.all([
           db.collection("users").findOne(
             { userId: session.userId },
             { projection: { "preferences.gender": 1, "preferences.location": 1 } }
-          ),
-          db.collection("medications").find({ userId: session.userId, active: true }).sort({ name: 1 }).toArray(),
-          getRdsProfile(db, session.userId),
+          ).catch(e => { console.error("[voice-proxy] users lookup failed:", e.message); return null; }),
+          db.collection("medications").find({ userId: session.userId, active: true }).sort({ name: 1 }).toArray()
+            .catch(e => { console.error("[voice-proxy] medications lookup failed:", e.message); return []; }),
+          getRdsProfile(db, session.userId)
+            .catch(e => { console.error("[voice-proxy] rds profile lookup failed:", e.message); return null; }),
+          resolvePlanForUsage(db, session.userId, false)
+            .catch(e => { console.error(`[voice-proxy] plan resolution failed for userId=${session.userId}:`, e.message); return null; }),
         ]);
         if (!gender) gender = userDoc?.preferences?.gender || null;
         activeMeds = meds || [];
         rdsProfile = profile || null;
-        const savedLoc = userDoc?.preferences?.location || null;
-        ws.savedLocation = savedLoc;
+        savedLocation = userDoc?.preferences?.location || null;
+        if (planInfo) {
+          planId = planInfo.planId;
+          planDisplayName = planInfo.planDisplayName;
+        } else {
+          planId = null;
+          planDisplayName = "Unknown";
+          console.warn(`[voice-proxy] plan lookup failed for authenticated userId=${session.userId} — labeling event "Unknown", not "Anonymous"`);
+        }
       }
-    } catch {
-      // non-fatal
+    } catch (e) {
+      console.error("[voice-proxy] session/profile resolution failed:", e?.message || e);
     }
 
     wss.handleUpgrade(req, socket, head, (ws) => {
@@ -284,6 +311,9 @@ server.on("upgrade", async (req, socket, head) => {
       ws.isAuthenticated = isAuthenticated;
       ws.rdsProfile = rdsProfile;
       ws.rdsUsername = rdsUsername;
+      ws.planId = planId;
+      ws.planDisplayName = planDisplayName;
+      ws.savedLocation = savedLocation;
       console.log(`📡 WS upgraded — locale: ${locale}, gender: ${gender || "unknown"}`);
       wss.emit("connection", ws, req);
     });
@@ -299,6 +329,10 @@ wss.on("connection", (ws) => {
   const voiceSessionId = randomUUID();
   let voiceResponseCounter = 0;
   const userId = ws.userId || null;
+  // ws.planId can legitimately be null (authenticated user, lookup failed —
+  // labeled "Unknown"), so only fall back to Anonymous when truly unset.
+  const planId = ws.planId !== undefined ? ws.planId : PLAN_ANONYMOUS;
+  const planDisplayName = ws.planDisplayName !== undefined ? ws.planDisplayName : "Anonymous";
 
   const MODEL = process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-12-2025";
   const modelPath = MODEL.startsWith("models/") ? MODEL : `models/${MODEL}`;
@@ -410,7 +444,10 @@ wss.on("connection", (ws) => {
         if (userId) {
           const responseId = `${voiceSessionId}_${voiceResponseCounter++}`;
           getDb()
-            .then(db => db && recordVoiceUsage({ db, userId, voiceSessionId, responseId, model: MODEL, usage: usageMeta }))
+            .then(db => db && recordVoiceUsage({
+              db, userId, voiceSessionId, responseId, model: MODEL, usage: usageMeta,
+              planId, planDisplayName,
+            }))
             .catch(e => console.error("[voice-proxy/usage]", e.message));
         }
       }

@@ -6,16 +6,18 @@ const PAGE_SIZE = 50;
 function parseQuery(req) {
   const url      = new URL(req.url, `http://${req.headers.host}`);
   const userId   = url.searchParams.get("userId") || null;
+  const planId   = url.searchParams.get("planId") || null;
   const from     = url.searchParams.get("from")   || null;
   const to       = url.searchParams.get("to")     || null;
   const page     = Math.max(1, parseInt(url.searchParams.get("page")     || "1",  10));
   const pageSize = Math.max(1, parseInt(url.searchParams.get("pageSize") || String(PAGE_SIZE), 10));
-  return { userId, from, to, page, pageSize };
+  return { userId, planId, from, to, page, pageSize };
 }
 
-function buildMatch(userId, from, to) {
+function buildMatch(userId, planId, from, to) {
   const match = {};
   if (userId) match.userId = userId;
+  if (planId) match.planId = planId;
   if (from || to) {
     match.createdAt = {};
     if (from) match.createdAt.$gte = new Date(from);
@@ -95,8 +97,8 @@ export default async function handler(req, res) {
 
   if (!requireDashboardSession(req, res)) return;
 
-  const { userId, from, to, page, pageSize } = parseQuery(req);
-  const match = buildMatch(userId, from, to);
+  const { userId, planId, from, to, page, pageSize } = parseQuery(req);
+  const match = buildMatch(userId, planId, from, to);
 
   try {
     const db = await getDb();

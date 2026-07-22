@@ -193,6 +193,34 @@ class BrendaApp {
       myInfoGenderMan: document.getElementById("myInfoGenderMan"),
       myInfoGenderOther: document.getElementById("myInfoGenderOther"),
 
+      // Usage Monitor (nested in My Info popup-card)
+      usageMonitor: document.getElementById("usageMonitor"),
+      usageMonitorTitle: document.getElementById("usageMonitorTitle"),
+      usageVoiceLabel: document.getElementById("usageVoiceLabel"),
+      usageVoicePct: document.getElementById("usageVoicePct"),
+      usageVoiceBar: document.getElementById("usageVoiceBar"),
+      usageChatLabel: document.getElementById("usageChatLabel"),
+      usageChatPct: document.getElementById("usageChatPct"),
+      usageChatBar: document.getElementById("usageChatBar"),
+      usageCurrentPlanLabel: document.getElementById("usageCurrentPlanLabel"),
+      usageCurrentPlanName: document.getElementById("usageCurrentPlanName"),
+      usageCloseBtn: document.getElementById("usageCloseBtn"),
+      usageGetMoreTimeBtn: document.getElementById("usageGetMoreTimeBtn"),
+
+      // Plan Selection overlay
+      planSelectionOverlay: document.getElementById("planSelectionOverlay"),
+      planPromoTitle: document.getElementById("planPromoTitle"),
+      planPromoBody: document.getElementById("planPromoBody"),
+      planSelectionHeader: document.getElementById("planSelectionHeader"),
+      planCardsContainer: document.getElementById("planCardsContainer"),
+      planNoteTerms: document.getElementById("planNoteTerms"),
+      planNoteGP: document.getElementById("planNoteGP"),
+      planNoteChange: document.getElementById("planNoteChange"),
+      planNoteBrendy: document.getElementById("planNoteBrendy"),
+      planNoteRestrictions: document.getElementById("planNoteRestrictions"),
+      planNoteAccept: document.getElementById("planNoteAccept"),
+      planNotePrivacy: document.getElementById("planNotePrivacy"),
+
       // Help UI
       helpBtn: document.getElementById("helpBtn"),
       helpOverlay: document.getElementById("helpOverlay"),
@@ -289,6 +317,8 @@ class BrendaApp {
     // Subjects UI labels
     this.localizeSubjectsUI();
     this.localizeMyInfoUI();
+    this.localizeUsageMonitorUI();
+    this.localizePlanSelectionUI();
 
     // Mode button labels (i18n)
     if (this.elements.toggleBtnText) {
@@ -340,6 +370,9 @@ class BrendaApp {
     this.elements.myInfoCloseBtn?.addEventListener("click", () => this.closeMyInfoOverlay());
     this.elements.myInfoCancelBtn?.addEventListener("click", () => this.closeMyInfoOverlay());
     this.elements.myInfoSaveBtn?.addEventListener("click", () => this.onMyInfoSave());
+    this.elements.usageCloseBtn?.addEventListener("click", () => this.closeMyInfoOverlay());
+    this.elements.usageGetMoreTimeBtn?.addEventListener("click", () => this.onGetMoreTime());
+    this.elements.planCardsContainer?.addEventListener("click", (e) => this.onPlanCardsClick(e));
 
     // Help button → opens new SideNav system
     this.elements.helpBtn?.addEventListener("click", () => this._sideNav.openSideNavHome());
@@ -545,6 +578,11 @@ class BrendaApp {
         this.elements.accountBtn.textContent = this.user.displayName;
       }
     }
+
+    // Grey out TALK for anonymous sessions — stays clickable (native
+    // `disabled` would swallow the click and the "open an account" message
+    // would never show), so this is a pure CSS lock, not btn.disabled.
+    this.elements.toggleBtnTalk?.classList.toggle("talk-locked", !!this.user?.isAnonymous);
   }
 
   validateNick(nick) {
@@ -1045,6 +1083,226 @@ class BrendaApp {
     if (this.elements.myInfoCancelBtn) this.elements.myInfoCancelBtn.textContent = t(v, "myInfoCancel");
   }
 
+  /* --------------------
+     USAGE MONITOR
+  -------------------- */
+  localizeUsageMonitorUI() {
+    const v = this.locale.variant;
+    if (this.elements.usageMonitorTitle) this.elements.usageMonitorTitle.textContent = t(v, "sub.monthlyMonitor");
+    if (this.elements.usageVoiceLabel) this.elements.usageVoiceLabel.textContent = t(v, "sub.voiceMode");
+    if (this.elements.usageChatLabel) this.elements.usageChatLabel.textContent = t(v, "sub.chatMode");
+    if (this.elements.usageCurrentPlanLabel) this.elements.usageCurrentPlanLabel.textContent = t(v, "sub.currentPlanLine");
+    if (this.elements.usageCloseBtn) this.elements.usageCloseBtn.textContent = t(v, "sub.close");
+    if (this.elements.usageGetMoreTimeBtn) this.elements.usageGetMoreTimeBtn.textContent = t(v, "sub.getMoreTime");
+  }
+
+  _tierKeyForPlanId(planId) {
+    return { brenda_free: "tier.free", brenda_basic: "tier.basic", brenda_superior: "tier.superior", brenda_advanced: "tier.advanced" }[planId] || null;
+  }
+
+  async refreshUsageMonitor() {
+    if (!this.elements.usageMonitor || !this.user || this.user.isAnonymous) return;
+    try {
+      const res = await fetch("/api/user/usage", { credentials: "include", cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json().catch(() => null);
+      if (!data) return;
+
+      const v = this.locale.variant;
+      const voicePct = Math.round((data.voiceTokensUsed / (data.voiceQuota || 1)) * 100);
+      const chatPct = Math.round((data.chatTokensUsed / (data.chatQuota || 1)) * 100);
+
+      if (this.elements.usageVoicePct) this.elements.usageVoicePct.textContent = t(v, "sub.pctUsed", { n: voicePct });
+      if (this.elements.usageChatPct) this.elements.usageChatPct.textContent = t(v, "sub.pctUsed", { n: chatPct });
+      if (this.elements.usageVoiceBar) {
+        this.elements.usageVoiceBar.style.width = `${Math.min(voicePct, 100)}%`;
+        this.elements.usageVoiceBar.classList.toggle("exhausted", data.voiceStatus === "exhausted");
+      }
+      if (this.elements.usageChatBar) {
+        this.elements.usageChatBar.style.width = `${Math.min(chatPct, 100)}%`;
+        this.elements.usageChatBar.classList.toggle("exhausted", data.chatStatus === "exhausted");
+      }
+      if (this.elements.usageCurrentPlanName) {
+        const tierKey = this._tierKeyForPlanId(data.planId);
+        this.elements.usageCurrentPlanName.textContent = tierKey ? t(v, tierKey) : (data.planDisplayName || "");
+      }
+    } catch {
+      // Usage block just stays at its last-known state if the fetch fails.
+    }
+  }
+
+  onGetMoreTime() {
+    this.openPlanSelectionOverlay();
+  }
+
+  /* --------------------
+     PLAN SELECTION
+  -------------------- */
+  localizePlanSelectionUI() {
+    const v = this.locale.variant;
+    if (this.elements.planPromoTitle) this.elements.planPromoTitle.textContent = t(v, "sub.tryFreeTitle");
+    if (this.elements.planPromoBody) this.elements.planPromoBody.innerHTML = t(v, "sub.tryFreeBody");
+    if (this.elements.planSelectionHeader) this.elements.planSelectionHeader.textContent = t(v, "sub.header");
+    if (this.elements.planNoteTerms) this.elements.planNoteTerms.textContent = t(v, "notes.termsChange");
+    if (this.elements.planNoteGP) this.elements.planNoteGP.textContent = t(v, "notes.manageGP");
+    if (this.elements.planNoteChange) this.elements.planNoteChange.textContent = t(v, "notes.changeAnytime");
+    if (this.elements.planNoteBrendy) this.elements.planNoteBrendy.textContent = t(v, "notes.brendyEquiv");
+    if (this.elements.planNoteRestrictions) this.elements.planNoteRestrictions.textContent = t(v, "notes.restrictions");
+    if (this.elements.planNoteAccept) this.elements.planNoteAccept.textContent = t(v, "notes.termsAccept");
+    if (this.elements.planNotePrivacy) this.elements.planNotePrivacy.textContent = t(v, "notes.privacyLink");
+  }
+
+  _isSpanishLocale() {
+    return this.locale.variant.startsWith("es");
+  }
+
+  // Hand-rolled rather than Intl/toLocaleString: CLDR suppresses the
+  // thousands separator for exactly-4-digit numbers in es-ES (e.g. 1680
+  // renders as "1680", not "1.680"), which would silently break the
+  // "min" column. Grouping every 3 digits unconditionally avoids that.
+  _formatInt(n) {
+    const s = Math.round(n).toString();
+    const sep = this._isSpanishLocale() ? "." : ",";
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+  }
+
+  _formatPriceCents(cents) {
+    const [intPart, decPart] = (cents / 100).toFixed(2).split(".");
+    const decSep = this._isSpanishLocale() ? "," : ".";
+    return `${this._formatInt(Number(intPart))}${decSep}${decPart}`;
+  }
+
+  async openPlanSelectionOverlay() {
+    const o = this.elements.planSelectionOverlay;
+    if (!o) return;
+    o.classList.remove("hidden");
+    o.setAttribute("aria-hidden", "false");
+
+    if (this.elements.planCardsContainer) {
+      this.elements.planCardsContainer.innerHTML = "";
+    }
+
+    try {
+      const [plansRes, usageRes] = await Promise.all([
+        fetch("/api/plans", { credentials: "include", cache: "no-store" }),
+        fetch("/api/user/usage", { credentials: "include", cache: "no-store" }),
+      ]);
+      const plansData = plansRes.ok ? await plansRes.json().catch(() => null) : null;
+      const usageData = usageRes.ok ? await usageRes.json().catch(() => null) : null;
+      const plans = plansData?.plans || [];
+      const currentPlanId = usageData?.planId || null;
+      this._renderPlanCards(plans, currentPlanId);
+    } catch {
+      // Cards container just stays empty if the fetch fails.
+    }
+  }
+
+  closePlanSelectionOverlay() {
+    const o = this.elements.planSelectionOverlay;
+    if (!o) return;
+    o.classList.add("hidden");
+    o.setAttribute("aria-hidden", "true");
+  }
+
+  _renderPlanCards(plans, currentPlanId) {
+    const container = this.elements.planCardsContainer;
+    if (!container) return;
+    const v = this.locale.variant;
+
+    const paidPlans = plans
+      .filter((p) => p.planId !== "brenda_free")
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+    container.innerHTML = paidPlans
+      .map((plan) => {
+        const tierKey = this._tierKeyForPlanId(plan.planId);
+        const planLabel = tierKey ? t(v, tierKey) : (plan.displayName || plan.planId);
+        const totalMinutes = (plan.voiceMinApprox || 0) + (plan.chatMinApprox || 0);
+        const isCurrent = plan.planId === currentPlanId;
+        const isPopular = !!plan.isMostPopular;
+        const fullPrice = this._formatPriceCents(plan.fullPriceCents || 0);
+        const introPrice = this._formatPriceCents(plan.firstMonthPriceCents || 0);
+
+        const btnClass = isCurrent ? "plan-select-btn plan-select-btn--current" : "plan-select-btn";
+        const btnLabel = isCurrent ? t(v, "sub.currentPlan", { plan: planLabel }) : t(v, "sub.selectPlan", { plan: planLabel });
+
+        return `
+          <div class="plan-card${isPopular ? " plan-card--popular" : ""}" data-plan-id="${plan.planId}">
+            ${isPopular ? `<span class="plan-card-badge">${t(v, "sub.mostPopular")}</span>` : ""}
+            <div class="plan-card-header">
+              <div class="plan-card-name-row">
+                <h3 class="plan-card-name">${planLabel}</h3>
+                <span class="plan-card-minutes">${t(v, "sub.totalMinutes", { n: this._formatInt(totalMinutes) })}</span>
+              </div>
+              <button type="button" class="plan-card-close" data-action="close" aria-label="Close">×</button>
+            </div>
+
+            <div class="plan-card-pricing">
+              <span class="plan-price-full">${t(v, "sub.fullPrice", { n: fullPrice })}</span>
+              <span class="plan-price-intro">${t(v, "sub.introPrice", { n: introPrice })}</span>
+              <p class="plan-price-offer-text">${t(v, "sub.introOffer", { n: fullPrice })}</p>
+              <span class="plan-save-pill">${t(v, "sub.savePct", { n: plan.firstMonthDiscountPct || 0 })}</span>
+            </div>
+
+            <table class="plan-card-table">
+              <thead>
+                <tr><th></th><th>${t(v, "sub.timeCol")}</th><th>${t(v, "sub.brendysCol")}</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>${t(v, "sub.voiceRow")}</td><td>${this._formatInt(plan.voiceMinApprox)} min</td><td>${this._formatInt(plan.voiceQuota)}</td></tr>
+                <tr><td>${t(v, "sub.chatRow")}</td><td>${this._formatInt(plan.chatMinApprox)} min</td><td>${this._formatInt(plan.chatQuota)}</td></tr>
+              </tbody>
+            </table>
+
+            <button type="button" class="${btnClass}" data-action="select" data-plan-id="${plan.planId}" data-plan-label="${planLabel}" ${isCurrent ? "data-current=\"true\"" : ""}>${btnLabel}</button>
+
+            <p class="plan-card-footnote">${t(v, "sub.timeNote")}</p>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
+  onPlanCardsClick(e) {
+    const closeBtn = e.target.closest('[data-action="close"]');
+    if (closeBtn) {
+      this.closePlanSelectionOverlay();
+      return;
+    }
+    const selectBtn = e.target.closest('[data-action="select"]');
+    if (selectBtn) {
+      const planId = selectBtn.getAttribute("data-plan-id");
+      const planLabel = selectBtn.getAttribute("data-plan-label");
+      const isCurrent = selectBtn.getAttribute("data-current") === "true";
+      this.onSelectPlan(planId, planLabel, isCurrent);
+    }
+  }
+
+  async onSelectPlan(planId, planLabel, isCurrent) {
+    const v = this.locale.variant;
+    if (isCurrent) {
+      window.alert(t(v, "sub.alreadyOnPlan"));
+      return;
+    }
+    const confirmed = window.confirm(t(v, "sub.switchConfirm", { plan: planLabel }));
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch("/api/user/plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ planId }),
+      });
+      if (!res.ok) return;
+
+      this.closePlanSelectionOverlay();
+      await this.refreshUsageMonitor();
+    } catch {
+      // Leave the overlay open so the user can retry.
+    }
+  }
+
   setMyInfoStatus(msg, isError = false) {
     if (this.elements.myInfoStatus) {
       this.elements.myInfoStatus.textContent = msg || "";
@@ -1105,6 +1363,13 @@ class BrendaApp {
     o.setAttribute("aria-hidden", "false");
     await this.populateMyInfoForm();
     setTimeout(() => this.elements.myInfoTownInput?.focus(), 30);
+
+    const showUsage = !!this.user && !this.user.isAnonymous;
+    if (this.elements.usageMonitor) {
+      this.elements.usageMonitor.classList.toggle("hidden", !showUsage);
+      this.elements.usageMonitor.setAttribute("aria-hidden", String(!showUsage));
+    }
+    if (showUsage) this.refreshUsageMonitor();
   }
 
   closeMyInfoOverlay() {
@@ -1389,6 +1654,7 @@ class BrendaApp {
 
   onTalkButton() {
     if (!this.user) { this.openAuthOverlay({ closable: false, resetFields: true }); return; }
+    if (this.user.isAnonymous) { window.alert(t(this.locale.variant, "talkRequiresAccount")); return; }
 
     // Switch UI to talk
     this.setMode("talk");

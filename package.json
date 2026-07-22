@@ -9,10 +9,14 @@
     "vercel-dev": "vercel dev --listen 3000",
     "test:gemini-key": "node --env-file=.env scripts/test-gemini-key.js",
     "test:gemini-live": "node --env-file=.env scripts/test-gemini-live.js",
-    "migrate:cleanup": "node --env-file=.env scripts/cleanup-migrate.js"
+    "migrate:cleanup": "node --env-file=.env scripts/cleanup-migrate.js",
+    "seed:plans": "node --env-file=.env scripts/seed-plans.js",
+    "backup:db": "node --env-file=.env scripts/backup-db.js",
+    "restore:db": "node --env-file=.env scripts/restore-db.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "bson": "^7.3.0",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "mongodb": "^7.3.0",

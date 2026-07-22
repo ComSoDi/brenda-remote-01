@@ -11,6 +11,7 @@ import { getDb } from "../lib/mongo.js";
 import { ObjectId } from "mongodb";
 import { randomUUID } from "crypto";
 import { recordChatUsage } from "../lib/usage.js";
+import { resolvePlanForUsage } from "../lib/subscriptions.js";
 import {
   getRdsProfile, buildRdsSystemAddendum, detectRdsIntent, buildMemoryNarrative,
   extractRdsItems, addRdsItem, removeRdsItem, parseForgetTag,
@@ -690,13 +691,21 @@ export default async function handler(req, res) {
     const chatRequestId = randomUUID();
     const chatSessionId = typeof body.chatSessionId === "string" ? body.chatSessionId : null;
     let _callIdx = 0;
+    // Resolved lazily/in parallel with the rest of the handler — never awaited
+    // on the request's critical path, only by the fire-and-forget usage write.
+    const _planInfoPromise = db
+      ? resolvePlanForUsage(db, session.userId, session.isAnonymous)
+      : Promise.resolve(null);
     const _chatRecord = (d) => {
       if (!d?.usageMetadata || !db) return;
-      recordChatUsage({
+      const callIndex = _callIdx++;
+      _planInfoPromise.then((planInfo) => recordChatUsage({
         db, userId: session.userId, chatRequestId, chatSessionId,
-        callIndex: _callIdx++, model: GEMINI_CHAT_MODEL,
+        callIndex, model: GEMINI_CHAT_MODEL,
         usage: d.usageMetadata,
-      }).catch(e => console.error("[chat/usage]", e.message));
+        planId: planInfo?.planId ?? null,
+        planDisplayName: planInfo?.planDisplayName ?? null,
+      })).catch(e => console.error("[chat/usage]", e.message));
     };
 
     const conv = await db.collection("conversations").findOne(

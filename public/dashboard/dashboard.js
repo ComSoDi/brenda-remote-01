@@ -14,6 +14,7 @@ class DashboardApp {
     this._tbody  = document.getElementById("dashboard-tbody");
     this._status = document.getElementById("status-msg");
     this._uSel   = document.getElementById("filter-user");
+    this._pSel   = document.getElementById("filter-plan");
     this._fFrom  = document.getElementById("filter-from");
     this._fTo    = document.getElementById("filter-to");
 
@@ -42,6 +43,7 @@ class DashboardApp {
 
     // Wire filter change listeners
     this._uSel.addEventListener("change",  () => this._onFilterChange());
+    this._pSel.addEventListener("change",  () => this._onFilterChange());
     this._fFrom.addEventListener("change", () => this._onFilterChange());
     this._fTo.addEventListener("change",   () => this._onFilterChange());
     document.getElementById("btn-refresh").addEventListener("click", () => this._onFilterChange());
@@ -60,13 +62,14 @@ class DashboardApp {
   async fetchAndRender() {
     this._setStatus("Loading…");
     const userId = this._uSel.value || "";
+    const planId = this._pSel.value || "";
     const from   = this._fFrom.value ? new Date(this._fFrom.value).toISOString() : "";
     const to     = this._fTo.value   ? new Date(this._fTo.value).toISOString()   : "";
 
     try {
       [this._voiceData, this._chatData] = await Promise.all([
-        this._fetchEvents("voice", userId, from, to, this._voicePage),
-        this._fetchEvents("chat",  userId, from, to, this._chatPage),
+        this._fetchEvents("voice", userId, planId, from, to, this._voicePage),
+        this._fetchEvents("chat",  userId, planId, from, to, this._chatPage),
       ]);
       this._setStatus("");
       this._renderTable();
@@ -76,9 +79,10 @@ class DashboardApp {
     }
   }
 
-  async _fetchEvents(type, userId, from, to, page) {
+  async _fetchEvents(type, userId, planId, from, to, page) {
     const params = new URLSearchParams({ page, pageSize: 50 });
     if (userId) params.set("userId", userId);
+    if (planId) params.set("planId", planId);
     if (from)   params.set("from",   from);
     if (to)     params.set("to",     to);
     return this._apiFetch(`/api/dashboard/${type}-events?${params}`);
@@ -218,7 +222,7 @@ class DashboardApp {
     const tprc  = this._calcThoughtsPrice(c.thoughts, u.thoughtsTokens);
 
     return `<tr class="${cls}" data-block="${type}">
-      <td colspan="2" style="text-align:left"><strong>${label}</strong>
+      <td colspan="3" style="text-align:left"><strong>${label}</strong>
         <button class="toggle-btn js-toggle" data-block="${type}">${icon}</button>
         <span style="font-weight:normal;font-size:10px;margin-left:4px">(${this._fmtInt(total)} events)</span>
       </td>
@@ -239,7 +243,7 @@ class DashboardApp {
     const tprc = this._calcThoughtsPrice(c.thoughts, u.thoughtsTokens);
 
     return `<tr class="${cls}" style="opacity:0.75;">
-      <td colspan="2" style="text-align:left;padding-left:14px;font-style:italic">${this._esc(label)}</td>
+      <td colspan="3" style="text-align:left;padding-left:14px;font-style:italic">${this._esc(label)}</td>
       ${this._tokenCells(u, true)}
       ${this._voiceMinCells(u, true)}
       ${this._priceCells(p, tprc, true)}
@@ -264,6 +268,7 @@ class DashboardApp {
     return `<tr class="row-event">
       <td class="col-dt">${d ? this._fmtDate(d) : ""}</td>
       <td class="col-dt">${d ? this._fmtTime(d) : ""}</td>
+      <td>${this._esc(ev.planDisplayName || "—")}</td>
       ${this._tokenCells(u)}
       ${this._voiceMinCells(u)}
       ${this._priceCells(p, tprc)}
@@ -277,7 +282,7 @@ class DashboardApp {
     const label = type === "voice" ? "Voice model:" : "Chat model:";
     const value = (models || []).filter(Boolean).sort().join(", ") || "—";
     return `<tr class="row-model">
-      <td colspan="31">${label} ${this._esc(value)}</td>
+      <td colspan="32">${label} ${this._esc(value)}</td>
     </tr>`;
   }
 
@@ -285,7 +290,7 @@ class DashboardApp {
     const prevDis = page <= 1 ? "disabled" : "";
     const nextDis = page >= totalPages ? "disabled" : "";
     return `<tr class="row-pagination">
-      <td colspan="31">
+      <td colspan="32">
         <button class="pagination-btn js-prev-page" data-block="${type}" ${prevDis}>&#8592; Previous</button>
         <span class="pagination-label">Page ${page} of ${totalPages} &nbsp;(${this._fmtInt(total)} total)</span>
         <button class="pagination-btn js-next-page" data-block="${type}" ${nextDis}>Next &#8594;</button>
@@ -337,6 +342,7 @@ class DashboardApp {
     return `<tr class="row-totals">
       <td class="col-dt">${this._esc(dateCell)}</td>
       <td class="col-dt">${this._esc(timeCell)}</td>
+      <td></td>
       ${this._tokenCells(u, true)}
       ${this._voiceMinCells(u, true)}
       ${this._priceCells(p, tprc, true)}

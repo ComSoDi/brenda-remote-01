@@ -45,3 +45,6 @@ CLAUDE.local.md
 
 # Voice proxy local deps
 voice-proxy/node_modules/
+
+# Local DB backups (contain real user PII — never commit)
+backups/

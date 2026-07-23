@@ -48,7 +48,16 @@ class DashboardApp {
     this._fTo.addEventListener("change",   () => this._onFilterChange());
     document.getElementById("btn-refresh").addEventListener("click", () => this._onFilterChange());
 
+    // Prices column-group collapse/expand
+    this._table = document.querySelector("table.dashboard-table");
+    document.getElementById("price-toggle-close").addEventListener("click", () => this._setPricesCollapsed(true));
+    document.getElementById("price-toggle-open").addEventListener("click", () => this._setPricesCollapsed(false));
+
     await this.fetchAndRender();
+  }
+
+  _setPricesCollapsed(collapsed) {
+    this._table.classList.toggle("prices-collapsed", collapsed);
   }
 
   _onFilterChange() {
@@ -119,7 +128,11 @@ class DashboardApp {
     let rows = "";
     rows += this._renderSubtotalRow(data.subtotals, type, expanded, data.total);
     if (expanded) {
-      data.events.forEach((ev) => { rows += this._renderEventRow(ev); });
+      if (type === "chat") {
+        rows += this._renderDayGroups(data.events, type, 14);
+      } else {
+        data.events.forEach((ev) => { rows += this._renderEventRow(ev); });
+      }
       if (data.totalPages > 1) {
         rows += this._renderPaginationRow(data.page, data.totalPages, type, data.total);
       }
@@ -151,7 +164,11 @@ class DashboardApp {
         const userSub = this._computeSubtotals(userEvents);
         const label   = this._uLabel(userId);
         rows += this._renderPerUserSubtotal(userSub, label, type);
-        userEvents.forEach((ev) => { rows += this._renderEventRow(ev); });
+        if (type === "chat") {
+          rows += this._renderDayGroups(userEvents, type, 28);
+        } else {
+          userEvents.forEach((ev) => { rows += this._renderEventRow(ev); });
+        }
         rows += this._renderModelRow(userSub.models, type);
       });
     }
@@ -210,6 +227,58 @@ class DashboardApp {
     };
   }
 
+  // ── Day-boundary grouping (chat) ─────────────────────────
+  // Groups events into "business days" that roll over at 2am rather than
+  // midnight, so a late-night chat isn't split from the evening before it.
+
+  _dayBucketKey(dateVal) {
+    const d = new Date(dateVal);
+    if (d.getHours() < 2) d.setDate(d.getDate() - 1);
+    return this._fmtDate(d);
+  }
+
+  _renderDayGroups(events, type, indent) {
+    const groups = new Map();
+    (events || []).forEach((ev) => {
+      const key = ev.createdAt ? this._dayBucketKey(ev.createdAt) : "—";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(ev);
+    });
+
+    let rows = "";
+    groups.forEach((dayEvents, dayKey) => {
+      const sub = this._computeSubtotals(dayEvents);
+      const times = dayEvents
+        .map((ev) => (ev.createdAt ? new Date(ev.createdAt).getTime() : null))
+        .filter((t) => t != null);
+      const spanMin = times.length ? (Math.max(...times) - Math.min(...times)) / 60000 : 0;
+      rows += this._renderDaySubtotal(dayKey, sub, dayEvents.length, spanMin, type, indent);
+      dayEvents.forEach((ev) => { rows += this._renderEventRow(ev); });
+    });
+    return rows;
+  }
+
+  _renderDaySubtotal(dayKey, sub, count, spanMin, type, indent) {
+    const cls  = type === "voice" ? "row-voice-subtotal" : "row-chat-subtotal";
+    const u    = sub.usage || {};
+    const c    = sub.cost  || {};
+    const p    = sub.avgPricing || {};
+    const tprc = this._calcThoughtsPrice(c.thoughts, u.thoughtsTokens);
+
+    return `<tr class="${cls}" style="opacity:0.75;">
+      <td colspan="3" style="text-align:left;padding-left:${indent}px;font-style:italic">${this._esc(dayKey)}
+        <span style="font-weight:normal;font-size:10px;margin-left:4px">(${count} msg${count === 1 ? "" : "s"})</span>
+      </td>
+      ${this._tokenCells(u, true)}
+      ${this._voiceMinCells(u, true)}
+      ${this._tokensPerMinFromDuration(u.totalTokens, spanMin)}
+      ${this._priceCells(p, tprc, true)}
+      ${this._voicePriceCells(p, true)}
+      ${this._costCells(c, true)}
+      ${this._voiceCostCells(c, true)}
+    </tr>`;
+  }
+
   // ── Row renderers ────────────────────────────────────────
 
   _renderSubtotalRow(sub, type, expanded, total) {
@@ -228,6 +297,7 @@ class DashboardApp {
       </td>
       ${this._tokenCells(u, true)}
       ${this._voiceMinCells(u, true)}
+      ${this._tokensPerMinCell(u)}
       ${this._priceCells(p, tprc, true)}
       ${this._voicePriceCells(p, true)}
       ${this._costCells(c, true)}
@@ -246,6 +316,7 @@ class DashboardApp {
       <td colspan="3" style="text-align:left;padding-left:14px;font-style:italic">${this._esc(label)}</td>
       ${this._tokenCells(u, true)}
       ${this._voiceMinCells(u, true)}
+      ${this._tokensPerMinCell(u)}
       ${this._priceCells(p, tprc, true)}
       ${this._voicePriceCells(p, true)}
       ${this._costCells(c, true)}
@@ -271,6 +342,7 @@ class DashboardApp {
       <td>${this._esc(ev.planDisplayName || "—")}</td>
       ${this._tokenCells(u)}
       ${this._voiceMinCells(u)}
+      <td></td>
       ${this._priceCells(p, tprc)}
       ${this._voicePriceCells(p)}
       ${this._costCells(c)}
@@ -282,7 +354,7 @@ class DashboardApp {
     const label = type === "voice" ? "Voice model:" : "Chat model:";
     const value = (models || []).filter(Boolean).sort().join(", ") || "—";
     return `<tr class="row-model">
-      <td colspan="32">${label} ${this._esc(value)}</td>
+      <td colspan="33">${label} ${this._esc(value)}</td>
     </tr>`;
   }
 
@@ -290,7 +362,7 @@ class DashboardApp {
     const prevDis = page <= 1 ? "disabled" : "";
     const nextDis = page >= totalPages ? "disabled" : "";
     return `<tr class="row-pagination">
-      <td colspan="32">
+      <td colspan="33">
         <button class="pagination-btn js-prev-page" data-block="${type}" ${prevDis}>&#8592; Previous</button>
         <span class="pagination-label">Page ${page} of ${totalPages} &nbsp;(${this._fmtInt(total)} total)</span>
         <button class="pagination-btn js-next-page" data-block="${type}" ${nextDis}>Next &#8594;</button>
@@ -345,6 +417,7 @@ class DashboardApp {
       <td></td>
       ${this._tokenCells(u, true)}
       ${this._voiceMinCells(u, true)}
+      ${this._tokensPerMinCell(u)}
       ${this._priceCells(p, tprc, true)}
       ${this._voicePriceCells(p, true)}
       ${this._costCells(c, true)}
@@ -365,11 +438,11 @@ class DashboardApp {
   }
 
   _priceCells(p, thoughtsPrice, isSubtotal = false) {
-    const baseCls = isSubtotal ? "col-orange" : "";
+    const baseCls = isSubtotal ? "col-orange col-price" : "col-price";
     return [
       p?.textInput, p?.audioInput, p?.textOutput, p?.audioOutput,
     ].map((v) => `<td class="${baseCls}">${this._fmtPricePerM(v)}</td>`).join("")
-      + `<td class="${isSubtotal ? "col-yellow" : ""}">${thoughtsPrice}</td>`;
+      + `<td class="${isSubtotal ? "col-yellow col-price" : "col-price"}">${thoughtsPrice}</td>`;
   }
 
   _costCells(c, isSubtotal = false) {
@@ -391,8 +464,22 @@ class DashboardApp {
       .map((v, i) => `<td class="${cls[i]}">${this._fmtMin(v)}</td>`).join("");
   }
 
+  _tokensPerMinCell(u) {
+    const totMin = ((u.audioInputTokens || 0) + (u.audioOutputTokens || 0)) / 1500;
+    return `<td class="col-white">${this._fmtTokensPerMin(u.totalTokens, totMin)}</td>`;
+  }
+
+  _tokensPerMinFromDuration(totalTokens, minutes) {
+    return `<td class="col-white">${this._fmtTokensPerMin(totalTokens, minutes)}</td>`;
+  }
+
+  _fmtTokensPerMin(totalTokens, minutes) {
+    if (!(minutes > 0.005)) return "---";
+    return (totalTokens / minutes).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+
   _voicePriceCells(p, isSubtotal = false) {
-    const baseCls  = isSubtotal ? "col-orange" : "";
+    const baseCls  = isSubtotal ? "col-orange col-price" : "col-price";
     const priceIn  = p?.audioInput  != null ? (p.audioInput  / 1000) * 25 * 60 : null;
     const priceOut = p?.audioOutput != null ? (p.audioOutput / 1000) * 25 * 60 : null;
     return [priceIn, priceOut]

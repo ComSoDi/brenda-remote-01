@@ -217,6 +217,45 @@ td.col-yellow { background: #FFFF00 !important; }
   padding: 0;
 }
 
+/* ── Collapsible "prices" column group (price/1M tokens + Voice/min) ── */
+table.dashboard-table.prices-collapsed .col-price,
+table.dashboard-table.prices-collapsed th.grp-price {
+  display: none;
+}
+
+th.grp-price-last,
+th.grp-cost-first {
+  position: relative;
+}
+
+.price-toggle {
+  position: absolute;
+  top: 2px;
+  width: 0;
+  height: 0;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.price-toggle-close {
+  right: -6px;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 8px solid #333;
+}
+
+.price-toggle-open {
+  left: -6px;
+  display: none;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 8px solid #333;
+}
+
+table.dashboard-table.prices-collapsed .price-toggle-open {
+  display: block;
+}
+
 /* ── Loading / error state ──────────────────────────────── */
 #status-msg {
   padding: 12px 0;

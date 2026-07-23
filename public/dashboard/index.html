@@ -57,9 +57,16 @@
           <th rowspan="2">Plan</th>
           <th colspan="8">Tokens</th>
           <th colspan="3">Voice (min)</th>
-          <th colspan="5">price / 1M tokens</th>
-          <th colspan="2">Voice/min</th>
-          <th colspan="8">Cost</th>
+          <th rowspan="2">Tokens<br>/min</th>
+          <th colspan="5" class="grp-price">price / 1M tokens</th>
+          <th colspan="2" class="grp-price grp-price-last">
+            Voice/min
+            <span class="price-toggle price-toggle-close" id="price-toggle-close" title="Collapse price columns"></span>
+          </th>
+          <th colspan="8" class="grp-cost-first">
+            <span class="price-toggle price-toggle-open" id="price-toggle-open" title="Expand price columns"></span>
+            Cost
+          </th>
           <th colspan="3">Voice cost</th>
         </tr>
         <tr class="row-cols">
@@ -79,14 +86,14 @@
           <th>out</th>
           <th>total</th>
           <!-- Price / 1M tokens -->
-          <th>text in</th>
-          <th>audio in</th>
-          <th>text out</th>
-          <th>audio out</th>
-          <th>thoughts</th>
+          <th class="col-price">text in</th>
+          <th class="col-price">audio in</th>
+          <th class="col-price">text out</th>
+          <th class="col-price">audio out</th>
+          <th class="col-price">thoughts</th>
           <!-- Voice/min -->
-          <th>price in</th>
-          <th>price out</th>
+          <th class="col-price">price in</th>
+          <th class="col-price">price out</th>
           <!-- Cost -->
           <th>text in</th>
           <th>audio in</th>

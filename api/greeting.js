@@ -6,8 +6,10 @@ import { getDb } from "../lib/mongo.js";
 import { requireSession } from "../lib/auth.js";
 import { getRdsProfile, incrementRdsSession, setDeclaredInterests } from "../lib/rdsService.js";
 
-const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
-const THIRTY_MIN_MS  = 30 * 60 * 1000;
+// Same-day "Hey!" once a few hours have passed (after lunch, late afternoon, that night).
+const SAME_DAY_SHORT_GREETING_GAP_MS = 3 * 60 * 60 * 1000;
+// Fallback new-day threshold, only used if an older client doesn't send localDay.
+const FALLBACK_NEW_DAY_GAP_MS = 8 * 60 * 60 * 1000;
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -41,9 +43,15 @@ export default async function handler(req, res) {
       const db  = await getDb();
       const now = new Date();
 
+      // Client sends its own local "day bucket" (YYYY-MM-DD, already rolled back
+      // for hours before 2am so a late-night tail counts as the day before) since
+      // only the client reliably knows the user's local calendar day.
+      const url     = new URL(req.url, `http://${req.headers.host}`);
+      const localDay = url.searchParams.get("localDay") || null;
+
       const user = await db.collection("users").findOne(
         { userId: session.userId },
-        { projection: { lastSeen: 1 } }
+        { projection: { lastSeen: 1, lastSeenLocalDay: 1 } }
       );
 
       const lastSeen = user?.lastSeen ? new Date(user.lastSeen) : null;
@@ -53,16 +61,20 @@ export default async function handler(req, res) {
         greetingType = "full";
       } else {
         const gapMs = now - lastSeen;
-        if (gapMs >= EIGHT_HOURS_MS) {
+        const isNewDay = localDay
+          ? localDay !== user.lastSeenLocalDay
+          : gapMs >= FALLBACK_NEW_DAY_GAP_MS;
+
+        if (isNewDay) {
           greetingType = "full";
-        } else if (gapMs >= THIRTY_MIN_MS) {
+        } else if (gapMs >= SAME_DAY_SHORT_GREETING_GAP_MS) {
           greetingType = "short";
         }
       }
 
       await db.collection("users").updateOne(
         { userId: session.userId },
-        { $set: { lastSeen: now } }
+        { $set: { lastSeen: now, ...(localDay ? { lastSeenLocalDay: localDay } : {}) } }
       );
 
       // Fetch and mark-delivered any pending medication reminders

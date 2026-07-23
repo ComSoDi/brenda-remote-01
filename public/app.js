@@ -43,7 +43,7 @@ class BrendaApp {
     this._greetingShown = false;  // true once shown in text channel
 
     // Chat session ID — groups all chat requests in one continuous visit.
-    // Reset on new day / 12-hour gap (same threshold as greeting logic).
+    // Reset whenever a greeting fires (new day, or same-day gap — see checkAndShowGreeting).
     this._chatSessionId = null;
 
     // Heartbeat handles — cleared by stopGreetingHeartbeat()
@@ -1679,8 +1679,26 @@ class BrendaApp {
 
     // Cold start in WRITE mode: Brenda initiates conversation (only if user hasn't spoken yet this session)
     if (!this._userSpokenThisSession && !this.user?.isAnonymous) {
-      setTimeout(() => this.startConversation().catch(e => console.warn("[rds/text-start]", e)), 300);
+      setTimeout(async () => {
+        try {
+          await this._showTextGreetingIfPending();
+          await this.startConversation();
+        } catch (e) {
+          console.warn("[rds/text-start]", e);
+        }
+      }, 300);
     }
+  }
+
+  // Emits the pending greeting in the text channel if the checkin decided one
+  // is due and it hasn't been shown yet in this mode (mirrors the voice path's
+  // guard in maybeSendVoiceGreeting so a mode switch can't skip it).
+  async _showTextGreetingIfPending() {
+    if (this._greetingShown) return;
+    if (!this._greetingType || this._greetingType === "none") return;
+    if (!this._greetingText) return;
+    this._greetingShown = true;
+    await this.emitAssistantLine({ text: this._greetingText, channel: "text", forceNewDateSeparator: true });
   }
 
   /* --------------------
@@ -2913,6 +2931,22 @@ class BrendaApp {
   ========================================================= */
 
   /**
+   * Local "day bucket" for this device (YYYY-MM-DD), rolled back to the
+   * previous day for hours before 2am so a late-night chat doesn't get a
+   * jarring "good morning" a few minutes later. Sent to /api/greeting so the
+   * server can tell "new day" from "same day, hours later" using the user's
+   * actual local calendar day rather than a server-side UTC comparison.
+   */
+  _localDayBucket(date = new Date()) {
+    const d = new Date(date);
+    if (d.getHours() < 2) d.setDate(d.getDate() - 1);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  /**
    * Called once after every successful authentication (login, anonymous, or
    * session restore).  Asks the server whether a greeting is due, builds the
    * appropriate text, and — for text mode — emits it immediately.
@@ -2923,7 +2957,8 @@ class BrendaApp {
     if (!this.user) return;
 
     try {
-      const data = await this.apiJSON("/api/greeting", { method: "GET" });
+      const localDay = this._localDayBucket();
+      const data = await this.apiJSON(`/api/greeting?localDay=${encodeURIComponent(localDay)}`, { method: "GET" });
       const greetingType = data?.greetingType || "none";
 
       // Reset session-level state (but NOT _greetingType/_greetingText yet —
@@ -2991,9 +3026,8 @@ class BrendaApp {
 
       // Text mode: emit right now, after history is already rendered.
       // Voice mode: _greetingText is already stored; scheduleVoiceGreeting() picks it up.
-      if (this.mode === "text" && this._greetingText) {
-        this._greetingShown = true;
-        await this.emitAssistantLine({ text: this._greetingText, channel: "text", forceNewDateSeparator: true });
+      if (this.mode === "text") {
+        await this._showTextGreetingIfPending();
       }
 
       // Water-cooler news greeting — only on full greetings for logged-in users
@@ -3146,7 +3180,7 @@ class BrendaApp {
   }
 
   /**
-   * Builds a short, casual "welcome back" greeting (same-day 8 h+ return).
+   * Builds a short, casual "welcome back" greeting (same day, a few hours later).
    * @param {string} displayName  Empty string for anonymous sessions.
    */
   buildShortGreeting(displayName) {

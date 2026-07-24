@@ -140,6 +140,11 @@ const Config = {
   // Allow browser speech fallback when WS is unavailable
   VOICE_ALLOW_BROWSER_FALLBACK: false,
 
+  // After a "full" (long, start-of-day) greeting, how long to leave the floor
+  // open for the user to greet back, ask a question, or start their own topic
+  // before Brenda proceeds to the RDS conversation starter. 5-10s recommended.
+  GREETING_RESPONSE_WINDOW_MS: 7000,
+
   GEMINI: {
     // Live voice model — verify current ID at https://ai.google.dev/gemini-api/docs/models
     MODEL: "gemini-2.5-flash-preview-native-audio-dialog",

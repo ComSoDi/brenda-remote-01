@@ -1682,6 +1682,12 @@ class BrendaApp {
       setTimeout(async () => {
         try {
           await this._showTextGreetingIfPending();
+          // After the long "full" greeting, leave the floor open for the user
+          // to greet back / ask something before Brenda starts a topic herself.
+          if (this._greetingType === "full" && this._greetingShown) {
+            await new Promise(r => setTimeout(r, window.Config?.GREETING_RESPONSE_WINDOW_MS ?? 7000));
+          }
+          if (this._userSpokenThisSession) return; // user jumped in during the pause
           await this.startConversation();
         } catch (e) {
           console.warn("[rds/text-start]", e);
@@ -2564,10 +2570,16 @@ class BrendaApp {
       if (sendGreeting) {
         await new Promise(r => setTimeout(r, 500));   // let Gemini begin speaking
         await this._waitForSpeechEnd(15000);           // wait for greeting to finish
-        await new Promise(r => setTimeout(r, 600));   // brief pause
+        // After the long "full" greeting, leave the floor open for the user to
+        // greet back / ask something before Brenda starts a topic herself.
+        const pauseMs = this._greetingType === "full"
+          ? (window.Config?.GREETING_RESPONSE_WINDOW_MS ?? 7000)
+          : 600;
+        await new Promise(r => setTimeout(r, pauseMs));
       } else {
         await new Promise(r => setTimeout(r, 800));
       }
+      if (this._userSpokenThisSession) return; // user jumped in during the pause — let the real conversation continue
       this.startConversation().catch(e => console.warn("[rds/auto-start]", e));
     }
   }

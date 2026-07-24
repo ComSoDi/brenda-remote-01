@@ -2106,6 +2106,31 @@ class BrendaApp {
     }
   }
 
+  // "tiempo" is ambiguous in Spanish (weather vs. time/duration, e.g. "¿cuánto
+  // tiempo tardo en llegar?"). Keep this list in sync with the equivalent
+  // TIEMPO_AS_TIME_PATTERNS / tiempoLooksLikeWeather() in api/chat.js.
+  _tiempoLooksLikeWeather(raw) {
+    if (!raw.includes("tiempo")) return true;
+    const otherWeatherWords = [
+      "clima", "pronóstico", "pronostico", "llover", "lluvia",
+      "temperatura", "humedad", "viento", "nieve", "tormenta", "soleado", "nublado"
+    ];
+    if (otherWeatherWords.some((k) => raw.includes(k))) return true;
+    const timeNotWeatherPatterns = [
+      /\bcu[aá]nto(?:s)?\s+tiempo\b/,
+      /\btiempo\b.{0,25}\b(tard[oa]s?|tardan|tardamos|toma(?:s|n|mos)?|llev[oa]s?|llevan|llevamos|dura(?:s|n)?|falta(?:s|n)?|qued[ao]n?)\b/,
+      /\b(tard[oa]s?|tardan|tardamos|toma(?:s|n|mos)?|llev[oa]s?|llevan|llevamos|dura(?:s|n)?|falta(?:s|n)?|qued[ao]n?)\b.{0,25}\btiempo\b/,
+      /\btiempo\s+libre\b/,
+      /\bal\s+mismo\s+tiempo\b/,
+      /\bhace\s+tiempo\b/,
+      /\btiempo\s+real\b/,
+      /\b(?:gan|perd|pierd)\w*\s+(?:el\s+|su\s+|mi\s+|tu\s+|tanto\s+|mucho\s+)?tiempo\b/,
+      /\btiempo\s+de\s+espera\b/,
+      /\btiempo\s+r[eé]cord\b/,
+    ];
+    return !timeNotWeatherPatterns.some((re) => re.test(raw));
+  }
+
   isWeatherQuery(text) {
     const raw = String(text || "").toLowerCase();
     if (!raw) return false;
@@ -2121,7 +2146,11 @@ class BrendaApp {
 
     const isSpanish = (this.locale?.variant || "").toLowerCase().startsWith("es");
     const list = isSpanish ? esKeywords : enKeywords;
-    return list.some((k) => raw.includes(k));
+    return list.some((k) => {
+      if (!raw.includes(k)) return false;
+      if (isSpanish && k === "tiempo" && !this._tiempoLooksLikeWeather(raw)) return false;
+      return true;
+    });
   }
 
   // Detects time-of-day queries in TALK mode so they can be routed through

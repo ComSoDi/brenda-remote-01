@@ -429,20 +429,57 @@ function buildMedReplyParts(meds, locale) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+// "tiempo" is ambiguous in Spanish — it means both "weather" and "time/duration"
+// ("¿cuánto tiempo tardo en llegar?" = travel duration, not weather). These
+// patterns catch the "time" sense so isWeatherQuery() doesn't misfire on it.
+const TIEMPO_AS_TIME_PATTERNS = [
+  // "cuánto/cuantos tiempo" — the classic "how long" phrasing
+  /\bcu[aá]nto(?:s)?\s+tiempo\b/,
+  // duration/travel verbs near "tiempo", either order
+  /\btiempo\b.{0,25}\b(tard[oa]s?|tardan|tardamos|toma(?:s|n|mos)?|llev[oa]s?|llevan|llevamos|dura(?:s|n)?|falta(?:s|n)?|qued[ao]n?)\b/,
+  /\b(tard[oa]s?|tardan|tardamos|toma(?:s|n|mos)?|llev[oa]s?|llevan|llevamos|dura(?:s|n)?|falta(?:s|n)?|qued[ao]n?)\b.{0,25}\btiempo\b/,
+  // fixed idioms where "tiempo" clearly isn't weather
+  /\btiempo\s+libre\b/,
+  /\bal\s+mismo\s+tiempo\b/,
+  /\bhace\s+tiempo\b/,
+  /\btiempo\s+real\b/,
+  /\b(?:gan|perd|pierd)\w*\s+(?:el\s+|su\s+|mi\s+|tu\s+|tanto\s+|mucho\s+)?tiempo\b/,
+  /\btiempo\s+de\s+espera\b/,
+  /\btiempo\s+r[eé]cord\b/,
+];
+
+// Other Spanish weather keywords that are never ambiguous — if any of these is
+// present, "tiempo" elsewhere in the message can't override a real weather signal.
+const UNAMBIGUOUS_ES_WEATHER_KEYWORDS = [
+  "clima", "pronóstico", "pronostico", "llover", "lluvia",
+  "temperatura", "humedad", "viento", "nieve", "tormenta", "soleado", "nublado"
+];
+
+// True unless "tiempo" is the only weather-ish word in the message AND it's
+// clearly being used in its "time/duration" sense (see TIEMPO_AS_TIME_PATTERNS).
+function tiempoLooksLikeWeather(raw) {
+  if (!raw.includes("tiempo")) return true;
+  if (UNAMBIGUOUS_ES_WEATHER_KEYWORDS.some((k) => raw.includes(k))) return true;
+  return !TIEMPO_AS_TIME_PATTERNS.some((re) => re.test(raw));
+}
+
 function isWeatherQuery(text, localeVariant = "en-US") {
   const raw = String(text || "").toLowerCase();
   if (!raw) return false;
-  const esKeywords = [
-    "tiempo", "clima", "pronóstico", "pronostico", "llover", "lluvia",
-    "temperatura", "humedad", "viento", "nieve", "tormenta", "soleado", "nublado"
-  ];
+  const esKeywords = ["tiempo", ...UNAMBIGUOUS_ES_WEATHER_KEYWORDS];
   const enKeywords = [
     "weather", "forecast", "rain", "raining", "rainy", "temperature",
     "humidity", "wind", "snow", "storm", "sunny", "cloudy"
   ];
   const isSpanish = String(localeVariant || "").toLowerCase().startsWith("es");
   const list = isSpanish ? esKeywords : enKeywords;
-  return list.some((k) => raw.includes(k));
+  return list.some((k) => {
+    if (!raw.includes(k)) return false;
+    if (isSpanish && k === "tiempo" && !tiempoLooksLikeWeather(raw)) {
+      return false; // "tiempo" here means duration/time, not weather
+    }
+    return true;
+  });
 }
 
 // Country name (lowercase) → ISO 3166-1 alpha-2 code
@@ -596,17 +633,25 @@ function parseWeatherCityFromMessage(text, lang, isFollowUp = false) {
     /\b(?:weather|forecast)\s+(?:in|for)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)\s*$/i,
   ];
 
-  const esPatterns = [
-    /(?:tiempo|clima|temperatura|lluvia|nieve|pronóstico|pronostico)(?:\s+\w+){0,3}?\s+(?:en|de)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)(?:\?|$|\.)/i,
-    /(?:en|de)\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,20}?)\s+(?:tiempo|clima|temperatura)/i,
-    /(?:va a llover|lloverá|nieva|nevará)(?:\s+\w+){0,4}?\s+en\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)(?:\?|$)/i,
+  // Patterns anchored on "tiempo" specifically — skipped below when "tiempo"
+  // is being used in its time/duration sense, so a message like "¿cuánto
+  // tiempo tardo en llegar?" doesn't get a bogus "city" extracted from it.
+  const esPatternsTiempoAnchored = [
+    /(?:tiempo|clima|temperatura|lluvia|nieve|pronóstico|pronostico)(?:\s+\w+){0,3}?\s+(?:en|de)\s+([A-Za-zÀ-ÿñÑ][A-Za-zÀ-ÿñÑ\s,]{1,30}?)(?:\?|$|\.)/i,
+    /(?:en|de)\s+([A-Za-zÀ-ÿñÑ][A-Za-zÀ-ÿñÑ\s,]{1,20}?)\s+(?:tiempo|clima|temperatura)/i,
     // "quiero saber el pronóstico del tiempo en Madrid"
-    /\b(?:tiempo|clima|pronóstico|pronostico|lluvia|temperatura)\b.{0,40}?\ben\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)\s*$/i,
+    /\b(?:tiempo|clima|pronóstico|pronostico|lluvia|temperatura)\b.{0,40}?\ben\s+([A-Za-zÀ-ÿñÑ][A-Za-zÀ-ÿñÑ\s,]{1,30}?)\s*$/i,
+  ];
+  const esPatternsOther = [
+    /(?:va a llover|lloverá|nieva|nevará)(?:\s+\w+){0,4}?\s+en\s+([A-Za-zÀ-ÿñÑ][A-Za-zÀ-ÿñÑ\s,]{1,30}?)(?:\?|$)/i,
     // "quiero consultarla en Madrid" / "quiero el tiempo en Madrid" — no weather keyword required
     // Safe: only fires on initial queries (isFollowUp=false), and the extracted text
     // is passed through splitCityCountry which will detect a trailing country name.
-    /\b(?:consultarl[ao]|saber|conocer|darme|decirme|ver)\b.{0,30}?\ben\s+([A-Za-zÀ-ÿ\u00f1\u00d1][A-Za-zÀ-ÿ\u00f1\u00d1\s,]{1,30}?)\s*$/i,
+    /\b(?:consultarl[ao]|saber|conocer|darme|decirme|ver)\b.{0,30}?\ben\s+([A-Za-zÀ-ÿñÑ][A-Za-zÀ-ÿñÑ\s,]{1,30}?)\s*$/i,
   ];
+  const esPatterns = tiempoLooksLikeWeather(trimmed.toLowerCase())
+    ? [...esPatternsTiempoAnchored, ...esPatternsOther]
+    : esPatternsOther;
 
   const patterns = lang === "es" ? esPatterns : enPatterns;
   for (const pattern of patterns) {

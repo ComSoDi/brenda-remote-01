@@ -11,7 +11,8 @@ import { getDb } from "../lib/mongo.js";
 import { ObjectId } from "mongodb";
 import { randomUUID } from "crypto";
 import { recordChatUsage } from "../lib/usage.js";
-import { resolvePlanForUsage } from "../lib/subscriptions.js";
+import { resolvePlanForUsage, getOrCreateSubscription, getUsageSinceDate, computeStatus } from "../lib/subscriptions.js";
+import { ANONYMOUS_CHAT_QUOTA } from "../lib/plans.js";
 import {
   getRdsProfile, buildRdsSystemAddendum, detectRdsIntent, buildMemoryNarrative,
   extractRdsItems, addRdsItem, removeRdsItem, parseForgetTag,
@@ -731,6 +732,60 @@ export default async function handler(req, res) {
 
     // Load conversation history from Mongo
     const db = await getDb();
+
+    // ────────────────────────────────────────────────────────────────────────
+    // CHAT QUOTA GATE — block once the user's chat quota is exhausted.
+    // Registered users: quota resets every billing period (subscriptions doc).
+    // Anonymous sessions: flat ANONYMOUS_CHAT_QUOTA for the lifetime of the
+    // ghost account — each anonymous session gets its own userId (never
+    // reused, see api/auth/anonymous.js), so "all-time for this userId" IS
+    // "this session"; passing epoch as sinceDate sums every event ever
+    // recorded for it.
+    // ────────────────────────────────────────────────────────────────────────
+    if (db) {
+      let chatTokensUsed = 0;
+      let chatQuota = 0;
+      if (session.isAnonymous) {
+        chatQuota = ANONYMOUS_CHAT_QUOTA;
+        ({ chatTokensUsed } = await getUsageSinceDate(db, session.userId, new Date(0)));
+      } else {
+        const sub = await getOrCreateSubscription(db, session.userId);
+        chatQuota = sub.chatQuota;
+        ({ chatTokensUsed } = await getUsageSinceDate(db, session.userId, sub.periodStartDate));
+      }
+
+      if (computeStatus(chatTokensUsed, chatQuota) === "exhausted") {
+        const quotaMsg = session.isAnonymous
+          ? (lang === "es"
+              ? "Has agotado tu tiempo de chat gratuito de esta sesión. Abre una cuenta gratuita para seguir chateando conmigo."
+              : "You've used up your free chat time for this session. Open a free account to keep chatting with me.")
+          : (lang === "es"
+              ? "Has agotado tu tiempo de chat de este periodo. Puedes ampliar tu plan para seguir chateando conmigo."
+              : "You've used up your chat time for this period. You can upgrade your plan to keep chatting with me.");
+
+        await db.collection("conversations").updateOne(
+          { userId: session.userId },
+          {
+            $setOnInsert: { userId: session.userId, createdAt: new Date() },
+            $push: {
+              messages: {
+                $each: [
+                  ...inputMessages.map((m) => ({
+                    id: new ObjectId(), role: m.role, content: m.content,
+                    timestamp: new Date(), fromChannel: "text",
+                  })),
+                  { id: new ObjectId(), role: "assistant", content: quotaMsg, timestamp: new Date(), fromChannel: "text" },
+                ],
+              },
+            },
+            $set: { updatedAt: new Date() },
+          },
+          { upsert: true }
+        );
+
+        return json(res, 200, { reply: quotaMsg, meta: { quota: { type: "chat", status: "exhausted" } } });
+      }
+    }
 
     // Usage tracking — one chatRequestId per HTTP request, callIndex per Gemini call
     const chatRequestId = randomUUID();

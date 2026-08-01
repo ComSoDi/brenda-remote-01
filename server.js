@@ -38,7 +38,7 @@ import rdsTopicStarterHandler from "./api/rds/topic-starter.js";
 import { getSession } from "./lib/auth.js";
 import { getDb } from "./lib/mongo.js";
 import { recordVoiceUsage } from "./lib/usage.js";
-import { resolvePlanForUsage } from "./lib/subscriptions.js";
+import { resolvePlanForUsage, getOrCreateSubscription, getUsageSinceDate, computeStatus } from "./lib/subscriptions.js";
 import { PLAN_ANONYMOUS } from "./lib/plans.js";
 import { getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem } from "./lib/rdsService.js";
 
@@ -251,56 +251,78 @@ server.on("upgrade", async (req, socket, head) => {
     }
     const locale = url.searchParams.get("locale") || "es-ES";
 
-    // Resolve userId, gender, medications, and RDS profile from session / DB (non-fatal)
-    let gender = null;
+    // Voice requires a valid, non-anonymous session. Anonymous users are
+    // blocked from TALK by design (see PRD); this also closes the hole where
+    // a client bypassing the app UI entirely (e.g. opening this WS directly
+    // from devtools) could get free, unmetered, untracked Gemini Live voice
+    // access with no account at all — previously nothing here checked for a
+    // session before accepting the upgrade.
+    const session = getSession(req);
+    if (!session?.userId || session.isAnonymous) {
+      console.warn("[voice-proxy] refusing upgrade — no valid authenticated session");
+      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+
+    // Resolve gender, medications, and RDS profile from session / DB (non-fatal)
+    let gender = session.gender || null;
     let activeMeds = [];
-    let userId = null;
-    let isAuthenticated = false;
+    const userId = session.userId;
+    const isAuthenticated = true;
     let rdsProfile = null;
-    let rdsUsername = "";
+    const rdsUsername = session.displayName || session.username || "";
     let planId = PLAN_ANONYMOUS;
     let planDisplayName = "Anonymous";
     let savedLocation = null;
+    let voiceQuotaExhausted = false;
     try {
-      const session = getSession(req);
-      if (session?.userId) userId = session.userId;
-      if (session?.gender) gender = session.gender;
-      if (session?.userId && !session.isAnonymous) {
-        isAuthenticated = true;
-        rdsUsername = session.displayName || session.username || "";
-        const db = await getDb();
-        // Each lookup is isolated with its own .catch() — one failing lookup
-        // (e.g. RDS profile) must not silently blank out the others, and a
-        // failed plan lookup must never be indistinguishable from a genuinely
-        // anonymous session (that's what caused plan to show "Anonymous" for
-        // authenticated users — see 2026-07-19 bugfix).
-        const [userDoc, meds, profile, planInfo] = await Promise.all([
-          db.collection("users").findOne(
-            { userId: session.userId },
-            { projection: { "preferences.gender": 1, "preferences.location": 1 } }
-          ).catch(e => { console.error("[voice-proxy] users lookup failed:", e.message); return null; }),
-          db.collection("medications").find({ userId: session.userId, active: true }).sort({ name: 1 }).toArray()
-            .catch(e => { console.error("[voice-proxy] medications lookup failed:", e.message); return []; }),
-          getRdsProfile(db, session.userId)
-            .catch(e => { console.error("[voice-proxy] rds profile lookup failed:", e.message); return null; }),
-          resolvePlanForUsage(db, session.userId, false)
-            .catch(e => { console.error(`[voice-proxy] plan resolution failed for userId=${session.userId}:`, e.message); return null; }),
-        ]);
-        if (!gender) gender = userDoc?.preferences?.gender || null;
-        activeMeds = meds || [];
-        rdsProfile = profile || null;
-        savedLocation = userDoc?.preferences?.location || null;
-        if (planInfo) {
-          planId = planInfo.planId;
-          planDisplayName = planInfo.planDisplayName;
-        } else {
-          planId = null;
-          planDisplayName = "Unknown";
-          console.warn(`[voice-proxy] plan lookup failed for authenticated userId=${session.userId} — labeling event "Unknown", not "Anonymous"`);
-        }
+      const db = await getDb();
+      // Each lookup is isolated with its own .catch() — one failing lookup
+      // (e.g. RDS profile) must not silently blank out the others, and a
+      // failed plan lookup must never be indistinguishable from a genuinely
+      // anonymous session (that's what caused plan to show "Anonymous" for
+      // authenticated users — see 2026-07-19 bugfix).
+      const [userDoc, meds, profile, planInfo, voiceStatus] = await Promise.all([
+        db.collection("users").findOne(
+          { userId },
+          { projection: { "preferences.gender": 1, "preferences.location": 1 } }
+        ).catch(e => { console.error("[voice-proxy] users lookup failed:", e.message); return null; }),
+        db.collection("medications").find({ userId, active: true }).sort({ name: 1 }).toArray()
+          .catch(e => { console.error("[voice-proxy] medications lookup failed:", e.message); return []; }),
+        getRdsProfile(db, userId)
+          .catch(e => { console.error("[voice-proxy] rds profile lookup failed:", e.message); return null; }),
+        resolvePlanForUsage(db, userId, false)
+          .catch(e => { console.error(`[voice-proxy] plan resolution failed for userId=${userId}:`, e.message); return null; }),
+        // Fail-open on error — a transient DB hiccup shouldn't lock out a
+        // legitimate user, matching the fallback philosophy of the lookups above.
+        getOrCreateSubscription(db, userId)
+          .then((sub) => getUsageSinceDate(db, userId, sub.periodStartDate)
+            .then((u) => computeStatus(u.voiceTokensUsed, sub.voiceQuota)))
+          .catch(e => { console.error(`[voice-proxy] quota check failed for userId=${userId}:`, e.message); return "active"; }),
+      ]);
+      if (!gender) gender = userDoc?.preferences?.gender || null;
+      activeMeds = meds || [];
+      rdsProfile = profile || null;
+      savedLocation = userDoc?.preferences?.location || null;
+      if (planInfo) {
+        planId = planInfo.planId;
+        planDisplayName = planInfo.planDisplayName;
+      } else {
+        planId = null;
+        planDisplayName = "Unknown";
+        console.warn(`[voice-proxy] plan lookup failed for authenticated userId=${userId} — labeling event "Unknown", not "Anonymous"`);
       }
+      voiceQuotaExhausted = voiceStatus === "exhausted";
     } catch (e) {
       console.error("[voice-proxy] session/profile resolution failed:", e?.message || e);
+    }
+
+    if (voiceQuotaExhausted) {
+      console.log(`[voice-proxy] blocked — voice quota exhausted userId=${userId}`);
+      socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+      socket.destroy();
+      return;
     }
 
     wss.handleUpgrade(req, socket, head, (ws) => {

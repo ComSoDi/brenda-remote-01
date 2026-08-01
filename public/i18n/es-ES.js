@@ -14,6 +14,7 @@ export default {
     send: "Enviar",
     textInputPlaceholder: "Escribe aqui.",
     talkRequiresAccount: "Abre una cuenta Gratis para poder Hablar",
+    voiceQuotaExhausted: "Has agotado tu tiempo de voz de este periodo. Por favor amplia tu plan para seguir conversando.",
     youLabel: "Tu",
     assistantLabel: "IA Brenda",
 

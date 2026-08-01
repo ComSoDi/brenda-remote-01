@@ -56,6 +56,113 @@ async function getDb() {
   return _mongoClient.db(process.env.MONGODB_DB || "ai_chat");
 }
 
+// ── subscription / quota (mirrors lib/subscriptions.js + lib/plans.js) ────
+// Standalone deploy (rootDir: voice-proxy in render.yaml) can't import from
+// the main repo's lib/ folder, hence the duplication — keep in sync by hand.
+
+const PLAN_FREE = "brenda_free";
+const SUBSCRIPTION_PERIOD_DAYS = 30;
+
+function addDays(date, days) {
+  const d = new Date(date);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d;
+}
+
+async function getPlan(db, planId) {
+  return db.collection("plans").findOne({ planId });
+}
+
+async function getOrCreateSubscription(db, userId) {
+  const now = new Date();
+  const subs = db.collection("subscriptions");
+
+  const sub = await subs.findOne({ userId, status: "active" });
+  if (sub && sub.periodEndDate > now) return sub;
+
+  const planId = sub?.planId || PLAN_FREE;
+  const plan = await getPlan(db, planId);
+
+  const newSub = {
+    userId,
+    planId,
+    planDisplayName: plan?.displayName || "Free",
+    status: "active",
+    periodStartDate: now,
+    periodEndDate: addDays(now, SUBSCRIPTION_PERIOD_DAYS),
+    createdAt: now,
+    updatedAt: now,
+    voiceQuota: plan?.voiceQuota ?? 0,
+    chatQuota: plan?.chatQuota ?? 0,
+    previousPlanId: sub?.planId ?? null,
+    previousPurchaseToken: null,
+    planChangedAt: null,
+    voiceExhaustedAt: null,
+    chatExhaustedAt: null,
+    gp: {
+      purchaseToken: null, latestOrderId: null, linkedPurchaseToken: null,
+      subscriptionState: null, acknowledgementState: null, regionCode: null,
+      startTime: null, environment: null, lineItems: null,
+      externalAccountIdentifiers: null, lastVerifiedAt: null, rawResponse: null,
+    },
+  };
+
+  if (sub) {
+    await subs.updateOne({ _id: sub._id }, { $set: { status: "expired", updatedAt: now } });
+  }
+  const insertRes = await subs.insertOne(newSub);
+  newSub._id = insertRes.insertedId;
+  return newSub;
+}
+
+async function getVoiceTokensUsedSince(db, userId, sinceDate) {
+  const [agg] = await db.collection("gemini_voice_usage_events")
+    .aggregate([
+      { $match: { userId, createdAt: { $gte: sinceDate } } },
+      { $group: { _id: null, total: { $sum: "$usage.totalTokens" } } },
+    ])
+    .toArray();
+  return agg?.total || 0;
+}
+
+function computeStatus(used, quota) {
+  return used >= quota ? "exhausted" : "active";
+}
+
+// ── voice usage recording (minimal — mirrors lib/usage.js recordVoiceUsage) ─
+// Only captures what the quota check needs (usage.totalTokens) plus a
+// zeroed cost stub so dashboard reads don't hit missing fields. Does NOT
+// replicate per-modality cost breakdown or the gemini_voice_usage_summary
+// rollup — full-fidelity cost accounting for this proxy path is a known,
+// accepted gap; the quota gate itself is accurate since it only needs tokens.
+async function recordVoiceUsageMinimal(db, { userId, voiceSessionId, responseId, model, usage, planId, planDisplayName }) {
+  const totalInput  = Number(usage?.promptTokenCount ?? 0) || 0;
+  const totalOutput = Number(usage?.responseTokenCount ?? usage?.candidatesTokenCount ?? 0) || 0;
+  const thoughtsTokens = Number(usage?.thoughtsTokenCount ?? 0) || 0;
+  const normalizedUsage = {
+    textInputTokens: 0, audioInputTokens: totalInput,
+    textOutputTokens: 0, audioOutputTokens: totalOutput,
+    thoughtsTokens,
+    totalInputTokens: totalInput, totalOutputTokens: totalOutput,
+    totalTokens: totalInput + totalOutput + thoughtsTokens,
+  };
+  const now = new Date();
+  await db.collection("gemini_voice_usage_events").updateOne(
+    { userId, voiceSessionId, responseId },
+    {
+      $setOnInsert: {
+        userId, voiceSessionId, responseId,
+        model: String(model || "").replace(/^models\//, "") || "unknown",
+        usage: normalizedUsage,
+        cost: { textInput: 0, audioInput: 0, textOutput: 0, audioOutput: 0, thoughts: 0, total: 0 },
+        planId, planDisplayName,
+        createdAt: now, updatedAt: now,
+      },
+    },
+    { upsert: true }
+  ).catch(e => console.error("[voice-proxy/usage]", e.message));
+}
+
 // ── system instruction builder (mirrors lib/gemini-voice-proxy.js) ─────────
 
 function buildGenderLine(locale, gender) {
@@ -171,35 +278,65 @@ async function createGeminiVoiceProxy(browserWs, req) {
   const urlParams = new URL(req.url, "http://localhost").searchParams;
   const locale = urlParams.get("locale") || "en-US";
 
-  // Gender + medication lookup from session + DB (non-fatal)
-  let gender = null;
+  // Voice requires a valid, non-anonymous session — anonymous users are
+  // blocked from TALK by design, and this proxy previously accepted ANY
+  // connection with no auth check at all (free, unmetered, untracked Gemini
+  // Live access for anyone who found this URL).
+  const session = getSession(req);
+  if (!session?.userId || session.isAnonymous) {
+    console.warn("[voice-proxy] refusing connection — no valid authenticated session");
+    browserWs.close(1008, "unauthorized");
+    return;
+  }
+  const userId = session.userId;
+
+  // Gender, medications, and quota lookup from session + DB (non-fatal
+  // except the quota check itself, which fails open on a DB error).
+  let gender = session.gender || null;
   let activeMeds = [];
-  let isAuthenticated = false;
+  const isAuthenticated = true;
+  let planId = null;
+  let planDisplayName = "Unknown";
+  let voiceQuotaExhausted = false;
   try {
-    const session = getSession(req);
-    if (session?.gender) gender = session.gender;
-    if (session?.userId && !session.isAnonymous) {
-      isAuthenticated = true;
-      const db = await getDb();
-      if (db) {
-        const [userDoc, meds] = await Promise.all([
-          db.collection("users").findOne(
-            { userId: session.userId },
-            { projection: { "preferences.gender": 1 } }
-          ),
-          db.collection("medications").find({ userId: session.userId, active: true }).sort({ name: 1 }).toArray(),
-        ]);
-        if (!gender) gender = userDoc?.preferences?.gender || null;
-        activeMeds = meds || [];
+    const db = await getDb();
+    if (db) {
+      const [userDoc, meds, sub] = await Promise.all([
+        db.collection("users").findOne(
+          { userId },
+          { projection: { "preferences.gender": 1 } }
+        ).catch(e => { console.error("[voice-proxy] users lookup failed:", e.message); return null; }),
+        db.collection("medications").find({ userId, active: true }).sort({ name: 1 }).toArray()
+          .catch(e => { console.error("[voice-proxy] medications lookup failed:", e.message); return []; }),
+        getOrCreateSubscription(db, userId)
+          .catch(e => { console.error(`[voice-proxy] subscription lookup failed for userId=${userId}:`, e.message); return null; }),
+      ]);
+      if (!gender) gender = userDoc?.preferences?.gender || null;
+      activeMeds = meds || [];
+      if (sub) {
+        planId = sub.planId;
+        planDisplayName = sub.planDisplayName;
+        const voiceTokensUsed = await getVoiceTokensUsedSince(db, userId, sub.periodStartDate)
+          .catch(e => { console.error(`[voice-proxy] usage lookup failed for userId=${userId}:`, e.message); return 0; });
+        voiceQuotaExhausted = computeStatus(voiceTokensUsed, sub.voiceQuota) === "exhausted";
       }
     }
-  } catch {
-    // non-fatal
+  } catch (e) {
+    console.error("[voice-proxy] session/profile resolution failed:", e?.message || e);
+  }
+
+  if (voiceQuotaExhausted) {
+    console.log(`[voice-proxy] blocked — voice quota exhausted userId=${userId}`);
+    browserWs.close(1008, "voice_quota_exhausted");
+    return;
   }
 
   const voice = process.env.GEMINI_LIVE_VOICE || VOICE_MAP[locale] || "Vindemiatrix";
   const model = process.env.GEMINI_LIVE_MODEL || "gemini-2.5-flash-native-audio-preview-12-2025";
   const systemText = buildSystemInstructions(locale, gender) + buildMedSystemBlock(activeMeds, locale, isAuthenticated);
+
+  const voiceSessionId = crypto.randomUUID();
+  let voiceResponseCounter = 0;
 
   const geminiWs = new WebSocket(`${GEMINI_LIVE_URL}?key=${GEMINI_API_KEY}`);
 
@@ -220,6 +357,18 @@ async function createGeminiVoiceProxy(browserWs, req) {
 
   geminiWs.on("message", (data) => {
     if (browserWs.readyState === WebSocket.OPEN) browserWs.send(data);
+    try {
+      const msg = JSON.parse(data.toString());
+      if (msg.usageMetadata) {
+        const responseId = `${voiceSessionId}_${voiceResponseCounter++}`;
+        getDb()
+          .then(db => db && recordVoiceUsageMinimal(db, {
+            userId, voiceSessionId, responseId, model, usage: msg.usageMetadata,
+            planId, planDisplayName,
+          }))
+          .catch(e => console.error("[voice-proxy/usage]", e.message));
+      }
+    } catch { /* not JSON — ignore */ }
   });
 
   geminiWs.on("error", (err) => {

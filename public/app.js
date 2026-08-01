@@ -1652,15 +1652,34 @@ class BrendaApp {
     }
   }
 
-  onTalkButton() {
+  async onTalkButton() {
     if (!this.user) { this.openAuthOverlay({ closable: false, resetFields: true }); return; }
     if (this.user.isAnonymous) { window.alert(t(this.locale.variant, "talkRequiresAccount")); return; }
+
+    // Toggle voice connection
+    const isDisconnect = this.elements.toggleBtnTalk.classList.contains("btn-disconnect-talk");
+    if (!isDisconnect) {
+      // Block starting a new voice session once the voice quota is exhausted —
+      // checked fresh here so it reflects usage right up to this click. The
+      // server-side WS gate (server.js /api/voice/stream upgrade handler, and
+      // voice-proxy/index.js for the standalone deployment) is the hard
+      // backstop either way; this just avoids a silent/abrupt connect-then-disconnect.
+      try {
+        const res = await fetch("/api/user/usage", { credentials: "include", cache: "no-store" });
+        const data = res.ok ? await res.json().catch(() => null) : null;
+        if (data?.voiceStatus === "exhausted") {
+          window.alert(t(this.locale.variant, "voiceQuotaExhausted"));
+          this.openPlanSelectionOverlay();
+          return;
+        }
+      } catch {
+        // Usage check failed — fail open; the server-side gate still applies.
+      }
+    }
 
     // Switch UI to talk
     this.setMode("talk");
 
-    // Toggle voice connection
-    const isDisconnect = this.elements.toggleBtnTalk.classList.contains("btn-disconnect-talk");
     if (isDisconnect) {
       this.hangUp();
       return;

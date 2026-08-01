@@ -1825,6 +1825,14 @@ body {
   color: #111827;
 }
 
+/* One-time price (e.g. Top-up) — same weight as plan-price-intro but no
+   sibling struck-through "full price" next to it, since there's no discount. */
+.plan-price-onetime {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+}
+
 .plan-price-offer-text {
   margin: 4px 0 0;
   font-size: 12px;

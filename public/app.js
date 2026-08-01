@@ -213,6 +213,8 @@ class BrendaApp {
       planPromoBody: document.getElementById("planPromoBody"),
       planSelectionHeader: document.getElementById("planSelectionHeader"),
       planCardsContainer: document.getElementById("planCardsContainer"),
+      otherPlansHeader: document.getElementById("otherPlansHeader"),
+      topUpCardContainer: document.getElementById("topUpCardContainer"),
       planNoteTerms: document.getElementById("planNoteTerms"),
       planNoteGP: document.getElementById("planNoteGP"),
       planNoteChange: document.getElementById("planNoteChange"),
@@ -373,6 +375,7 @@ class BrendaApp {
     this.elements.usageCloseBtn?.addEventListener("click", () => this.closeMyInfoOverlay());
     this.elements.usageGetMoreTimeBtn?.addEventListener("click", () => this.onGetMoreTime());
     this.elements.planCardsContainer?.addEventListener("click", (e) => this.onPlanCardsClick(e));
+    this.elements.topUpCardContainer?.addEventListener("click", (e) => this.onPlanCardsClick(e));
 
     // Help button → opens new SideNav system
     this.elements.helpBtn?.addEventListener("click", () => this._sideNav.openSideNavHome());
@@ -1153,6 +1156,7 @@ class BrendaApp {
     if (this.elements.planPromoTitle) this.elements.planPromoTitle.textContent = t(v, "sub.tryFreeTitle");
     if (this.elements.planPromoBody) this.elements.planPromoBody.innerHTML = t(v, "sub.tryFreeBody");
     if (this.elements.planSelectionHeader) this.elements.planSelectionHeader.textContent = t(v, "sub.header");
+    if (this.elements.otherPlansHeader) this.elements.otherPlansHeader.textContent = t(v, "sub.otherPlansHeader");
     if (this.elements.planNoteTerms) this.elements.planNoteTerms.textContent = t(v, "notes.termsChange");
     if (this.elements.planNoteGP) this.elements.planNoteGP.textContent = t(v, "notes.manageGP");
     if (this.elements.planNoteChange) this.elements.planNoteChange.textContent = t(v, "notes.changeAnytime");
@@ -1191,6 +1195,9 @@ class BrendaApp {
     if (this.elements.planCardsContainer) {
       this.elements.planCardsContainer.innerHTML = "";
     }
+    if (this.elements.topUpCardContainer) {
+      this.elements.topUpCardContainer.innerHTML = "";
+    }
 
     try {
       const [plansRes, usageRes] = await Promise.all([
@@ -1204,6 +1211,7 @@ class BrendaApp {
       // Used by onSelectPlan() to tell an upgrade from a downgrade.
       this._currentPlanSortOrder = plans.find((p) => p.planId === currentPlanId)?.sortOrder ?? 0;
       this._renderPlanCards(plans, currentPlanId);
+      this._renderTopUpCard(plans.find((p) => p.planId === "brenda_topup") || null);
     } catch {
       // Cards container just stays empty if the fetch fails.
     }
@@ -1222,7 +1230,7 @@ class BrendaApp {
     const v = this.locale.variant;
 
     const paidPlans = plans
-      .filter((p) => p.planId !== "brenda_free")
+      .filter((p) => p.planId !== "brenda_free" && p.planId !== "brenda_topup")
       .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
     container.innerHTML = paidPlans
@@ -1275,6 +1283,59 @@ class BrendaApp {
       .join("");
   }
 
+  // Top-up: a one-time "add more Brendys" product, not a recurring
+  // subscription — no first-month offer, so no intro price / save pill.
+  // Rendered in its own container below the subscription plan cards, under
+  // the "Other plans" header (see index.html + localizePlanSelectionUI()).
+  _renderTopUpCard(plan) {
+    const container = this.elements.topUpCardContainer;
+    if (!container) return;
+    const hasTopUp = !!plan;
+    if (this.elements.otherPlansHeader) {
+      this.elements.otherPlansHeader.classList.toggle("hidden", !hasTopUp);
+    }
+    if (!hasTopUp) {
+      container.innerHTML = "";
+      return;
+    }
+
+    const v = this.locale.variant;
+    const planLabel = t(v, "sub.topUpName");
+    const totalMinutes = (plan.voiceMinApprox || 0) + (plan.chatMinApprox || 0);
+    const price = this._formatPriceCents(plan.fullPriceCents || 0);
+
+    container.innerHTML = `
+      <div class="plan-card" data-plan-id="${plan.planId}">
+        <div class="plan-card-header">
+          <div class="plan-card-name-row">
+            <h3 class="plan-card-name">${planLabel}</h3>
+            <span class="plan-card-minutes">${t(v, "sub.totalMinutes", { n: this._formatInt(totalMinutes) })}</span>
+          </div>
+          <button type="button" class="plan-card-close" data-action="close" aria-label="Close">×</button>
+        </div>
+
+        <div class="plan-card-pricing">
+          <span class="plan-price-onetime">${t(v, "sub.topUpPrice", { n: price })}</span>
+          <p class="plan-price-offer-text">${t(v, "sub.topUpSubtitle")}</p>
+        </div>
+
+        <table class="plan-card-table">
+          <thead>
+            <tr><th></th><th>${t(v, "sub.timeCol")}</th><th>${t(v, "sub.brendysCol")}</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>${t(v, "sub.voiceRow")}</td><td>${this._formatInt(plan.voiceMinApprox)} min</td><td>${this._formatInt(plan.voiceQuota)}</td></tr>
+            <tr><td>${t(v, "sub.chatRow")}</td><td>${this._formatInt(plan.chatMinApprox)} min</td><td>${this._formatInt(plan.chatQuota)}</td></tr>
+          </tbody>
+        </table>
+
+        <button type="button" class="plan-select-btn" data-action="topup" data-plan-id="${plan.planId}" data-plan-label="${planLabel}">${t(v, "sub.topUpSelect")}</button>
+
+        <p class="plan-card-footnote">${t(v, "sub.timeNote")}</p>
+      </div>
+    `;
+  }
+
   onPlanCardsClick(e) {
     const closeBtn = e.target.closest('[data-action="close"]');
     if (closeBtn) {
@@ -1288,6 +1349,13 @@ class BrendaApp {
       const isCurrent = selectBtn.getAttribute("data-current") === "true";
       const sortOrder = Number(selectBtn.getAttribute("data-sort-order") || 0);
       this.onSelectPlan(planId, planLabel, isCurrent, sortOrder);
+      return;
+    }
+    // Top-up purchases aren't wired to a real purchase flow yet (no one-time
+    // IAP / Google Play Billing integration exists) — placeholder for now.
+    const topUpBtn = e.target.closest('[data-action="topup"]');
+    if (topUpBtn) {
+      window.alert(t(this.locale.variant, "sub.topUpComingSoon"));
     }
   }
 

@@ -1654,12 +1654,16 @@ body {
   transition: width 0.3s ease;
 }
 
+/* Old colors */
+/* usage-monitor-bar--voice { background: #F77A20; }  */
+/* usage-monitor-bar--voice { background: #7A20F7; }  */
+
 .usage-monitor-bar--voice {
-  background: #f77a20;
+  background: #FFB278;
 }
 
 .usage-monitor-bar--chat {
-  background: #7a20f7;
+  background: #8C25D3;
 }
 
 .usage-monitor-bar.exhausted {
@@ -1756,7 +1760,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   background: #dc2626;
-  color: #fbbf24;
+  color: #FFFF00;
   font-weight: 800;
   font-size: 11px;
   letter-spacing: 0.5px;

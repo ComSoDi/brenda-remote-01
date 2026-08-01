@@ -29,12 +29,29 @@ class DashboardApp {
     try {
       const users = await this._apiFetch("/api/dashboard/users");
       this._uSel.innerHTML = '<option value="">ALL</option>';
-      users.forEach((u) => {
+
+      const realUsers  = users.filter((u) => !u.isAnonymous);
+      const anonUsers  = users.filter((u) => u.isAnonymous);
+
+      const addOption = (parent, u) => {
         const opt = document.createElement("option");
         opt.value       = u.userId;
         opt.textContent = u.displayName;
-        this._uSel.appendChild(opt);
-      });
+        parent.appendChild(opt);
+      };
+
+      if (realUsers.length) {
+        const grp = document.createElement("optgroup");
+        grp.label = "Users";
+        realUsers.forEach((u) => addOption(grp, u));
+        this._uSel.appendChild(grp);
+      }
+      if (anonUsers.length) {
+        const grp = document.createElement("optgroup");
+        grp.label = "Anonymous";
+        anonUsers.forEach((u) => addOption(grp, u));
+        this._uSel.appendChild(grp);
+      }
     } catch (e) {
       if (e.status === 401) { window.location = "/api/auth/google"; return; }
       this._setStatus("Failed to load users: " + (e.message || e));

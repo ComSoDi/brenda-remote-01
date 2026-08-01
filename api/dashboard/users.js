@@ -13,13 +13,19 @@ export default async function handler(req, res) {
   try {
     const db    = await getDb();
     const users = await db.collection("users")
-      .find({}, { projection: { userId: 1, username: 1, displayName: 1 } })
+      .find({}, { projection: { userId: 1, username: 1, displayName: 1, isAnonymous: 1 } })
       .toArray();
 
     const result = users
       .map((u) => ({
         userId:      u.userId,
-        displayName: u.displayName || u.username || u.userId.replace(/^user_/, ""),
+        // Every anonymous account shares the literal username "anonymous", so it
+        // can never be used as a display label — fall back straight to the
+        // unique userId suffix (e.g. "anonymous_000042") for those instead.
+        displayName: u.isAnonymous
+          ? u.userId.replace(/^user_/, "")
+          : (u.displayName || u.username || u.userId.replace(/^user_/, "")),
+        isAnonymous: !!u.isAnonymous,
       }))
       .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }));
 

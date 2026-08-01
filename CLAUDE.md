@@ -12,7 +12,7 @@
 |---|---|
 | Runtime | Node.js 20.x, ESM (`"type": "module"`) |
 | Deployment | Vercel (serverless functions) |
-| Local dev | Express + nodemon via `server.js` (gitignored) |
+| Local dev | Express + nodemon via `server.js` (tracked in git) |
 | Database | MongoDB Atlas |
 | Chat AI | Gemini (gemini-2.5-flash by default) |
 | Voice AI | Gemini Live (gemini-2.5-flash-preview-native-audio-dialog) |
@@ -44,9 +44,15 @@ api/                        Vercel serverless handlers (export default async fun
 
 lib/                        Shared utilities (bundled into Vercel functions via vercel.json)
   auth.js                   Session sign/verify/get/require + cookie helpers
-  gemini-voice-proxy.js     WebSocket proxy for Gemini Live voice sessions
   mongo.js                  MongoDB connection (cached on globalThis.__brendaMongo)
   usage.js                  Voice token usage normalization, cost calculation, DB rollups
+
+voice-proxy/                 Standalone Node service (own package.json), deployed separately on
+                            Render (render.yaml, rootDir: voice-proxy) as "brenda-voice-proxy".
+                            Handles /api/voice/stream when the client is pointed at it via
+                            VOICE_PROXY_WS_URL (cross-domain path). Can't import from lib/ — the
+                            main repo isn't part of its deploy — so session/subscription/usage
+                            logic needed there is intentionally duplicated, not shared.
 
 public/                     Static frontend (served as SPA)
   index.html                Main app shell ("Soy IA Brenda")
@@ -102,11 +108,13 @@ On Vercel, set the same variables in the project environment settings.
 ## Dev Commands
 
 ```bash
-npm run dev           # Local dev with nodemon (requires server.js, which is gitignored)
+npm run dev           # Local dev with nodemon (server.js)
 npm run vercel-dev    # Vercel dev server on port 3000
 ```
 
-> `server.js` is gitignored — it exists only in the local working directory for development.
+> `server.js` is tracked in git — it's the real local dev server, including the `/api/voice/stream`
+> WebSocket upgrade handler (session + quota gate live here). Changes to it need to be committed
+> like any other file.
 
 ---
 
@@ -156,7 +164,9 @@ npm run vercel-dev    # Vercel dev server on port 3000
 
 ### Voice
 - **Active backend**: `"gemini-proxy"` (`Config.VOICE_BACKEND` in `public/config.js`).
-- Frontend (`voiceAgent.js`) connects via `lib/gemini-voice-proxy.js` (WebSocket proxy to Gemini Live).
+- Frontend (`voiceAgent.js`) connects to `/api/voice/stream`, handled by `server.js`'s WS upgrade
+  handler locally (or the standalone `voice-proxy/` service when `VOICE_PROXY_WS_URL` is set) —
+  both require a valid, non-anonymous session and gate on the voice quota before proxying to Gemini Live.
 - Voice model: `gemini-2.5-flash-preview-native-audio-dialog`. Voices: `Vindemiatrix` (Spanish), `Aoede` (English).
 - VAD / turn detection tuned via `Config.TURN_DETECTION` (Gemini path) in `public/config.js`.
 - Transcription language is locked to the app locale to prevent misdetection.
@@ -169,7 +179,7 @@ npm run vercel-dev    # Vercel dev server on port 3000
 
 - **ESM only** — always use `import`/`export`, never `require()`.
 - **No build step** — frontend files are served as-is from `public/`.
-- **`server.js` is gitignored** — never commit it.
+- **`server.js` is tracked in git** — commit changes to it like any other file.
 - **`package-lock.json` is gitignored** — do not commit it.
 - **Vercel auto-deploys on push** — never suggest adding a bundler.
 - Error handling: never swallow exceptions silently.

@@ -685,6 +685,18 @@
   <script src="config.js?v=22-GAGA"></script>
   <script src="voiceAgent.js?v=22-GAGA"></script>
   <script type="module" src="app.js?v=22-GAGA"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('Service Worker registered:', reg.scope))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+
+
 </body>
 
 </html>

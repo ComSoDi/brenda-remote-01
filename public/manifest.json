@@ -1,6 +1,7 @@
 {
 "name": "IA Brenda",
 "short_name": "Brenda",
+"id": "brendaconversation_v01.00",
 "start_url": "/",
 "display": "standalone",
 "description": "Tu compañera de conversación, siempre disponible, amistosa y atenta.",

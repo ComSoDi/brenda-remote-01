@@ -1,0 +1,76 @@
+{
+"name": "IA Brenda",
+"short_name": "Brenda",
+"start_url": "/",
+"display": "standalone",
+"description": "Tu compañera de conversación, siempre disponible, amistosa y atenta.",
+"lang": "es-ES",
+"dir": "auto",
+"theme_color": "#FFFFFF",
+"background_color": "#8c25d3",
+"orientation": "any",
+"icons": [
+  {
+    "src": "/images_play/icon-192.png",
+    "sizes": "192x192",
+    "type": "image/png",
+    "purpose": "any"
+  },
+  {
+    "src": "/images_play/icon-512.png",
+    "sizes": "512x512",
+    "type": "image/png",
+    "purpose": "any"
+  },
+  {
+    "src": "/images_play/icon-512-maskable.png",
+    "sizes": "512x512",
+    "type": "image/png",
+    "purpose": "maskable"
+  }
+],
+"screenshots": [
+    {
+        "src": "/images_play/brendascreenshot_a.png",
+        "sizes": "810x1440",
+        "type": "image/png",
+        "description": "Screenshot of Create Account"
+    },
+    {
+        "src": "/images_play/brendascreenshot_b.png",
+        "sizes": "810x1440",
+        "type": "image/png",
+        "description": "Screenshot of Talk / Chat"
+    },
+    {
+        "src": "/images_play/brendascreenshot_c.png",
+        "sizes": "810x1440",
+        "type": "image/png",
+        "description": "Screenshot of My Info"
+    },
+    {
+        "src": "/images_play/brendascreenshot_d.png",
+        "sizes": "810x1440",
+        "type": "image/png",
+        "description": "Screenshot of Talking"
+    },
+    {
+        "src": "/images_play/brendascreenshot_e.png",
+        "sizes": "810x1440",
+        "type": "image/png",
+        "description": "Screenshot of Help Screen"
+    },
+    {
+        "src": "/images_play/brendascreenshot_f.png",
+        "sizes": "810x1440",
+        "type": "image/png",
+        "description": "Screenshot of Top Up"
+    },
+    {
+        "src": "/images_play/brendascreenshot_g.png",
+        "sizes": "810x1440",
+        "type": "image/png",
+        "description": "Screenshot of Select Plan"
+    }
+]
+}

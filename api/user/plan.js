@@ -34,6 +34,9 @@ export default async function handler(req, res) {
       planDisplayName: sub.planDisplayName,
       voiceQuota: sub.voiceQuota,
       chatQuota: sub.chatQuota,
+      deferred: !!sub.deferred,
+      pendingPlanId: sub.pendingPlanId || null,
+      effectiveAt: sub.deferred ? sub.effectiveAt : null,
     });
   } catch (e) {
     return json(res, 500, { error: e?.message || String(e) });

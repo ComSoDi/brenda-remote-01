@@ -1124,7 +1124,17 @@ class BrendaApp {
       }
       if (this.elements.usageCurrentPlanName) {
         const tierKey = this._tierKeyForPlanId(data.planId);
-        this.elements.usageCurrentPlanName.textContent = tierKey ? t(v, tierKey) : (data.planDisplayName || "");
+        let label = tierKey ? t(v, tierKey) : (data.planDisplayName || "");
+        // A scheduled downgrade only takes effect at the next billing period
+        // (see lib/subscriptions.js switchPlan) — show it here so the plan
+        // name doesn't look "stuck" after the user picked something else.
+        if (data.pendingPlanId) {
+          const pendingTierKey = this._tierKeyForPlanId(data.pendingPlanId);
+          const pendingLabel = pendingTierKey ? t(v, pendingTierKey) : (data.pendingPlanDisplayName || "");
+          const effectiveDate = data.periodEndDate ? new Date(data.periodEndDate).toLocaleDateString(v) : "";
+          label += ` ${t(v, "sub.pendingChange", { plan: pendingLabel, date: effectiveDate })}`;
+        }
+        this.elements.usageCurrentPlanName.textContent = label;
       }
     } catch {
       // Usage block just stays at its last-known state if the fetch fails.
@@ -1191,6 +1201,8 @@ class BrendaApp {
       const usageData = usageRes.ok ? await usageRes.json().catch(() => null) : null;
       const plans = plansData?.plans || [];
       const currentPlanId = usageData?.planId || null;
+      // Used by onSelectPlan() to tell an upgrade from a downgrade.
+      this._currentPlanSortOrder = plans.find((p) => p.planId === currentPlanId)?.sortOrder ?? 0;
       this._renderPlanCards(plans, currentPlanId);
     } catch {
       // Cards container just stays empty if the fetch fails.
@@ -1254,7 +1266,7 @@ class BrendaApp {
               </tbody>
             </table>
 
-            <button type="button" class="${btnClass}" data-action="select" data-plan-id="${plan.planId}" data-plan-label="${planLabel}" ${isCurrent ? "data-current=\"true\"" : ""}>${btnLabel}</button>
+            <button type="button" class="${btnClass}" data-action="select" data-plan-id="${plan.planId}" data-plan-label="${planLabel}" data-sort-order="${plan.sortOrder ?? 0}" ${isCurrent ? "data-current=\"true\"" : ""}>${btnLabel}</button>
 
             <p class="plan-card-footnote">${t(v, "sub.timeNote")}</p>
           </div>
@@ -1274,17 +1286,24 @@ class BrendaApp {
       const planId = selectBtn.getAttribute("data-plan-id");
       const planLabel = selectBtn.getAttribute("data-plan-label");
       const isCurrent = selectBtn.getAttribute("data-current") === "true";
-      this.onSelectPlan(planId, planLabel, isCurrent);
+      const sortOrder = Number(selectBtn.getAttribute("data-sort-order") || 0);
+      this.onSelectPlan(planId, planLabel, isCurrent, sortOrder);
     }
   }
 
-  async onSelectPlan(planId, planLabel, isCurrent) {
+  async onSelectPlan(planId, planLabel, isCurrent, sortOrder = 0) {
     const v = this.locale.variant;
     if (isCurrent) {
       window.alert(t(v, "sub.alreadyOnPlan"));
       return;
     }
-    const confirmed = window.confirm(t(v, "sub.switchConfirm", { plan: planLabel }));
+
+    // Downgrades are deferred to the next billing period (see
+    // lib/subscriptions.js switchPlan) — say so up front, before the user
+    // confirms, so they're not surprised their plan "didn't change".
+    const isDowngrade = sortOrder < (this._currentPlanSortOrder ?? 0);
+    const confirmKey = isDowngrade ? "sub.downgradeConfirm" : "sub.switchConfirm";
+    const confirmed = window.confirm(t(v, confirmKey, { plan: planLabel }));
     if (!confirmed) return;
 
     try {
@@ -1295,9 +1314,13 @@ class BrendaApp {
         body: JSON.stringify({ planId }),
       });
       if (!res.ok) return;
+      const data = await res.json().catch(() => null);
 
       this.closePlanSelectionOverlay();
       await this.refreshUsageMonitor();
+      if (data?.deferred) {
+        window.alert(t(v, "sub.downgradeScheduled", { plan: planLabel }));
+      }
     } catch {
       // Leave the overlay open so the user can retry.
     }

@@ -1,7 +1,7 @@
 // api/user/usage.js
 import { getDb } from "../../lib/mongo.js";
 import { requireSession } from "../../lib/auth.js";
-import { getOrCreateSubscription, getUsageSinceDate, computeStatus } from "../../lib/subscriptions.js";
+import { getOrCreateSubscription, getUsageSinceDate, computeStatus, getPlan } from "../../lib/subscriptions.js";
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -25,6 +25,12 @@ export default async function handler(req, res) {
     const sub = await getOrCreateSubscription(db, s.userId);
     const { voiceTokensUsed, chatTokensUsed } = await getUsageSinceDate(db, s.userId, sub.periodStartDate);
 
+    let pendingPlanDisplayName = null;
+    if (sub.pendingPlanId) {
+      const pendingPlan = await getPlan(db, sub.pendingPlanId);
+      pendingPlanDisplayName = pendingPlan?.displayName || sub.pendingPlanId;
+    }
+
     return json(res, 200, {
       planId: sub.planId,
       planDisplayName: sub.planDisplayName,
@@ -34,6 +40,9 @@ export default async function handler(req, res) {
       chatQuota: sub.chatQuota,
       voiceStatus: computeStatus(voiceTokensUsed, sub.voiceQuota),
       chatStatus: computeStatus(chatTokensUsed, sub.chatQuota),
+      pendingPlanId: sub.pendingPlanId || null,
+      pendingPlanDisplayName,
+      periodEndDate: sub.periodEndDate,
     });
   } catch (e) {
     return json(res, 500, { error: e?.message || String(e) });

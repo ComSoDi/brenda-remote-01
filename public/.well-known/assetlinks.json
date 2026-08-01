@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "co.aibrenda.twa",
+        "sha256_cert_fingerprints": ["40:30:45:4F:06:64:9B:33:C0:3F:D7:47:D3:F2:7E:F7:9F:77:54:C5:62:44:06:01:83:17:74:45:E4:9B:53:55"]
+      }
+    }]

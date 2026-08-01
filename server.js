@@ -53,6 +53,7 @@ dns.setServers((process.env.DNS_SERVERS || "1.1.1.1, 8.8.8.8").split(/[,\s]+/).f
 
 const app = express();
 app.use(express.json({ limit: "2mb" }));
+app.use("/.well-known", express.static(path.join(STATIC_DIR, ".well-known"), { dotfiles: "allow" }));
 app.use(express.static(STATIC_DIR));
 
 app.post("/api/auth/login", loginHandler);

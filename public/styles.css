@@ -293,6 +293,17 @@ body {
 /* =========================================================
    6) TEXT INPUT
 ========================================================= */
+.ai-disclaimer {
+  margin: 4px 0 0;
+  font-size: 0.7em;
+  line-height: 1.2;
+  color: #999;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .chat-inputbar {
   display: flex;
   gap: 10px;
@@ -658,6 +669,16 @@ body {
   position: relative;
   z-index: 2;
   display: block;
+}
+
+.call-disclaimer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14px;
+  margin: 0;
+  padding: 0 18px;
+  color: rgba(11, 11, 11, 0.55);
 }
 
 /* Minimized tile */

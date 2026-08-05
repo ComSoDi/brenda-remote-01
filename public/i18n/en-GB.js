@@ -10,6 +10,7 @@ export default {
 
     hintTalk: "Tap to speak",
     hintText: "Tap to text",
+    aiDisclaimer: "Remember: Brenda is an AI and can make mistakes",
     placeholder: "Conversation will appear here.",
     send: "Send",
     textInputPlaceholder: "Type here.",

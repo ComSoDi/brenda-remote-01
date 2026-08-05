@@ -10,6 +10,7 @@ export default {
 
     hintTalk: "Toca para hablar",
     hintText: "Toca para escribir",
+    aiDisclaimer: "Recuerda: Brenda es una IA y puede equivocarse",
     placeholder: "La conversacion aparecera aqui.",
     send: "Enviar",
     textInputPlaceholder: "Escribe aqui.",

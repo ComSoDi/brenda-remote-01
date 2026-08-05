@@ -85,6 +85,7 @@ class BrendaApp {
 
       // Mode input
       textInputWrap: document.getElementById("textInputWrap"),
+      aiDisclaimer: document.getElementById("aiDisclaimer"),
 
       // Bottom buttons
       toggleBtnTalk: document.getElementById("toggleBtnTalk"),
@@ -103,6 +104,7 @@ class BrendaApp {
       // Call overlay + tile
       callOverlay: document.getElementById("callOverlay"),
       callTitle: document.getElementById("callTitle"),
+      callDisclaimer: document.getElementById("callDisclaimer"),
       callMinBtn: document.getElementById("callMinBtn"),
       callHangBtn: document.getElementById("callHangBtn"),
       callTile: document.getElementById("callTile"),
@@ -290,6 +292,8 @@ class BrendaApp {
     // Localise hints + placeholders
     if (this.elements.hintTalk) this.elements.hintTalk.textContent = t(this.locale.variant, "hintTalk");
     if (this.elements.hintText) this.elements.hintText.textContent = t(this.locale.variant, "hintText");
+    if (this.elements.aiDisclaimer) this.elements.aiDisclaimer.textContent = t(this.locale.variant, "aiDisclaimer");
+    if (this.elements.callDisclaimer) this.elements.callDisclaimer.textContent = t(this.locale.variant, "aiDisclaimer");
 
     // Transcript autoscroll + placeholder
     if (this.elements.transcriptOuter) {

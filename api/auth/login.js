@@ -68,7 +68,7 @@ export default async function handler(req, res) {
           username,
           userId,
           pinHash,
-          preferences: { gender: gender || null },
+          preferences: { gender: gender || null, consentAcceptedAt: null, talkDisclaimerAcceptedAt: null },
           createdAt: now,
           lastLogin: now,
         };
@@ -88,7 +88,7 @@ export default async function handler(req, res) {
         username,
         userId: baseUserId,
         pinHash,
-        preferences: { gender },
+        preferences: { gender, consentAcceptedAt: null, talkDisclaimerAcceptedAt: null },
         createdAt: now,
         lastLogin: now,
       };
@@ -112,6 +112,8 @@ export default async function handler(req, res) {
       displayName: user.username,
       isAnonymous: false,
       gender: effectiveGender,
+      consentAcceptedAt: user.preferences?.consentAcceptedAt || null,
+      talkDisclaimerAcceptedAt: user.preferences?.talkDisclaimerAcceptedAt || null,
     });
   } catch (e) {
     console.error("Login error:", e);

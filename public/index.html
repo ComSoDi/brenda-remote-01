@@ -204,6 +204,45 @@
       </div>
     </div>
 
+    <!-- CONSENT OVERLAY (AI disclosure, shown once after account creation/login until accepted) -->
+    <div id="consentOverlay" class="brenda-overlay consent-overlay hidden" aria-hidden="true">
+      <div class="brenda-card consent-card" role="dialog" aria-modal="true">
+        <div class="brenda-top">
+          <img src="images/brenda-avatar.png" alt="Brenda" class="brenda-avatar" />
+          <h1 id="consentTitle" class="brenda-title"></h1>
+          <h2 id="consentSubtitle" class="brenda-subtitle"></h2>
+        </div>
+
+        <div id="consentContent" class="brenda-content"></div>
+
+        <div class="consent-error" id="consentError" role="alert" aria-live="polite"></div>
+
+        <div class="consent-actions">
+          <button id="consentDeclineBtn" class="consent-decline-btn" type="button"></button>
+          <button id="consentAgreeBtn" class="consent-agree-btn" type="button"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TALK DISCLAIMER OVERLAY (shown once, first time TALK is tapped on an account) -->
+    <div id="talkOverlay" class="brenda-overlay talk-overlay hidden" aria-hidden="true">
+      <div class="brenda-card consent-card" role="dialog" aria-modal="true">
+        <div class="brenda-top">
+          <img src="images/brenda-avatar.png" alt="Brenda" class="brenda-avatar" />
+          <h1 id="talkTitle" class="brenda-title"></h1>
+          <h2 id="talkSubtitle" class="brenda-subtitle"></h2>
+        </div>
+
+        <div id="talkContent" class="brenda-content"></div>
+
+        <div class="consent-error" id="talkError" role="alert" aria-live="polite"></div>
+
+        <div class="consent-actions">
+          <button id="talkGotItBtn" class="talk-gotit-btn" type="button"></button>
+        </div>
+      </div>
+    </div>
+
     <!-- SUBJECTS POPUP -->
     <div id="subjectsOverlay" class="popup-overlay hidden" aria-hidden="true">
       <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="subjectsTitle">

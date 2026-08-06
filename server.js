@@ -10,6 +10,9 @@ import loginHandler from "./api/auth/login.js";
 import meHandler from "./api/auth/me.js";
 import anonymousHandler from "./api/auth/anonymous.js";
 import logoutHandler from "./api/auth/logout.js";
+import consentHandler from "./api/auth/consent.js";
+import declineConsentHandler from "./api/auth/decline-consent.js";
+import talkDisclaimerHandler from "./api/auth/talk-disclaimer.js";
 import historyHandler from "./api/history.js";
 import usageHandler from "./api/user/usage.js";
 import plansHandler from "./api/plans.js";
@@ -60,6 +63,9 @@ app.post("/api/auth/login", loginHandler);
 app.get("/api/auth/me", meHandler);
 app.post("/api/auth/anonymous", anonymousHandler);
 app.post("/api/auth/logout", logoutHandler);
+app.post("/api/auth/consent", consentHandler);
+app.post("/api/auth/decline-consent", declineConsentHandler);
+app.post("/api/auth/talk-disclaimer", talkDisclaimerHandler);
 
 app.post("/api/conversation/append", appendHandler);
 

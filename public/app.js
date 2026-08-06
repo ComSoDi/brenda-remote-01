@@ -134,6 +134,23 @@ class BrendaApp {
       authPrivacyLink: document.getElementById("authPrivacyLink"),
       authError: document.getElementById("authError"),
 
+      // Consent overlay (AI disclosure, first login)
+      consentOverlay: document.getElementById("consentOverlay"),
+      consentTitle: document.getElementById("consentTitle"),
+      consentSubtitle: document.getElementById("consentSubtitle"),
+      consentContent: document.getElementById("consentContent"),
+      consentError: document.getElementById("consentError"),
+      consentAgreeBtn: document.getElementById("consentAgreeBtn"),
+      consentDeclineBtn: document.getElementById("consentDeclineBtn"),
+
+      // Talk disclaimer overlay (first TALK tap)
+      talkOverlay: document.getElementById("talkOverlay"),
+      talkTitle: document.getElementById("talkTitle"),
+      talkSubtitle: document.getElementById("talkSubtitle"),
+      talkContent: document.getElementById("talkContent"),
+      talkError: document.getElementById("talkError"),
+      talkGotItBtn: document.getElementById("talkGotItBtn"),
+
       // Subjects UI
       startBtn: document.getElementById("startBtn"),
       medBtn: document.getElementById("medBtn"),
@@ -490,6 +507,11 @@ class BrendaApp {
     });
 
     this.elements.authCloseBtn?.addEventListener("click", () => this.closeAuthOverlay());
+
+    this.elements.consentAgreeBtn?.addEventListener("click", () => this.acceptConsent());
+    this.elements.consentDeclineBtn?.addEventListener("click", () => this.declineConsent());
+
+    this.elements.talkGotItBtn?.addEventListener("click", () => this.acceptTalkDisclaimer());
   }
 
   async bootstrapAuth() {
@@ -498,12 +520,14 @@ class BrendaApp {
       if (me?.voiceProxyUrl && window.Config) window.Config.VOICE_PROXY_WS_URL = me.voiceProxyUrl;
       if (me?.voiceToken  && window.Config) window.Config.VOICE_TOKEN = me.voiceToken;
       if (me?.userId) {
-        await this.setUser(me);
-        this.closeAuthOverlay();
-        await this.loadHistoryAndRender();
-        await this.checkAndShowGreeting();
-        this.startGreetingHeartbeat();
-        this.setTalkButtonState({ connected: false, disabled: false });
+        if (!me.isAnonymous && !me.consentAcceptedAt) {
+          this._pendingConsentUser = me;
+          this.closeAuthOverlay();
+          this.openConsentOverlay();
+          this.setTalkButtonState({ connected: false, disabled: true });
+          return;
+        }
+        await this.completeLogin(me);
         return;
       }
     } catch {
@@ -569,6 +593,7 @@ class BrendaApp {
         displayName: nameToShow,
         isAnonymous: !!meOrNull.isAnonymous,
         gender: meOrNull.gender || null,
+        talkDisclaimerAcceptedAt: meOrNull.talkDisclaimerAcceptedAt || null,
       }
       : null;
 
@@ -633,17 +658,14 @@ class BrendaApp {
         body: { username: nick, pin },
       });
 
-      await this.setUser(me);
-      this.closeAuthOverlay();
+      if (!me.isAnonymous && !me.consentAcceptedAt) {
+        this._pendingConsentUser = me;
+        this.closeAuthOverlay();
+        this.openConsentOverlay();
+        return;
+      }
 
-      // Switch user: replace transcript with their last N
-      await this.loadHistoryAndRender();
-      await this.checkAndShowGreeting();
-      this.startGreetingHeartbeat();
-
-      // Enable controls
-      this.setTalkButtonState({ connected: false, disabled: false });
-      this.elements.toggleBtnText.disabled = false;
+      await this.completeLogin(me);
     } catch (e) {
       console.error(e);
       if (this.elements.authError) this.elements.authError.textContent = e?.message || String(e);
@@ -656,21 +678,125 @@ class BrendaApp {
     this.setAuthBusy(true);
     try {
       const me = await this.apiJSON("/api/auth/anonymous", { method: "POST", body: {} });
-      await this.setUser(me);
-      this.closeAuthOverlay();
-
-      // New anon user has no history; still load (empty)
-      await this.loadHistoryAndRender();
-      await this.checkAndShowGreeting();
-      this.startGreetingHeartbeat();
-
-      this.setTalkButtonState({ connected: false, disabled: false });
-      this.elements.toggleBtnText.disabled = false;
+      await this.completeLogin(me);
     } catch (e) {
       console.error(e);
       if (this.elements.authError) this.elements.authError.textContent = e?.message || String(e);
     } finally {
       this.setAuthBusy(false);
+    }
+  }
+
+  // Finishes the login/signup sequence once any required consent has been
+  // resolved — shared by authContinue, continueAnonymous, bootstrapAuth, and
+  // the consent overlay's accept/decline handlers.
+  async completeLogin(me) {
+    await this.setUser(me);
+    this.closeAuthOverlay();
+    this.closeConsentOverlay();
+
+    await this.loadHistoryAndRender();
+    await this.checkAndShowGreeting();
+    this.startGreetingHeartbeat();
+
+    this.setTalkButtonState({ connected: false, disabled: false });
+    this.elements.toggleBtnText.disabled = false;
+  }
+
+  openConsentOverlay() {
+    const v = this.locale.variant;
+    if (this.elements.consentTitle) this.elements.consentTitle.textContent = t(v, "consentTitle");
+    if (this.elements.consentSubtitle) this.elements.consentSubtitle.textContent = t(v, "consentSubtitle");
+    if (this.elements.consentContent) {
+      this.elements.consentContent.innerHTML = t(v, "consentContent");
+      this.elements.consentContent.scrollTop = 0;
+    }
+    if (this.elements.consentAgreeBtn) this.elements.consentAgreeBtn.textContent = t(v, "consentAgree");
+    if (this.elements.consentDeclineBtn) this.elements.consentDeclineBtn.textContent = t(v, "consentDecline");
+    if (this.elements.consentError) this.elements.consentError.textContent = "";
+
+    this.elements.consentOverlay?.classList.remove("hidden");
+    this.elements.consentOverlay?.setAttribute("aria-hidden", "false");
+  }
+
+  closeConsentOverlay() {
+    this.elements.consentOverlay?.classList.add("hidden");
+    this.elements.consentOverlay?.setAttribute("aria-hidden", "true");
+  }
+
+  setConsentBusy(isBusy) {
+    if (this.elements.consentAgreeBtn) this.elements.consentAgreeBtn.disabled = isBusy;
+    if (this.elements.consentDeclineBtn) this.elements.consentDeclineBtn.disabled = isBusy;
+  }
+
+  async acceptConsent() {
+    if (!this._pendingConsentUser) return;
+    this.setConsentBusy(true);
+    try {
+      const { consentAcceptedAt } = await this.apiJSON("/api/auth/consent", { method: "POST", body: {} });
+      const me = { ...this._pendingConsentUser, consentAcceptedAt };
+      this._pendingConsentUser = null;
+      await this.completeLogin(me);
+    } catch (e) {
+      console.error(e);
+      if (this.elements.consentError) this.elements.consentError.textContent = e?.message || String(e);
+    } finally {
+      this.setConsentBusy(false);
+    }
+  }
+
+  async declineConsent() {
+    this.setConsentBusy(true);
+    try {
+      const me = await this.apiJSON("/api/auth/decline-consent", { method: "POST", body: {} });
+      this._pendingConsentUser = null;
+      await this.completeLogin(me);
+    } catch (e) {
+      console.error(e);
+      if (this.elements.consentError) this.elements.consentError.textContent = e?.message || String(e);
+    } finally {
+      this.setConsentBusy(false);
+    }
+  }
+
+  openTalkOverlay() {
+    const v = this.locale.variant;
+    if (this.elements.talkTitle) this.elements.talkTitle.textContent = t(v, "talkTitle");
+    if (this.elements.talkSubtitle) this.elements.talkSubtitle.textContent = t(v, "talkSubtitle");
+    if (this.elements.talkContent) {
+      this.elements.talkContent.innerHTML = t(v, "talkContent");
+      this.elements.talkContent.scrollTop = 0;
+    }
+    if (this.elements.talkGotItBtn) this.elements.talkGotItBtn.textContent = t(v, "talkGotIt");
+    if (this.elements.talkError) this.elements.talkError.textContent = "";
+
+    this.elements.talkOverlay?.classList.remove("hidden");
+    this.elements.talkOverlay?.setAttribute("aria-hidden", "false");
+  }
+
+  closeTalkOverlay() {
+    this.elements.talkOverlay?.classList.add("hidden");
+    this.elements.talkOverlay?.setAttribute("aria-hidden", "true");
+  }
+
+  setTalkOverlayBusy(isBusy) {
+    if (this.elements.talkGotItBtn) this.elements.talkGotItBtn.disabled = isBusy;
+  }
+
+  async acceptTalkDisclaimer() {
+    this.setTalkOverlayBusy(true);
+    try {
+      const { talkDisclaimerAcceptedAt } = await this.apiJSON("/api/auth/talk-disclaimer", { method: "POST", body: {} });
+      if (this.user) this.user.talkDisclaimerAcceptedAt = talkDisclaimerAcceptedAt;
+      this.closeTalkOverlay();
+      // Re-enter the same gated flow — now accepted, it falls through to the
+      // quota check and connects.
+      await this.onTalkButton();
+    } catch (e) {
+      console.error(e);
+      if (this.elements.talkError) this.elements.talkError.textContent = e?.message || String(e);
+    } finally {
+      this.setTalkOverlayBusy(false);
     }
   }
 
@@ -1754,6 +1880,14 @@ class BrendaApp {
     // Toggle voice connection
     const isDisconnect = this.elements.toggleBtnTalk.classList.contains("btn-disconnect-talk");
     if (!isDisconnect) {
+      // One-time disclaimer before the first-ever TALK connection on this
+      // account — acceptTalkDisclaimer() re-invokes onTalkButton() once
+      // recorded, which then falls through the checks below.
+      if (!this.user.talkDisclaimerAcceptedAt) {
+        this.openTalkOverlay();
+        return;
+      }
+
       // Block starting a new voice session once the voice quota is exhausted —
       // checked fresh here so it reflects usage right up to this click. The
       // server-side WS gate (server.js /api/voice/stream upgrade handler, and

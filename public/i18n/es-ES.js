@@ -41,6 +41,34 @@ export default {
     authGenderOther: "Otro",
     authErrorNoGender: "Por favor selecciona un género.",
 
+    consentTitle: "¡Bienvenido a IA Brenda!",
+    consentSubtitle: "Lee esto con atención y pulsa «Acepto» para continuar",
+    consentContent: `
+      <p><strong>Brenda es una IA, no una persona.</strong> Sus respuestas las genera una inteligencia artificial, no un ser humano. Es estupenda para charlar y darte información general, pero nunca sustituye el consejo de un profesional.</p>
+      <p>Piensa en Brenda como una vecina simpática con la que te encanta charlar. No te fíes de ella para temas médicos, legales, financieros o psicológicos: siempre te recomendará que consultes a un profesional certificado.</p>
+      <p>Por favor, no le compartas datos personales identificativos, contraseñas, información financiera, historial médico ni otros datos sensibles.</p>
+      <p><strong>Tu voz.</strong> En el modo HABLAR, tu micrófono capta tu voz en tiempo real. El audio se envía directamente a un servicio externo de IA para procesarlo y nunca lo almacenamos nosotros.</p>
+      <p>El micrófono se desconecta automáticamente tras un rato de silencio. Si ocurre y quieres seguir hablando, simplemente vuelve a pulsar HABLAR.</p>
+      <p><strong>Tus conversaciones.</strong> Brenda guarda tus mensajes más recientes para que puedas retomar donde lo dejaste. El audio de voz nunca se graba: solo se guarda la transcripción de texto para dar continuidad a la sesión.</p>
+      <p>Al pulsar «Acepto» confirmas que has leído y aceptas los Términos de Uso y la Política de Privacidad de IA Brenda.</p>
+    `,
+    consentAgree: "Acepto",
+    consentDecline: "No acepto",
+
+    talkTitle: "¡Hablemos!",
+    talkSubtitle: "Unas cosas rápidas antes de tu primera llamada",
+    talkContent: `
+      <p>Para tener conversaciones de voz con Brenda, pulsa el botón HABLAR para activar el micrófono.</p>
+      <p class="disclosure-note">La primera vez que pulses HABLAR, tu dispositivo te pedirá permiso para usar el micrófono. Te recomendamos elegir «Permitir siempre» para que quede listo para futuras llamadas.</p>
+      <p>Para colgar, simplemente pulsa el icono rojo de teléfono o el botón rojo de Colgar.</p>
+      <p>Como en una llamada telefónica, Brenda tarda unos segundos en «contestar» y saludarte.</p>
+      <p>Tu voz se envía en tiempo real a un servicio externo de IA: nunca la grabamos ni la almacenamos nosotros.</p>
+      <p>Lo que dices y lo que responde Brenda se transcribe a texto y se guarda, así que aparece en tu ventana de chat.</p>
+      <p><strong>Por favor, no compartas información personal sensible, ni por voz ni por chat.</strong></p>
+      <p>El micrófono se desconecta automáticamente tras un rato de silencio. Si ocurre y quieres seguir hablando, simplemente vuelve a pulsar HABLAR.</p>
+    `,
+    talkGotIt: "Entendido. Hablemos",
+
     subjectsButton: "Temas",
     subjectsTitle: "Temas",
     subjectsSubtitle: "Dime los temas que más te interesan para hablar",

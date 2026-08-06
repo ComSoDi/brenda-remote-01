@@ -48,16 +48,20 @@ export default async function handler(req, res) {
 
   // Fetch gender from DB (session cookies pre-dating this field won't have it)
   let gender = s.gender || null;
-  if (!gender && !s.isAnonymous) {
+  let consentAcceptedAt = null;
+  let talkDisclaimerAcceptedAt = null;
+  if (!s.isAnonymous) {
     try {
       const db = await getDb();
       const user = await db.collection("users").findOne(
         { userId: s.userId },
-        { projection: { "preferences.gender": 1 } }
+        { projection: { "preferences.gender": 1, "preferences.consentAcceptedAt": 1, "preferences.talkDisclaimerAcceptedAt": 1 } }
       );
-      gender = user?.preferences?.gender || null;
+      if (!gender) gender = user?.preferences?.gender || null;
+      consentAcceptedAt = user?.preferences?.consentAcceptedAt || null;
+      talkDisclaimerAcceptedAt = user?.preferences?.talkDisclaimerAcceptedAt || null;
     } catch {
-      // non-fatal — gender stays null
+      // non-fatal — gender/consent/talk-disclaimer stay null
     }
   }
 
@@ -73,6 +77,8 @@ export default async function handler(req, res) {
     displayName: s.isAnonymous ? "anonymous" : (s.username || ""),
     isAnonymous: !!s.isAnonymous,
     gender,
+    consentAcceptedAt,
+    talkDisclaimerAcceptedAt,
     voiceProxyUrl: process.env.VOICE_PROXY_WS_URL || null,
     voiceToken,
   });

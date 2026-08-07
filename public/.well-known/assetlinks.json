@@ -1,8 +1,11 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "co.aibrenda.twa",
-        "sha256_cert_fingerprints": ["7C:7C:2A:06:29:81:DA:60:4F:4A:38:65:67:31:6F:E5:75:EC:0C:C8:18:27:14:98:3F:79:12:AB:C3:5C:CB:FC"]
-      }
-    }]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "co.aibrenda.twa",
+      "sha256_cert_fingerprints":
+        ["B4:8E:10:A4:43:1D:0A:E4:6D:96:55:74:E9:FD:99:5C:0E:D2:42:9A:38:3D:57:41:99:19:94:92:AA:8C:6F:5E"]
+    }
+  }
+]

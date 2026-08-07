@@ -69,6 +69,22 @@ export default {
     `,
     talkGotIt: "Entendido. Hablemos",
 
+    privacyTitle: "Política de Privacidad de Datos",
+    privacyContent: `
+      <p>La aplicación <strong>IABrenda.com</strong> está en período de prueba y solo disponible a usuarios selectos que colaboran en las pruebas preliminares propias de la etapa de desarrollo.</p>
+      <p>Durante este periodo de prueba no podemos garantizar la privacidad de los datos que se usarán para descubrir posibles fallas, requerimientos imprevistos y caracteristicas a incorporar antes de su futuro lanzamiento.</p>
+      <p>Tampoco somos responsables de la privacidad de los datos de aquellos que usen <strong>IABrenda.com</strong> sin nuestro consentimiento.</p>
+      <p>El sistema de registro usado durante el período de prueba (Apodo + PIN) es <strong>MUY básico</strong> y no garantiza ni remotamente la privacidad de los datos.</p>
+      <p>Por favor <strong>NUNCA COMPARTAS</strong> datos personales como dirección, emails, cuenta bancaria, estado de salud, consultas legales o fiscales, etc. en esta plataforma.</p>
+      <p>Cuando se acabe el período de prueba incorporaremos sistemas de protección más robustos (p.ej. OAuth).</p>
+      <p class="content-subheading">Datos de Voz y Conversación</p>
+      <p><strong>Entrada de voz:</strong> Cuando usas el modo HABLAR, tu micrófono capta tu voz y la envía en tiempo real a nuestro servicio de procesamiento de IA. El audio se procesa al instante y nunca es grabado, almacenado ni conservado por IA Brenda ni por sus servidores.</p>
+      <p><strong>Transcripciones:</strong> Las conversaciones de voz se transcriben a texto en tiempo real. Estas transcripciones, junto con tus mensajes de chat de texto, se guardan para mostrar tus aproximadamente últimas 20 interacciones. Esto te permite revisar tus conversaciones recientes dentro de la app. El historial de conversación está asociado exclusivamente a tu cuenta y se almacena de forma segura.</p>
+      <p><strong>Lo que no almacenamos:</strong> Archivos de audio en bruto, grabaciones de voz ni ningún dato biométrico de voz.</p>
+      <p><strong>Eliminación de datos:</strong> Puedes solicitar la eliminación de tu cuenta y de todos los datos de conversación asociados en cualquier momento escribiéndonos a soporte@comerciosocialdigital.com. Procesaremos tu solicitud en un plazo de 30 días.</p>
+    `,
+    privacyUnderstood: "Entendido",
+
     subjectsButton: "Temas",
     subjectsTitle: "Temas",
     subjectsSubtitle: "Dime los temas que más te interesan para hablar",
@@ -337,7 +353,8 @@ export default {
     "sub.topUpPrice": "${n}",
     "sub.topUpSubtitle": "Añade Brendys cuando quieras",
     "sub.topUpSelect": "Añadir Brendys",
-    "sub.topUpComingSoon": "¡Las recargas estarán disponibles muy pronto!",
+    "sub.topUpConfirm": "¿Añadir los Brendys de {plan} a tu cuenta ahora?",
+    "sub.topUpSuccess": "¡Brendys añadidos a tu saldo de voz y chat!",
     "sub.totalMinutes": "{n} minutos totales*",
     "sub.fullPrice": "${n}/mes",
     "sub.introPrice": "${n} / 1er mes",

@@ -50,19 +50,23 @@ export default async function handler(req, res) {
   let gender = s.gender || null;
   let consentAcceptedAt = null;
   let talkDisclaimerAcceptedAt = null;
-  if (!s.isAnonymous) {
-    try {
-      const db = await getDb();
-      const user = await db.collection("users").findOne(
-        { userId: s.userId },
-        { projection: { "preferences.gender": 1, "preferences.consentAcceptedAt": 1, "preferences.talkDisclaimerAcceptedAt": 1 } }
-      );
-      if (!gender) gender = user?.preferences?.gender || null;
+  // policyAcceptedAt is tracked for anonymous sessions too — the privacy
+  // policy is viewable (and "Understood"-able) regardless of account type.
+  let policyAcceptedAt = null;
+  try {
+    const db = await getDb();
+    const user = await db.collection("users").findOne(
+      { userId: s.userId },
+      { projection: { "preferences.gender": 1, "preferences.consentAcceptedAt": 1, "preferences.talkDisclaimerAcceptedAt": 1, "preferences.policyAcceptedAt": 1 } }
+    );
+    if (!gender) gender = user?.preferences?.gender || null;
+    if (!s.isAnonymous) {
       consentAcceptedAt = user?.preferences?.consentAcceptedAt || null;
       talkDisclaimerAcceptedAt = user?.preferences?.talkDisclaimerAcceptedAt || null;
-    } catch {
-      // non-fatal — gender/consent/talk-disclaimer stay null
     }
+    policyAcceptedAt = user?.preferences?.policyAcceptedAt || null;
+  } catch {
+    // non-fatal — gender/consent/talk-disclaimer/policy stay null
   }
 
   // Short-lived token (10 min) so the external voice proxy (different domain)
@@ -79,6 +83,7 @@ export default async function handler(req, res) {
     gender,
     consentAcceptedAt,
     talkDisclaimerAcceptedAt,
+    policyAcceptedAt,
     voiceProxyUrl: process.env.VOICE_PROXY_WS_URL || null,
     voiceToken,
   });

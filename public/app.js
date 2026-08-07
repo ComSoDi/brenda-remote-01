@@ -151,6 +151,13 @@ class BrendaApp {
       talkError: document.getElementById("talkError"),
       talkGotItBtn: document.getElementById("talkGotItBtn"),
 
+      // Privacy policy overlay (on-demand, viewable anytime)
+      privacyOverlay: document.getElementById("privacyOverlay"),
+      privacyTitle: document.getElementById("privacyTitle"),
+      privacyContent: document.getElementById("privacyContent"),
+      privacyCloseBtn: document.getElementById("privacyCloseBtn"),
+      privacyUnderstoodBtn: document.getElementById("privacyUnderstoodBtn"),
+
       // Subjects UI
       startBtn: document.getElementById("startBtn"),
       medBtn: document.getElementById("medBtn"),
@@ -512,6 +519,20 @@ class BrendaApp {
     this.elements.consentDeclineBtn?.addEventListener("click", () => this.declineConsent());
 
     this.elements.talkGotItBtn?.addEventListener("click", () => this.acceptTalkDisclaimer());
+
+    // Privacy policy — on demand, from anywhere it's linked. Left-click opens
+    // the in-app popup; middle-click / right-click "open in new tab" still
+    // falls through to the real href (the standalone page stays available).
+    this.elements.authPrivacyLink?.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.openPrivacyOverlay();
+    });
+    this.elements.planNotePrivacy?.addEventListener("click", (e) => {
+      e.preventDefault();
+      this.openPrivacyOverlay();
+    });
+    this.elements.privacyCloseBtn?.addEventListener("click", () => this.closePrivacyOverlay());
+    this.elements.privacyUnderstoodBtn?.addEventListener("click", () => this.acceptPrivacyPolicy());
   }
 
   async bootstrapAuth() {
@@ -594,6 +615,7 @@ class BrendaApp {
         isAnonymous: !!meOrNull.isAnonymous,
         gender: meOrNull.gender || null,
         talkDisclaimerAcceptedAt: meOrNull.talkDisclaimerAcceptedAt || null,
+        policyAcceptedAt: meOrNull.policyAcceptedAt || null,
       }
       : null;
 
@@ -797,6 +819,39 @@ class BrendaApp {
       if (this.elements.talkError) this.elements.talkError.textContent = e?.message || String(e);
     } finally {
       this.setTalkOverlayBusy(false);
+    }
+  }
+
+  openPrivacyOverlay() {
+    const v = this.locale.variant;
+    if (this.elements.privacyTitle) this.elements.privacyTitle.textContent = t(v, "privacyTitle");
+    if (this.elements.privacyContent) {
+      this.elements.privacyContent.innerHTML = t(v, "privacyContent");
+      this.elements.privacyContent.scrollTop = 0;
+    }
+    if (this.elements.privacyUnderstoodBtn) this.elements.privacyUnderstoodBtn.textContent = t(v, "privacyUnderstood");
+
+    this.elements.privacyOverlay?.classList.remove("hidden");
+    this.elements.privacyOverlay?.setAttribute("aria-hidden", "false");
+  }
+
+  closePrivacyOverlay() {
+    this.elements.privacyOverlay?.classList.add("hidden");
+    this.elements.privacyOverlay?.setAttribute("aria-hidden", "true");
+  }
+
+  // On-demand, not gated — "Understood" just records the first time this
+  // account confirmed reading it (never overwritten after that). Best-effort:
+  // closes either way, including when there's no session yet (e.g. viewed
+  // from the pre-login signup screen).
+  async acceptPrivacyPolicy() {
+    try {
+      const { policyAcceptedAt } = await this.apiJSON("/api/auth/policy-accept", { method: "POST", body: {} });
+      if (this.user) this.user.policyAcceptedAt = policyAcceptedAt;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      this.closePrivacyOverlay();
     }
   }
 
@@ -1481,11 +1536,35 @@ class BrendaApp {
       this.onSelectPlan(planId, planLabel, isCurrent, sortOrder);
       return;
     }
-    // Top-up purchases aren't wired to a real purchase flow yet (no one-time
-    // IAP / Google Play Billing integration exists) — placeholder for now.
     const topUpBtn = e.target.closest('[data-action="topup"]');
     if (topUpBtn) {
-      window.alert(t(this.locale.variant, "sub.topUpComingSoon"));
+      const planLabel = topUpBtn.getAttribute("data-plan-label");
+      this.onTopUp(planLabel);
+    }
+  }
+
+  // Top-up purchases aren't wired to a real purchase flow yet (no one-time
+  // IAP / Google Play Billing integration exists) — adds the top-up plan's
+  // Brendys straight away, with no charge, as an interim stand-in (see
+  // lib/subscriptions.js addTopUp()).
+  async onTopUp(planLabel) {
+    const v = this.locale.variant;
+    const confirmed = window.confirm(t(v, "sub.topUpConfirm", { plan: planLabel }));
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch("/api/user/topup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) return;
+
+      this.closePlanSelectionOverlay();
+      await this.refreshUsageMonitor();
+      window.alert(t(v, "sub.topUpSuccess"));
+    } catch {
+      // Leave the overlay open so the user can retry.
     }
   }
 

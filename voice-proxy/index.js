@@ -61,12 +61,19 @@ async function getDb() {
 // the main repo's lib/ folder, hence the duplication — keep in sync by hand.
 
 const PLAN_FREE = "brenda_free";
-const SUBSCRIPTION_PERIOD_DAYS = 30;
 
-function addDays(date, days) {
-  const d = new Date(date);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d;
+// "Monthly" means calendar month (UTC) while Google Play billing isn't wired
+// up yet — mirrors lib/subscriptions.js, keep in sync by hand (see note above).
+function startOfMonthUTC(date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1, 0, 0, 0, 0));
+}
+
+function startOfNextMonthUTC(date) {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 1, 0, 0, 0, 0));
+}
+
+function isSameUTCMonth(a, b) {
+  return a.getUTCFullYear() === b.getUTCFullYear() && a.getUTCMonth() === b.getUTCMonth();
 }
 
 async function getPlan(db, planId) {
@@ -78,9 +85,10 @@ async function getOrCreateSubscription(db, userId) {
   const subs = db.collection("subscriptions");
 
   const sub = await subs.findOne({ userId, status: "active" });
-  if (sub && sub.periodEndDate > now) return sub;
+  if (sub && isSameUTCMonth(sub.periodStartDate, now)) return sub;
 
-  const planId = sub?.planId || PLAN_FREE;
+  // A pending (deferred) downgrade takes over here, at rollover — never mid-period.
+  const planId = sub?.pendingPlanId || sub?.planId || PLAN_FREE;
   const plan = await getPlan(db, planId);
 
   const newSub = {
@@ -88,8 +96,8 @@ async function getOrCreateSubscription(db, userId) {
     planId,
     planDisplayName: plan?.displayName || "Free",
     status: "active",
-    periodStartDate: now,
-    periodEndDate: addDays(now, SUBSCRIPTION_PERIOD_DAYS),
+    periodStartDate: startOfMonthUTC(now),
+    periodEndDate: startOfNextMonthUTC(now),
     createdAt: now,
     updatedAt: now,
     voiceQuota: plan?.voiceQuota ?? 0,
@@ -97,6 +105,8 @@ async function getOrCreateSubscription(db, userId) {
     previousPlanId: sub?.planId ?? null,
     previousPurchaseToken: null,
     planChangedAt: null,
+    pendingPlanId: null,
+    pendingPlanChangedAt: null,
     voiceExhaustedAt: null,
     chatExhaustedAt: null,
     gp: {

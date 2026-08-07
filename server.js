@@ -13,10 +13,12 @@ import logoutHandler from "./api/auth/logout.js";
 import consentHandler from "./api/auth/consent.js";
 import declineConsentHandler from "./api/auth/decline-consent.js";
 import talkDisclaimerHandler from "./api/auth/talk-disclaimer.js";
+import policyAcceptHandler from "./api/auth/policy-accept.js";
 import historyHandler from "./api/history.js";
 import usageHandler from "./api/user/usage.js";
 import plansHandler from "./api/plans.js";
 import planSwitchHandler from "./api/user/plan.js";
+import topUpHandler from "./api/user/topup.js";
 import weatherHandler from "./api/weather.js";
 import realtimeKeyHandler from "./api/voice/realtime-key.js";
 import appendHandler from "./api/conversation/append.js";
@@ -66,6 +68,7 @@ app.post("/api/auth/logout", logoutHandler);
 app.post("/api/auth/consent", consentHandler);
 app.post("/api/auth/decline-consent", declineConsentHandler);
 app.post("/api/auth/talk-disclaimer", talkDisclaimerHandler);
+app.post("/api/auth/policy-accept", policyAcceptHandler);
 
 app.post("/api/conversation/append", appendHandler);
 
@@ -73,6 +76,7 @@ app.get("/api/history", historyHandler);
 app.get("/api/user/usage", usageHandler);
 app.get("/api/plans", plansHandler);
 app.post("/api/user/plan", planSwitchHandler);
+app.post("/api/user/topup", topUpHandler);
 
 app.post("/api/chat", chatHandler);
 app.post("/api/weather", weatherHandler);

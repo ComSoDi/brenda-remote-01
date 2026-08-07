@@ -1042,6 +1042,40 @@ body {
   color: #666;
 }
 
+/* In-content section heading (h1/h2 are hidden inside .brenda-content since
+   the card title already sits in the fixed header) */
+.brenda-content .content-subheading {
+  margin: 1.4em 0 0.6em;
+  font-size: 1.05em;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.privacy-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.privacy-actions {
+  display: flex;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-top: 14px;
+}
+
+.privacy-understood-btn {
+  padding: 0 32px;
+  height: 46px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  background: #17bf54;
+  color: #ffffff;
+}
+
 .brenda-bottom-close {
   flex: 0 0 auto;
   margin-top: 16px;

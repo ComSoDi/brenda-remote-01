@@ -77,6 +77,23 @@ export default {
     `,
     talkGotIt: "Got it. Start talking",
 
+    // Privacy policy overlay (on-demand, viewable anytime)
+    privacyTitle: "Privacy Policy",
+    privacyContent: `
+      <p>The <strong>IABrenda.com</strong> app is currently in a trial period and is only available to select users collaborating in the preliminary testing of this development stage.</p>
+      <p>During this trial period we cannot guarantee the privacy of data used to discover potential bugs, unforeseen requirements, and features to be added before its future launch.</p>
+      <p>We are also not responsible for the privacy of data belonging to anyone who uses <strong>IABrenda.com</strong> without our consent.</p>
+      <p>The registration system used during the trial period (Nickname + PIN) is <strong>VERY basic</strong> and does not remotely guarantee data privacy.</p>
+      <p>Please <strong>NEVER SHARE</strong> personal data such as your address, emails, bank account, health status, legal or tax matters, etc. on this platform.</p>
+      <p>Once the trial period ends, we will implement more robust protection systems (e.g. OAuth).</p>
+      <p class="content-subheading">Voice &amp; Conversation Data</p>
+      <p><strong>Voice input:</strong> When you use TALK mode, your microphone captures your voice and sends it in real time to our AI processing service. Audio is processed immediately and is never recorded, stored, or retained by IA Brenda or its servers.</p>
+      <p><strong>Transcriptions:</strong> Voice conversations are transcribed to text in real time. These transcriptions, along with your text chat messages, are saved to display your approximately last 20 interactions. This allows you to review recent conversations within the app. Conversation history is associated exclusively with your account and is stored securely.</p>
+      <p><strong>What we do not store:</strong> Raw audio files, voice recordings, or any biometric voice data.</p>
+      <p><strong>Data deletion:</strong> You can request deletion of your account and all associated conversation data at any time by contacting us at support@comerciosocialdigital.com. We will process your request within 30 days.</p>
+    `,
+    privacyUnderstood: "Understood",
+
     // Subjects modal
     subjectsButton: "Subjects",
     subjectsTitle: "Subjects",
@@ -347,7 +364,8 @@ export default {
     "sub.topUpPrice": "${n}",
     "sub.topUpSubtitle": "Add Brendys at any time",
     "sub.topUpSelect": "Add Brendys",
-    "sub.topUpComingSoon": "Top-up purchases are coming soon!",
+    "sub.topUpConfirm": "Add {plan}'s Brendys to your account now?",
+    "sub.topUpSuccess": "Brendys added to your voice and chat balance!",
     "sub.totalMinutes": "{n} total minutes*",
     "sub.fullPrice": "${n}/mo",
     "sub.introPrice": "${n} / 1st month",

@@ -8,8 +8,8 @@
 "description": "Tu compañera de conversación, siempre disponible, amistosa y atenta.",
 "lang": "es-ES",
 "dir": "auto",
-"theme_color": "#FFFFFF",
-"background_color": "#8c25d3",
+"theme_color": "#8c25d3",
+"background_color": "#FFFFFF",
 "orientation": "any",
 "icons": [
   {

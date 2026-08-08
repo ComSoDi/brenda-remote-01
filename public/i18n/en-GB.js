@@ -363,7 +363,7 @@ export default {
     "sub.header": "Subscription Plans",
     "sub.otherPlansHeader": "Other plans",
     "sub.topUpName": "Top-up",
-    "sub.topUpPrice": "${n}",
+    "sub.topUpPrice": "£{n}",
     "sub.topUpSubtitle": "Add Brendys at any time",
     "sub.topUpSelect": "Add Brendys",
     "sub.topUpConfirm": "Add {plan}'s Brendys to your account now?",

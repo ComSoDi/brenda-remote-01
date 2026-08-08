@@ -1,4 +1,4 @@
-// public/medicationManager.js
+// public/taskManager.js
 // Medication Reminder Module — UI manager
 // Instantiated by app.js: new MedicationManager(app)
 
@@ -168,8 +168,8 @@ export class MedicationManager {
 
   async _load() {
     try {
-      const data = await this.app.apiJSON("/api/medications", { method: "GET" });
-      this.medications = data.medications || [];
+      const data = await this.app.apiJSON("/api/tasks", { method: "GET" });
+      this.medications = data.tasks || [];
     } catch {
       this.medications = [];
     }
@@ -434,10 +434,10 @@ export class MedicationManager {
         if (this._editMode === "change") {
           payload.changeReason = this._els.changeReasonInput.value.trim();
         }
-        await this.app.apiJSON(`/api/medications?id=${encodeURIComponent(this._editingId)}`,
+        await this.app.apiJSON(`/api/tasks?id=${encodeURIComponent(this._editingId)}`,
           { method: "PATCH", body: payload });
       } else {
-        await this.app.apiJSON("/api/medications", { method: "POST", body: payload });
+        await this.app.apiJSON("/api/tasks", { method: "POST", body: payload });
       }
 
       this._els.formStatus.textContent = this._t("medSaved");
@@ -454,7 +454,7 @@ export class MedicationManager {
   async _stopMed(med) {
     if (!confirm(`${this._t("medStopConfirm")} ${med.name}?`)) return;
     try {
-      await this.app.apiJSON(`/api/medications?id=${encodeURIComponent(med.id)}`, { method: "DELETE" });
+      await this.app.apiJSON(`/api/tasks?id=${encodeURIComponent(med.id)}`, { method: "DELETE" });
       await this._load();
       this._renderList();
     } catch { /* ignore */ }
@@ -476,7 +476,7 @@ export class MedicationManager {
       </div>
       <div class="med-schedule-table-wrap"><table class="med-schedule-table">
         <thead><tr>
-          <th>${t(v,"medColMedication")}</th>
+          <th>${t(v,"medColTask")}</th>
           <th>${t(v,"medColDose")}</th>
           <th>${t(v,"medColSchedule")}</th>
           <th>${t(v,"medColDirections")}</th>

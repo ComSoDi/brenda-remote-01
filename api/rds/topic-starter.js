@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       ? `\nAngles already introduced in previous sessions — DO NOT repeat or reference these:\n${pastAngles.map(a => `- ${a}`).join("\n")}`
       : "";
 
-    const taskInstruction = hasContext
+    const jobInstruction = hasContext
       ? "Using the context above, generate a specific conversation opener that goes DEEPER into the topic or introduces an ADJACENT element (a related person, work, historical influence, technique, or cultural angle). Do NOT simply restate the topic label. Build on what is already known about this person."
       : "Generate a specific, interesting angle on this topic — a concrete fact, reference, or cultural observation. Do NOT just restate the topic name.";
 
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       observationsBlock,
       pastAnglesBlock,
       "",
-      taskInstruction,
+      jobInstruction,
       "",
       "Return ONLY valid JSON (no prose, no code fences):",
       `{"statement":"Content only — a specific fact or observation, under 40 words, no opening phrase.","question":"A natural follow-up question, under 20 words.","angle":"3-7 word summary of the specific angle introduced (for internal tracking)."}`,

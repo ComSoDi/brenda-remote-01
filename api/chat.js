@@ -1030,7 +1030,7 @@ export default async function handler(req, res) {
     // MEDICATION QUERY BRANCH — deterministic, no Gemini needed
     // ────────────────────────────────────────────────────────────────────────
     if (medicationIntent) {
-      const activeMeds = await db.collection("medications")
+      const activeMeds = await db.collection("tasks")
         .find({ userId: session.userId, active: true })
         .sort({ name: 1 })
         .toArray();

@@ -118,6 +118,7 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text", key: "sideNavTalkText5" },
       { type: "text", key: "sideNavTalkText6" },
       { type: "text", key: "sideNavTalkText7" },
+      { type: "text", key: "sideNavTalkText8" },
     ],
   },
   news: {

@@ -56,16 +56,16 @@ export default async function handler(req, res) {
 
     // Subscription/billing and usage-tracking history are deliberately left
     // untouched (kept for accounting), so only these collections get wiped.
-    const meds = await db.collection("medications")
+    const tasks = await db.collection("tasks")
       .find({ userId }, { projection: { id: 1 } })
       .toArray();
-    const medIds = meds.map((m) => m.id).filter(Boolean);
+    const taskIds = tasks.map((t) => t.id).filter(Boolean);
 
     await db.collection("conversations").deleteOne({ userId });
-    await db.collection("medications").deleteMany({ userId });
+    await db.collection("tasks").deleteMany({ userId });
     await db.collection("medication_reminders").deleteMany({ userId });
-    if (medIds.length) {
-      await db.collection("medication_schedule_sync").deleteMany({ medicationId: { $in: medIds } });
+    if (taskIds.length) {
+      await db.collection("medication_schedule_sync").deleteMany({ medicationId: { $in: taskIds } });
     }
     await db.collection("rds_profiles").deleteOne({ userId });
     await db.collection("ai_categories").deleteOne({ userId });

@@ -311,18 +311,18 @@ async function createGeminiVoiceProxy(browserWs, req) {
   try {
     const db = await getDb();
     if (db) {
-      const [userDoc, meds, sub] = await Promise.all([
+      const [userDoc, tasks, sub] = await Promise.all([
         db.collection("users").findOne(
           { userId },
           { projection: { "preferences.gender": 1 } }
         ).catch(e => { console.error("[voice-proxy] users lookup failed:", e.message); return null; }),
-        db.collection("medications").find({ userId, active: true }).sort({ name: 1 }).toArray()
-          .catch(e => { console.error("[voice-proxy] medications lookup failed:", e.message); return []; }),
+        db.collection("tasks").find({ userId, active: true }).sort({ name: 1 }).toArray()
+          .catch(e => { console.error("[voice-proxy] tasks lookup failed:", e.message); return []; }),
         getOrCreateSubscription(db, userId)
           .catch(e => { console.error(`[voice-proxy] subscription lookup failed for userId=${userId}:`, e.message); return null; }),
       ]);
       if (!gender) gender = userDoc?.preferences?.gender || null;
-      activeMeds = meds || [];
+      activeMeds = tasks || [];
       if (sub) {
         planId = sub.planId;
         planDisplayName = sub.planDisplayName;
@@ -507,9 +507,9 @@ async function startScheduler() {
     const db = await getDb();
     if (!db) return;
 
-    const meds = await db.collection("medications").find({ active: true }).toArray();
+    const tasks = await db.collection("tasks").find({ active: true }).toArray();
 
-    for (const med of meds) {
+    for (const med of tasks) {
       // Course-ending-tomorrow check (independent of time match)
       if (isCourseEndingTomorrow(med)) {
         const { date } = tzParts(med.timezone);
@@ -551,7 +551,7 @@ async function startScheduler() {
       if (med.recurrence?.type === "interval") {
         const next = new Date();
         next.setDate(next.getDate() + (med.recurrence.intervalDays || 1));
-        await db.collection("medications").updateOne(
+        await db.collection("tasks").updateOne(
           { id: med.id },
           { $set: { "recurrence.nextDue": next.toISOString().slice(0, 10) } }
         );
@@ -561,7 +561,7 @@ async function startScheduler() {
       if (med.endDate) {
         const { date } = tzParts(med.timezone);
         if (date >= med.endDate) {
-          await db.collection("medications").updateOne(
+          await db.collection("tasks").updateOne(
             { id: med.id }, { $set: { active: false } }
           );
         }

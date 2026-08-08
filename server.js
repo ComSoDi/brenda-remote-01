@@ -25,7 +25,7 @@ import realtimeKeyHandler from "./api/voice/realtime-key.js";
 import appendHandler from "./api/conversation/append.js";
 import transcriptCorrectHandler from "./api/transcript/correct.js";
 import greetingHandler from "./api/greeting.js";
-import medicationsHandler from "./api/medications.js";
+import tasksHandler from "./api/tasks.js";
 import categoriesHandler from "./api/brenda/categories.js";
 import headlinesHandler from "./api/brenda/headlines.js";
 import gossipHandler from "./api/brenda/gossip.js";
@@ -85,7 +85,7 @@ app.post("/api/weather", weatherHandler);
 app.post("/api/voice/realtime-key", realtimeKeyHandler);
 
 app.all("/api/greeting", greetingHandler);
-app.all("/api/medications", medicationsHandler);
+app.all("/api/tasks", tasksHandler);
 
 app.all("/api/brenda/categories", categoriesHandler);
 app.all("/api/brenda/headlines", headlinesHandler);
@@ -296,13 +296,13 @@ server.on("upgrade", async (req, socket, head) => {
       // failed plan lookup must never be indistinguishable from a genuinely
       // anonymous session (that's what caused plan to show "Anonymous" for
       // authenticated users — see 2026-07-19 bugfix).
-      const [userDoc, meds, profile, planInfo, voiceStatus] = await Promise.all([
+      const [userDoc, tasks, profile, planInfo, voiceStatus] = await Promise.all([
         db.collection("users").findOne(
           { userId },
           { projection: { "preferences.gender": 1, "preferences.location": 1 } }
         ).catch(e => { console.error("[voice-proxy] users lookup failed:", e.message); return null; }),
-        db.collection("medications").find({ userId, active: true }).sort({ name: 1 }).toArray()
-          .catch(e => { console.error("[voice-proxy] medications lookup failed:", e.message); return []; }),
+        db.collection("tasks").find({ userId, active: true }).sort({ name: 1 }).toArray()
+          .catch(e => { console.error("[voice-proxy] tasks lookup failed:", e.message); return []; }),
         getRdsProfile(db, userId)
           .catch(e => { console.error("[voice-proxy] rds profile lookup failed:", e.message); return null; }),
         resolvePlanForUsage(db, userId, false)
@@ -315,7 +315,7 @@ server.on("upgrade", async (req, socket, head) => {
           .catch(e => { console.error(`[voice-proxy] quota check failed for userId=${userId}:`, e.message); return "active"; }),
       ]);
       if (!gender) gender = userDoc?.preferences?.gender || null;
-      activeMeds = meds || [];
+      activeMeds = tasks || [];
       rdsProfile = profile || null;
       savedLocation = userDoc?.preferences?.location || null;
       if (planInfo) {

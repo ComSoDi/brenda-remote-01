@@ -1,8 +1,8 @@
-// api/medications.js
-// GET    /api/medications          — list active medications
-// POST   /api/medications          — create medication + acknowledge disclaimer
-// PATCH  /api/medications?id=xxx   — update (mode: "correct" | "change")
-// DELETE /api/medications?id=xxx   — soft-delete (active=false)
+// api/tasks.js
+// GET    /api/tasks          — list active tasks
+// POST   /api/tasks          — create task + acknowledge disclaimer
+// PATCH  /api/tasks?id=xxx   — update (mode: "correct" | "change")
+// DELETE /api/tasks?id=xxx   — soft-delete (active=false)
 
 import { requireSession } from "../lib/auth.js";
 import { getDb } from "../lib/mongo.js";
@@ -36,12 +36,12 @@ export default async function handler(req, res) {
 
   // ── GET ──────────────────────────────────────────────────────────────────
   if (req.method === "GET") {
-    const meds = await db.collection("medications")
+    const tasks = await db.collection("tasks")
       .find({ userId: session.userId, active: true })
       .sort({ name: 1 })
       .toArray();
     // Strip MongoDB _id from results
-    return json(res, 200, { medications: meds.map(({ _id, ...m }) => m) });
+    return json(res, 200, { tasks: tasks.map(({ _id, ...t }) => t) });
   }
 
   // ── POST — create ─────────────────────────────────────────────────────────
@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     if (!timezone)         return json(res, 400, { error: "timezone required" });
 
     const now = new Date();
-    const med = {
+    const task = {
       id:                    crypto.randomUUID(),
       userId:                session.userId,
       name:                  name.trim(),
@@ -74,15 +74,15 @@ export default async function handler(req, res) {
       updatedAt:             now,
     };
 
-    await db.collection("medications").insertOne(med);
+    await db.collection("tasks").insertOne(task);
 
-    // Signal Render scheduler to pick up the new medication
+    // Signal Render scheduler to pick up the new task
     await db.collection("medication_schedule_sync").insertOne({
-      action: "create", medicationId: med.id, processedAt: null, createdAt: now,
+      action: "create", medicationId: task.id, processedAt: null, createdAt: now,
     });
 
-    const { _id, ...medOut } = med;
-    return json(res, 201, { medication: medOut });
+    const { _id, ...taskOut } = task;
+    return json(res, 201, { task: taskOut });
   }
 
   // ── PATCH — update ────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ export default async function handler(req, res) {
     const body = await parseBody(req);
     const { mode, name, dose, directions, recurrence, startDate, endDate, timezone, notes, enteredBy, changeReason, active } = body;
 
-    const existing = await db.collection("medications").findOne({ id, userId: session.userId });
+    const existing = await db.collection("tasks").findOne({ id, userId: session.userId });
     if (!existing) return json(res, 404, { error: "Not found" });
 
     const now = new Date();
@@ -127,7 +127,7 @@ export default async function handler(req, res) {
       };
     }
 
-    await db.collection("medications").updateOne({ id, userId: session.userId }, updateOp);
+    await db.collection("tasks").updateOne({ id, userId: session.userId }, updateOp);
 
     await db.collection("medication_schedule_sync").insertOne({
       action: "reschedule", medicationId: id, processedAt: null, createdAt: now,
@@ -141,7 +141,7 @@ export default async function handler(req, res) {
     const id = getParam(req, "id");
     if (!id) return json(res, 400, { error: "id required" });
 
-    await db.collection("medications").updateOne(
+    await db.collection("tasks").updateOne(
       { id, userId: session.userId },
       { $set: { active: false, updatedAt: new Date() } }
     );

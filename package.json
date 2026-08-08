@@ -11,6 +11,7 @@
     "test:gemini-live": "node --env-file=.env scripts/test-gemini-live.js",
     "migrate:cleanup": "node --env-file=.env scripts/cleanup-migrate.js",
     "migrate:account-status": "node --env-file=.env scripts/grandfather-account-status.js",
+    "migrate:rename-tasks": "node --env-file=.env scripts/rename-medications-to-tasks.js",
     "seed:plans": "node --env-file=.env scripts/seed-plans.js",
     "backup:db": "node --env-file=.env scripts/backup-db.js",
     "restore:db": "node --env-file=.env scripts/restore-db.js"

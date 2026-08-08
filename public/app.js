@@ -4,7 +4,7 @@ import { t, preloadLocale } from "./i18n/index.js";
 import { SideNavManager } from "./sideNavManager.js";
 import { renderTranscript, wireAutoScroll } from "./transcriptRenderer.js";
 import { getConversationContent } from "./conversationContent.js";
-import { MedicationManager } from "./medicationManager.js";
+import { MedicationManager } from "./taskManager.js";
 
 class BrendaApp {
   constructor() {

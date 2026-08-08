@@ -201,6 +201,9 @@
           <button id="authAnonBtn" class="auth-anon-link" type="button"></button>
 
           <a class="auth-privacy" id="authPrivacyLink" href="privacy.html" target="_blank" rel="noopener"></a>
+
+          <!-- Only shown when logged in as a named account (auth overlay reopened via the Account button) -->
+          <button id="deleteAccountLinkBtn" class="delete-account-link hidden" type="button"></button>
         </div>
       </div>
     </div>
@@ -257,6 +260,52 @@
 
         <div class="privacy-actions">
           <button id="privacyUnderstoodBtn" class="privacy-understood-btn" type="button"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNT DELETION OVERLAY (from the Account/auth overlay, named accounts only) -->
+    <div id="deleteAccountOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true">
+      <div class="brenda-card consent-card" role="dialog" aria-modal="true">
+        <button id="deleteAccountCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close">×</button>
+
+        <div class="brenda-top">
+          <h1 id="deleteAccountTitle" class="brenda-title"></h1>
+          <h2 id="deleteAccountSubtitle" class="brenda-subtitle"></h2>
+        </div>
+
+        <div id="deleteAccountContent" class="brenda-content"></div>
+
+        <div class="consent-error" id="deleteAccountError" role="alert" aria-live="polite"></div>
+
+        <div class="privacy-actions">
+          <button id="deleteAccountConfirmBtn" class="delete-account-confirm-btn" type="button"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNT DELETION — FINAL CONFIRMATION (re-enter Nick + PIN) -->
+    <div id="deleteAccountFinalOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true">
+      <div class="brenda-card consent-card" role="dialog" aria-modal="true">
+        <button id="deleteAccountFinalCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close">×</button>
+
+        <div class="brenda-top">
+          <h1 id="deleteAccountFinalTitle" class="brenda-title"></h1>
+          <h2 id="deleteAccountFinalSubtitle" class="brenda-subtitle"></h2>
+        </div>
+
+        <div class="auth-form">
+          <label class="auth-label" id="deleteAccountFinalNickLabel" for="deleteAccountFinalNick"></label>
+          <input id="deleteAccountFinalNick" class="auth-input" type="text" inputmode="text" autocomplete="username" />
+
+          <label class="auth-label" id="deleteAccountFinalPinLabel" for="deleteAccountFinalPin"></label>
+          <input id="deleteAccountFinalPin" class="auth-input" type="password" inputmode="numeric" autocomplete="current-password" maxlength="4" />
+        </div>
+
+        <div class="consent-error" id="deleteAccountFinalError" role="alert" aria-live="polite"></div>
+
+        <div class="privacy-actions">
+          <button id="deleteAccountFinalBtn" class="delete-account-confirm-btn" type="button"></button>
         </div>
       </div>
     </div>

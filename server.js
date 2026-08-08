@@ -14,6 +14,7 @@ import consentHandler from "./api/auth/consent.js";
 import declineConsentHandler from "./api/auth/decline-consent.js";
 import talkDisclaimerHandler from "./api/auth/talk-disclaimer.js";
 import policyAcceptHandler from "./api/auth/policy-accept.js";
+import deleteAccountHandler from "./api/auth/delete-account.js";
 import historyHandler from "./api/history.js";
 import usageHandler from "./api/user/usage.js";
 import plansHandler from "./api/plans.js";
@@ -69,6 +70,7 @@ app.post("/api/auth/consent", consentHandler);
 app.post("/api/auth/decline-consent", declineConsentHandler);
 app.post("/api/auth/talk-disclaimer", talkDisclaimerHandler);
 app.post("/api/auth/policy-accept", policyAcceptHandler);
+app.post("/api/auth/delete-account", deleteAccountHandler);
 
 app.post("/api/conversation/append", appendHandler);
 

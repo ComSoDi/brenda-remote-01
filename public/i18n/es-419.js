@@ -85,6 +85,20 @@ export default {
     `,
     privacyUnderstood: "Entendido",
 
+    deleteAccountLink: "Quiero cerrar mi cuenta y borrar mis datos",
+    deleteAccountTitle: "Eliminación de Cuenta y Datos",
+    deleteAccountSubtitle: "¿Estás seguro? Esta operación no se puede deshacer",
+    deleteAccountContent: `
+      <p>Sentimos que te vayas y lamentamos no poder ofrecerte reembolsos si lo haces. Quizás lo mejor sea eliminar tu cuenta y tus datos justo antes de tu próximo ciclo de facturación, para que aproveches por completo los Brendys que te queden.</p>
+      <p>En cualquier caso, te agradeceríamos muchísimo que nos escribieras a <a href="mailto:support@comerciosocialdigital.com">support@comerciosocialdigital.com</a> contándonos los motivos por los que decidiste dejar de usar Brenda.</p>
+      <p>Queremos mejorar cada día.</p>
+    `,
+    deleteAccountConfirm: "Por favor, cierra mi cuenta y elimina mis datos",
+    deleteAccountDone: "Tu cuenta y tus datos han sido eliminados.",
+    deleteAccountConfirmTitle: "¿Estás seguro?",
+    deleteAccountConfirmSubtitle: "¡Esto no se puede deshacer!",
+    deleteAccountFinalBtn: "Por favor, elimina mi cuenta y todos mis datos",
+
     subjectsButton: "Temas",
     subjectsTitle: "Temas",
     subjectsSubtitle: "Dime los temas que más te interesan para hablar",

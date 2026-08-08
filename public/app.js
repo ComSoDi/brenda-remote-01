@@ -158,6 +158,28 @@ class BrendaApp {
       privacyCloseBtn: document.getElementById("privacyCloseBtn"),
       privacyUnderstoodBtn: document.getElementById("privacyUnderstoodBtn"),
 
+      // Account deletion (from My Info, named accounts only)
+      deleteAccountLinkBtn: document.getElementById("deleteAccountLinkBtn"),
+      deleteAccountOverlay: document.getElementById("deleteAccountOverlay"),
+      deleteAccountTitle: document.getElementById("deleteAccountTitle"),
+      deleteAccountSubtitle: document.getElementById("deleteAccountSubtitle"),
+      deleteAccountContent: document.getElementById("deleteAccountContent"),
+      deleteAccountError: document.getElementById("deleteAccountError"),
+      deleteAccountCloseBtn: document.getElementById("deleteAccountCloseBtn"),
+      deleteAccountConfirmBtn: document.getElementById("deleteAccountConfirmBtn"),
+
+      // Account deletion — final confirmation (re-enter Nick + PIN)
+      deleteAccountFinalOverlay: document.getElementById("deleteAccountFinalOverlay"),
+      deleteAccountFinalTitle: document.getElementById("deleteAccountFinalTitle"),
+      deleteAccountFinalSubtitle: document.getElementById("deleteAccountFinalSubtitle"),
+      deleteAccountFinalNickLabel: document.getElementById("deleteAccountFinalNickLabel"),
+      deleteAccountFinalNick: document.getElementById("deleteAccountFinalNick"),
+      deleteAccountFinalPinLabel: document.getElementById("deleteAccountFinalPinLabel"),
+      deleteAccountFinalPin: document.getElementById("deleteAccountFinalPin"),
+      deleteAccountFinalError: document.getElementById("deleteAccountFinalError"),
+      deleteAccountFinalCloseBtn: document.getElementById("deleteAccountFinalCloseBtn"),
+      deleteAccountFinalBtn: document.getElementById("deleteAccountFinalBtn"),
+
       // Subjects UI
       startBtn: document.getElementById("startBtn"),
       medBtn: document.getElementById("medBtn"),
@@ -533,6 +555,18 @@ class BrendaApp {
     });
     this.elements.privacyCloseBtn?.addEventListener("click", () => this.closePrivacyOverlay());
     this.elements.privacyUnderstoodBtn?.addEventListener("click", () => this.acceptPrivacyPolicy());
+
+    this.elements.deleteAccountLinkBtn?.addEventListener("click", () => {
+      this.closeAuthOverlay();
+      this.openDeleteAccountOverlay();
+    });
+    this.elements.deleteAccountCloseBtn?.addEventListener("click", () => this.closeDeleteAccountOverlay());
+    this.elements.deleteAccountConfirmBtn?.addEventListener("click", () => {
+      this.closeDeleteAccountOverlay();
+      this.openDeleteAccountFinalOverlay();
+    });
+    this.elements.deleteAccountFinalCloseBtn?.addEventListener("click", () => this.closeDeleteAccountFinalOverlay());
+    this.elements.deleteAccountFinalBtn?.addEventListener("click", () => this.confirmDeleteAccount());
   }
 
   async bootstrapAuth() {
@@ -570,6 +604,14 @@ class BrendaApp {
     // If already authenticated and closable, show X
     if (this.elements.authCloseBtn) {
       this.elements.authCloseBtn.classList.toggle("hidden", !closable);
+    }
+
+    // Only a logged-in named account has anything to delete (reopened via
+    // the Account button) — never shown during first-time signup.
+    const showDeleteAccount = !!this.user && !this.user.isAnonymous;
+    if (this.elements.deleteAccountLinkBtn) {
+      this.elements.deleteAccountLinkBtn.textContent = t(this.locale.variant, "deleteAccountLink");
+      this.elements.deleteAccountLinkBtn.classList.toggle("hidden", !showDeleteAccount);
     }
 
     // âœ… Always clear errors
@@ -716,6 +758,8 @@ class BrendaApp {
     await this.setUser(me);
     this.closeAuthOverlay();
     this.closeConsentOverlay();
+    this.closeDeleteAccountOverlay();
+    this.closeDeleteAccountFinalOverlay();
 
     await this.loadHistoryAndRender();
     await this.checkAndShowGreeting();
@@ -855,6 +899,87 @@ class BrendaApp {
     }
   }
 
+  openDeleteAccountOverlay() {
+    const v = this.locale.variant;
+    if (this.elements.deleteAccountTitle) this.elements.deleteAccountTitle.textContent = t(v, "deleteAccountTitle");
+    if (this.elements.deleteAccountSubtitle) this.elements.deleteAccountSubtitle.textContent = t(v, "deleteAccountSubtitle");
+    if (this.elements.deleteAccountContent) {
+      this.elements.deleteAccountContent.innerHTML = t(v, "deleteAccountContent");
+      this.elements.deleteAccountContent.scrollTop = 0;
+    }
+    if (this.elements.deleteAccountConfirmBtn) this.elements.deleteAccountConfirmBtn.textContent = t(v, "deleteAccountConfirm");
+    if (this.elements.deleteAccountError) this.elements.deleteAccountError.textContent = "";
+
+    this.elements.deleteAccountOverlay?.classList.remove("hidden");
+    this.elements.deleteAccountOverlay?.setAttribute("aria-hidden", "false");
+  }
+
+  closeDeleteAccountOverlay() {
+    this.elements.deleteAccountOverlay?.classList.add("hidden");
+    this.elements.deleteAccountOverlay?.setAttribute("aria-hidden", "true");
+  }
+
+  setDeleteAccountBusy(isBusy) {
+    if (this.elements.deleteAccountConfirmBtn) this.elements.deleteAccountConfirmBtn.disabled = isBusy;
+  }
+
+  openDeleteAccountFinalOverlay() {
+    const v = this.locale.variant;
+    if (this.elements.deleteAccountFinalTitle) this.elements.deleteAccountFinalTitle.textContent = t(v, "deleteAccountConfirmTitle");
+    if (this.elements.deleteAccountFinalSubtitle) this.elements.deleteAccountFinalSubtitle.textContent = t(v, "deleteAccountConfirmSubtitle");
+    if (this.elements.deleteAccountFinalNickLabel) this.elements.deleteAccountFinalNickLabel.textContent = t(v, "authNickLabel");
+    if (this.elements.deleteAccountFinalPinLabel) this.elements.deleteAccountFinalPinLabel.textContent = t(v, "authPinLabel");
+    if (this.elements.deleteAccountFinalBtn) this.elements.deleteAccountFinalBtn.textContent = t(v, "deleteAccountFinalBtn");
+    if (this.elements.deleteAccountFinalNick) this.elements.deleteAccountFinalNick.value = "";
+    if (this.elements.deleteAccountFinalPin) this.elements.deleteAccountFinalPin.value = "";
+    if (this.elements.deleteAccountFinalError) this.elements.deleteAccountFinalError.textContent = "";
+
+    this.elements.deleteAccountFinalOverlay?.classList.remove("hidden");
+    this.elements.deleteAccountFinalOverlay?.setAttribute("aria-hidden", "false");
+    setTimeout(() => this.elements.deleteAccountFinalNick?.focus(), 50);
+  }
+
+  closeDeleteAccountFinalOverlay() {
+    this.elements.deleteAccountFinalOverlay?.classList.add("hidden");
+    this.elements.deleteAccountFinalOverlay?.setAttribute("aria-hidden", "true");
+  }
+
+  setDeleteAccountFinalBusy(isBusy) {
+    if (this.elements.deleteAccountFinalBtn) this.elements.deleteAccountFinalBtn.disabled = isBusy;
+    if (this.elements.deleteAccountFinalNick) this.elements.deleteAccountFinalNick.disabled = isBusy;
+    if (this.elements.deleteAccountFinalPin) this.elements.deleteAccountFinalPin.disabled = isBusy;
+  }
+
+  async confirmDeleteAccount() {
+    const v = this.locale.variant;
+    const nick = (this.elements.deleteAccountFinalNick?.value || "").trim();
+    const pin = (this.elements.deleteAccountFinalPin?.value || "").trim();
+
+    if (!this.validateNick(nick)) {
+      if (this.elements.deleteAccountFinalError) this.elements.deleteAccountFinalError.textContent = t(v, "authErrorBadNick");
+      return;
+    }
+    if (!this.validatePin(pin)) {
+      if (this.elements.deleteAccountFinalError) this.elements.deleteAccountFinalError.textContent = t(v, "authErrorBadPin");
+      return;
+    }
+
+    this.setDeleteAccountFinalBusy(true);
+    try {
+      const me = await this.apiJSON("/api/auth/delete-account", {
+        method: "POST",
+        body: { username: nick, pin },
+      });
+      await this.completeLogin(me);
+      window.alert(t(v, "deleteAccountDone"));
+    } catch (e) {
+      console.error(e);
+      if (this.elements.deleteAccountFinalError) this.elements.deleteAccountFinalError.textContent = e?.message || String(e);
+    } finally {
+      this.setDeleteAccountFinalBusy(false);
+    }
+  }
+
   /* --------------------
      API helper
   -------------------- */
@@ -871,13 +996,16 @@ class BrendaApp {
     const res = await fetch(url, opts);
     const text = await res.text().catch(() => "");
     if (!res.ok) {
-      // Try JSON error
+      // Try JSON error — parsing happens in its own try so a thrown Error
+      // here isn't immediately caught by the same block's catch.
+      let message = text || `HTTP ${res.status}`;
       try {
         const j = JSON.parse(text);
-        throw new Error(j.error || j.message || `HTTP ${res.status}`);
+        message = j.error || j.message || message;
       } catch {
-        throw new Error(text || `HTTP ${res.status}`);
+        // Not JSON — keep the raw text/status fallback.
       }
+      throw new Error(message);
     }
     if (!text) return null;
     try {

@@ -86,6 +86,20 @@ export default {
     `,
     privacyUnderstood: "Understood",
 
+    deleteAccountLink: "I want to delete my account and erase personal data",
+    deleteAccountTitle: "Account and Data Deletion",
+    deleteAccountSubtitle: "Are you sure? This operation can not be reversed",
+    deleteAccountContent: `
+      <p>We are sorry to see you go and we're sorry we can't offer any refunds if you do. Perhaps it would be best if you delete your account and data just before the next billing cycle so you completely spend your remaining Brendys.</p>
+      <p>In any case, we'd much appreciate it if you sent us an email to <a href="mailto:support@comerciosocialdigital.com">support@comerciosocialdigital.com</a> with the reasons you decided to part ways with Brenda.</p>
+      <p>We very much want to improve everyday.</p>
+    `,
+    deleteAccountConfirm: "Please Close my Account and delete my Data",
+    deleteAccountDone: "Your account and data have been deleted.",
+    deleteAccountConfirmTitle: "Are you sure?",
+    deleteAccountConfirmSubtitle: "Can't undo this!",
+    deleteAccountFinalBtn: "Please, delete my account and all my data",
+
     subjectsButton: "Subjects",
     subjectsTitle: "Subjects",
     subjectsSubtitle: "Tell me the subjects you love to talk about",

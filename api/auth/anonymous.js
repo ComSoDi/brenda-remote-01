@@ -35,6 +35,7 @@ export default async function handler(req, res) {
       createdAt: now,
       lastLogin: now,
       isAnonymous: true,
+      userAccountStatus: "Active",
     });
 
     await db.collection("conversations").insertOne({

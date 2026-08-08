@@ -1076,6 +1076,49 @@ body {
   color: #ffffff;
 }
 
+.delete-account-link {
+  display: block;
+  width: 100%;
+  margin: 40px 0 0;
+  padding: 10px 6px 0;
+  background: none;
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  cursor: pointer;
+  text-align: center;
+  font-size: 13px;
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+.delete-account-confirm-btn {
+  padding: 0 24px;
+  height: 46px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  background: #dc2626;
+  color: #ffffff;
+  text-align: center;
+}
+
+/* Delete-account confirmation popup — scoped overrides so the shared
+   .brenda-card/.consent-card rules (used by consent/talk/privacy popups too)
+   stay untouched. */
+#deleteAccountOverlay .brenda-top {
+  margin-top: 26px;
+}
+
+#deleteAccountOverlay .brenda-content {
+  text-align: center;
+}
+
+#deleteAccountOverlay .brenda-content p:last-child {
+  margin-bottom: 0;
+}
+
 .brenda-bottom-close {
   flex: 0 0 auto;
   margin-top: 16px;

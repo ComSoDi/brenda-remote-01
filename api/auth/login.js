@@ -71,6 +71,7 @@ export default async function handler(req, res) {
           preferences: { gender: gender || null, consentAcceptedAt: null, talkDisclaimerAcceptedAt: null, policyAcceptedAt: null },
           createdAt: now,
           lastLogin: now,
+          userAccountStatus: "Active",
         };
         await users.insertOne(user);
         await db.collection("conversations").insertOne({ userId, createdAt: now, updatedAt: now, messages: [] });
@@ -91,6 +92,7 @@ export default async function handler(req, res) {
         preferences: { gender, consentAcceptedAt: null, talkDisclaimerAcceptedAt: null, policyAcceptedAt: null },
         createdAt: now,
         lastLogin: now,
+        userAccountStatus: "Active",
       };
       await users.insertOne(user);
       await db.collection("conversations").insertOne({ userId: baseUserId, createdAt: now, updatedAt: now, messages: [] });

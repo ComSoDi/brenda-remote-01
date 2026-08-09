@@ -12,6 +12,9 @@
     "migrate:cleanup": "node --env-file=.env scripts/cleanup-migrate.js",
     "migrate:account-status": "node --env-file=.env scripts/grandfather-account-status.js",
     "migrate:rename-tasks": "node --env-file=.env scripts/rename-medications-to-tasks.js",
+    "migrate:rename-task-reminders": "node --env-file=.env scripts/rename-medication-reminders-to-task-reminders.js",
+    "migrate:rename-schedule-sync": "node --env-file=.env scripts/rename-schedule-sync-to-task-schedule-sync.js",
+    "migrate:rename-dose": "node --env-file=.env scripts/rename-dose-to-quantity.js",
     "seed:plans": "node --env-file=.env scripts/seed-plans.js",
     "backup:db": "node --env-file=.env scripts/backup-db.js",
     "restore:db": "node --env-file=.env scripts/restore-db.js"

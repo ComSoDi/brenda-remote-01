@@ -217,10 +217,10 @@ export class MedicationManager {
   _showOsNotification(reminder, msg) {
     if (!this._notifSupported() || Notification.permission !== "granted") return;
     try {
-      new Notification(reminder.medicationName || this._t("medNotifTitle"), {
+      new Notification(reminder.taskName || this._t("medNotifTitle"), {
         body: msg,
         icon: "/images/brenda-avatar.png",
-        tag:  `med-${reminder.medicationName || "reminder"}`,
+        tag:  `med-${reminder.taskName || "reminder"}`,
       });
     } catch { /* non-fatal */ }
   }

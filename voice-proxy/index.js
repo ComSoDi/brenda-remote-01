@@ -195,7 +195,7 @@ function buildSystemInstructions(locale, gender) {
   return "You are Brenda, a helpful and friendly AI voice assistant. Speak American English with a natural native accent. Prefer US vocabulary (cell phone, elevator, truck, gas). Be warm, brief, and conversational. Never use markdown or lists. Your text must match your spoken audio exactly. When discussing weather, always use Fahrenheit and round to the nearest whole number.";
 }
 
-// ── medication schedule for system prompt ─────────────────────────────────
+// ── task schedule for system prompt ─────────────────────────────────
 
 function formatVoiceMedTime(hhmm, locale) {
   const [hStr, mStr] = String(hhmm || "").split(":");
@@ -216,8 +216,8 @@ function buildMedSystemBlock(meds, locale, isAuthenticated) {
 
   if (!hasMeds) {
     return isEs
-      ? "\n\nNOTA: Este usuario no tiene recordatorios de medicamentos guardados. Si pregunta por sus medicamentos o recordatorios, dile amablemente que no ves recordatorios guardados y que puede añadirlos desde el botón «Medicamentos». NO digas que no tienes acceso a información médica."
-      : "\n\nNOTE: This user has no medication reminders saved. If they ask about their medications or reminders, kindly say you don't see any saved reminders and suggest the Medications button. Do NOT say you cannot access medical information.";
+      ? "\n\nNOTA: Este usuario no tiene recordatorios de tareas guardados. Si pregunta por sus tareas o recordatorios, dile amablemente que no ves recordatorios guardados y que puede añadirlos desde el botón «Tareas». NO digas que no tienes acceso a esa información."
+      : "\n\nNOTE: This user has no task reminders saved. If they ask about their tasks or reminders, kindly say you don't see any saved reminders and suggest the «Tasks» button. Do NOT say you cannot access that information.";
   }
 
   const lines = meds.map((med) => {
@@ -229,21 +229,21 @@ function buildMedSystemBlock(meds, locale, isAuthenticated) {
   });
   if (isEs) {
     return (
-      "\n\nHORARIO DE RECORDATORIOS PERSONALES DEL USUARIO (lista de alarmas que el usuario introdujo él mismo — NO es un historial médico):\n" +
+      "\n\nHORARIO DE RECORDATORIOS PERSONALES DEL USUARIO (lista de tareas que el usuario introdujo él mismo — NO es un historial formal):\n" +
       lines.join("\n") +
-      "\n\nTienes PLENO ACCESO a esta información — pertenece al usuario. Cuando pregunte por sus recordatorios, medicamentos, qué tiene planificado, qué se aproxima, etc.:\n" +
+      "\n\nTienes PLENO ACCESO a esta información — pertenece al usuario. Cuando pregunte por sus recordatorios, tareas, qué tiene planificado, qué se aproxima, etc.:\n" +
       "- DEBES responder siempre. Nunca digas que no tienes acceso ni uses la expresión «historial médico» o «registros médicos».\n" +
-      "- Usa lenguaje informativo, NO imperativo: «tu plan muestra», «veo en tu horario», «según tu recordatorio». NUNCA digas «toma», «debes tomar», «tienes que tomar».\n" +
-      "- Termina siempre con: «Por favor, revisa la receta de tu médico o las indicaciones de tu farmacéutico.»"
+      "- Usa lenguaje informativo, NO imperativo: «tu plan muestra», «veo en tu horario», «según tu recordatorio». NUNCA digas «toma», «debes hacer», «tienes que».\n" +
+      "- Termina siempre con: «Por favor, revisa la documentación formal o las indicaciones de un profesional.»"
     );
   }
   return (
     "\n\nUSER'S PERSONAL REMINDER SCHEDULE (alarm entries the user created themselves — this is NOT a medical record):\n" +
     lines.join("\n") +
-    "\n\nYou have FULL PERMISSION to share this data — it belongs to the user. When they ask about their reminders, medications, what is coming up, what they have today, etc.:\n" +
+    "\n\nYou have FULL PERMISSION to share this data — it belongs to the user. When they ask about their reminders, tasks, what is coming up, what they have today, etc.:\n" +
     "- You MUST always answer. Never say you cannot access this or use the phrase 'medical records'.\n" +
     "- Use informative, non-imperative language: 'your reminder plan shows', 'I can see in your schedule', 'according to your plan'. NEVER say 'take', 'you must', 'you need to'.\n" +
-    "- Always end with: 'Please review your doctor's prescription or your pharmacist's suggestions.'"
+    "- Always end with: 'Please review your professional's indications and instructions.'"
   );
 }
 
@@ -300,7 +300,7 @@ async function createGeminiVoiceProxy(browserWs, req) {
   }
   const userId = session.userId;
 
-  // Gender, medications, and quota lookup from session + DB (non-fatal
+  // Gender, tasks, and quota lookup from session + DB (non-fatal
   // except the quota check itself, which fails open on a DB error).
   let gender = session.gender || null;
   let activeMeds = [];
@@ -434,11 +434,11 @@ wss.on("connection", (ws, req) => {
 const PORT = process.env.PORT || 3002;
 server.listen(PORT, () => console.log(`[brenda-voice-proxy] listening on port ${PORT}`));
 
-// ── Medication reminder scheduler ─────────────────────────────────────────
+// ── Tasks reminder scheduler ─────────────────────────────────────────
 
 async function startScheduler() {
   if (!process.env.MONGODB_URI) {
-    console.log("[scheduler] MONGODB_URI not set — medication reminders disabled");
+    console.log("[scheduler] MONGODB_URI not set — tasks reminders disabled");
     return;
   }
 
@@ -468,15 +468,15 @@ async function startScheduler() {
     };
   }
 
-  // ── helper: is a medication due right now? ───────────────────────────────
-  function isDue(med) {
-    const { type, times, daysOfWeek, nextDue } = med.recurrence || {};
+  // ── helper: is a task due right now? ──────────────────────────────────────
+  function isDue(task) {
+    const { type, times, daysOfWeek, nextDue } = task.recurrence || {};
     if (!times?.length) return null;
 
-    const { hhmm, weekday, date } = tzParts(med.timezone);
-    const startDate = med.startDate || "1970-01-01";
+    const { hhmm, weekday, date } = tzParts(task.timezone);
+    const startDate = task.startDate || "1970-01-01";
     if (date < startDate) return null;
-    if (med.endDate && date > med.endDate) return null;
+    if (task.endDate && date > task.endDate) return null;
 
     const timeMatch = times.find(t => t === hhmm);
     if (!timeMatch) return null;
@@ -493,91 +493,91 @@ async function startScheduler() {
     return null;
   }
 
-  // ── helper: is a limited-course med ending tomorrow? ────────────────────
-  function isCourseEndingTomorrow(med) {
-    if (!med.endDate) return false;
+  // ── helper: is a limited-course task ending tomorrow? ────────────────────
+  function isCourseEndingTomorrow(task) {
+    if (!task.endDate) return false;
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().slice(0, 10);
-    return med.endDate === tomorrowStr;
+    return task.endDate === tomorrowStr;
   }
 
   // ── main check job ───────────────────────────────────────────────────────
-  agenda.define("check-medication-reminders", async () => {
+  agenda.define("check-task-reminders", async () => {
     const db = await getDb();
     if (!db) return;
 
     const tasks = await db.collection("tasks").find({ active: true }).toArray();
 
-    for (const med of tasks) {
+    for (const task of tasks) {
       // Course-ending-tomorrow check (independent of time match)
-      if (isCourseEndingTomorrow(med)) {
-        const { date } = tzParts(med.timezone);
-        const alreadySent = await db.collection("medication_reminders").findOne({
-          medicationId: med.id,
+      if (isCourseEndingTomorrow(task)) {
+        const { date } = tzParts(task.timezone);
+        const alreadySent = await db.collection("task_reminders").findOne({
+          taskId: task.id,
           reminderType: "course-ending",
           dueAt: { $gte: new Date(date + "T00:00:00Z") },
         });
         if (!alreadySent) {
-          await db.collection("medication_reminders").insertOne({
-            userId: med.userId, medicationId: med.id, medicationName: med.name,
+          await db.collection("task_reminders").insertOne({
+            userId: task.userId, taskId: task.id, taskName: task.name,
             reminderType: "course-ending", dueAt: new Date(),
             delivered: false, createdAt: new Date(),
           });
         }
       }
 
-      const reminderType = isDue(med);
+      const reminderType = isDue(task);
       if (!reminderType) continue;
 
       // Deduplicate: don't fire twice in the same 10-minute window
       const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000);
-      const recent = await db.collection("medication_reminders").findOne({
-        medicationId: med.id,
+      const recent = await db.collection("task_reminders").findOne({
+        taskId: task.id,
         reminderType: { $ne: "course-ending" },
         dueAt: { $gte: tenMinAgo },
       });
       if (recent) continue;
 
-      const type = med.endDate ? "limited-course" : "standard";
+      const type = task.endDate ? "limited-course" : "standard";
 
-      await db.collection("medication_reminders").insertOne({
-        userId: med.userId, medicationId: med.id, medicationName: med.name,
+      await db.collection("task_reminders").insertOne({
+        userId: task.userId, taskId: task.id, taskName: task.name,
         reminderType: type, dueAt: new Date(),
         delivered: false, createdAt: new Date(),
       });
 
-      // Advance nextDue for interval meds
-      if (med.recurrence?.type === "interval") {
+      // Advance nextDue for interval tasks
+      if (task.recurrence?.type === "interval") {
         const next = new Date();
-        next.setDate(next.getDate() + (med.recurrence.intervalDays || 1));
+        next.setDate(next.getDate() + (task.recurrence.intervalDays || 1));
         await db.collection("tasks").updateOne(
-          { id: med.id },
+          { id: task.id },
           { $set: { "recurrence.nextDue": next.toISOString().slice(0, 10) } }
         );
       }
 
       // Deactivate if past endDate
-      if (med.endDate) {
-        const { date } = tzParts(med.timezone);
-        if (date >= med.endDate) {
+      if (task.endDate) {
+        const { date } = tzParts(task.timezone);
+        if (date >= task.endDate) {
           await db.collection("tasks").updateOne(
-            { id: med.id }, { $set: { active: false } }
+            { id: task.id }, { $set: { active: false } }
           );
         }
       }
     }
 
-    // Process schedule sync queue (new/rescheduled/cancelled meds)
-    await db.collection("medication_schedule_sync").updateMany(
+    // Process schedule sync queue (new/rescheduled/cancelled tasks)
+    await db.collection("task_schedule_sync").updateMany(
       { processedAt: null },
       { $set: { processedAt: new Date() } }
     );
   });
 
   await agenda.start();
-  await agenda.every("1 minute", "check-medication-reminders");
-  console.log("[scheduler] Medication reminder scheduler started");
+  await agenda.every("1 minute", "check-task-reminders");
+  console.log("[scheduler] Task reminder scheduler started");
 }
 
 startScheduler().catch(e => console.error("[scheduler] Failed to start:", e.message));

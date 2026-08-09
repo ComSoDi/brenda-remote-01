@@ -47,7 +47,7 @@ export default async function handler(req, res) {
   // ── POST — create ─────────────────────────────────────────────────────────
   if (req.method === "POST") {
     const body = await parseBody(req);
-    const { name, dose, directions, recurrence, startDate, endDate, timezone, notes, enteredBy, disclaimerAcknowledged } = body;
+    const { name, quantity, directions, recurrence, startDate, endDate, timezone, notes, enteredBy, disclaimerAcknowledged } = body;
 
     if (!name?.trim())     return json(res, 400, { error: "name required" });
     if (!recurrence?.type) return json(res, 400, { error: "recurrence required" });
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       id:                    crypto.randomUUID(),
       userId:                session.userId,
       name:                  name.trim(),
-      dose:                  dose?.trim() || null,
+      quantity:              quantity?.trim() || null,
       directions:            directions?.trim().slice(0, 30) || null,
       recurrence,
       startDate:             startDate || now.toISOString().slice(0, 10),
@@ -77,8 +77,8 @@ export default async function handler(req, res) {
     await db.collection("tasks").insertOne(task);
 
     // Signal Render scheduler to pick up the new task
-    await db.collection("medication_schedule_sync").insertOne({
-      action: "create", medicationId: task.id, processedAt: null, createdAt: now,
+    await db.collection("task_schedule_sync").insertOne({
+      action: "create", taskId: task.id, processedAt: null, createdAt: now,
     });
 
     const { _id, ...taskOut } = task;
@@ -91,7 +91,7 @@ export default async function handler(req, res) {
     if (!id) return json(res, 400, { error: "id required" });
 
     const body = await parseBody(req);
-    const { mode, name, dose, directions, recurrence, startDate, endDate, timezone, notes, enteredBy, changeReason, active } = body;
+    const { mode, name, quantity, directions, recurrence, startDate, endDate, timezone, notes, enteredBy, changeReason, active } = body;
 
     const existing = await db.collection("tasks").findOne({ id, userId: session.userId });
     if (!existing) return json(res, 404, { error: "Not found" });
@@ -99,7 +99,7 @@ export default async function handler(req, res) {
     const now = new Date();
     const $set = { updatedAt: now };
     if (name       !== undefined) $set.name       = name.trim();
-    if (dose       !== undefined) $set.dose       = dose?.trim()                        || null;
+    if (quantity   !== undefined) $set.quantity   = quantity?.trim()                    || null;
     if (directions !== undefined) $set.directions = directions?.trim().slice(0, 30)     || null;
     if (recurrence !== undefined) $set.recurrence = recurrence;
     if (startDate  !== undefined) $set.startDate  = startDate;
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
           snapshotAt:  now.toISOString(),
           reason:      changeReason?.trim() || null,
           name:        existing.name,
-          dose:        existing.dose,
+          quantity:    existing.quantity,
           directions:  existing.directions,
           recurrence:  existing.recurrence,
           startDate:   existing.startDate,
@@ -129,8 +129,8 @@ export default async function handler(req, res) {
 
     await db.collection("tasks").updateOne({ id, userId: session.userId }, updateOp);
 
-    await db.collection("medication_schedule_sync").insertOne({
-      action: "reschedule", medicationId: id, processedAt: null, createdAt: now,
+    await db.collection("task_schedule_sync").insertOne({
+      action: "reschedule", taskId: id, processedAt: null, createdAt: now,
     });
 
     return json(res, 200, { ok: true });
@@ -146,8 +146,8 @@ export default async function handler(req, res) {
       { $set: { active: false, updatedAt: new Date() } }
     );
 
-    await db.collection("medication_schedule_sync").insertOne({
-      action: "cancel", medicationId: id, processedAt: null, createdAt: new Date(),
+    await db.collection("task_schedule_sync").insertOne({
+      action: "cancel", taskId: id, processedAt: null, createdAt: new Date(),
     });
 
     return json(res, 200, { ok: true });

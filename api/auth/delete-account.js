@@ -63,9 +63,9 @@ export default async function handler(req, res) {
 
     await db.collection("conversations").deleteOne({ userId });
     await db.collection("tasks").deleteMany({ userId });
-    await db.collection("medication_reminders").deleteMany({ userId });
+    await db.collection("task_reminders").deleteMany({ userId });
     if (taskIds.length) {
-      await db.collection("medication_schedule_sync").deleteMany({ medicationId: { $in: taskIds } });
+      await db.collection("task_schedule_sync").deleteMany({ taskId: { $in: taskIds } });
     }
     await db.collection("rds_profiles").deleteOne({ userId });
     await db.collection("ai_categories").deleteOne({ userId });

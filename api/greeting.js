@@ -77,17 +77,17 @@ export default async function handler(req, res) {
         { $set: { lastSeen: now, ...(localDay ? { lastSeenLocalDay: localDay } : {}) } }
       );
 
-      // Fetch and mark-delivered any pending medication reminders
+      // Fetch and mark-delivered any pending task reminders
       let pendingReminders = [];
       try {
-        pendingReminders = await db.collection("medication_reminders")
+        pendingReminders = await db.collection("task_reminders")
           .find({ userId: session.userId, delivered: false })
           .sort({ dueAt: 1 })
           .toArray();
 
         if (pendingReminders.length > 0) {
           const ids = pendingReminders.map(r => r._id);
-          await db.collection("medication_reminders").updateMany(
+          await db.collection("task_reminders").updateMany(
             { _id: { $in: ids } },
             { $set: { delivered: true, deliveredAt: now } }
           );
@@ -113,8 +113,8 @@ export default async function handler(req, res) {
         greetingType,
         displayName,
         pendingReminders: pendingReminders.map(r => ({
-          medicationName: r.medicationName,
-          reminderType:   r.reminderType,
+          taskName:     r.taskName,
+          reminderType: r.reminderType,
         })),
         rdsIntroNeeded,
         declaredInterests,

@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { getDb } from "../../lib/mongo.js";
 import { setSessionCookie } from "../../lib/auth.js";
 
+const MAX_PIN_ATTEMPTS = 3;
+
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json");
@@ -26,16 +28,6 @@ function isValidPin(p) {
   return /^\d{4}$/.test(p);
 }
 
-async function nextUserSuffix(db, username) {
-  const key = `userSuffix:${username}`;
-  const r = await db.collection("counters").findOneAndUpdate(
-    { _id: key },
-    { $inc: { seq: 1 } },
-    { upsert: true, returnDocument: "after" }
-  );
-  return r.seq || 1;
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") return json(res, 405, { error: "Method not allowed" });
 
@@ -56,32 +48,36 @@ export default async function handler(req, res) {
     let user = await users.findOne({ userId: baseUserId });
 
     if (user) {
+      // Nick is taken. Hard-locked accounts reject every attempt — right or
+      // wrong PIN — until manually cleared, so a forgetful/mistaken PIN can
+      // never silently spawn a duplicate account (see login decision tree).
+      const failedAttempts = user.preferences?.failedPinAttempts || 0;
+      if (failedAttempts >= MAX_PIN_ATTEMPTS) {
+        return json(res, 423, { error: "To recover your account, please email support@comerciosocialdigital.com" });
+      }
+
       const ok = await bcrypt.compare(pin, user.pinHash || "");
       if (!ok) {
-        // Pilot rule: new user for new Nick+PIN combo, even if username already exists.
-        // Keep display username, create a unique userId suffix.
-        const suffix = await nextUserSuffix(db, username);
-        const userId = `user_${username}_${suffix}`;
-        const pinHash = await bcrypt.hash(pin, 10);
-        const now = new Date();
-        user = {
-          username,
-          userId,
-          pinHash,
-          preferences: { gender: gender || null, consentAcceptedAt: null, talkDisclaimerAcceptedAt: null, policyAcceptedAt: null },
-          createdAt: now,
-          lastLogin: now,
-          userAccountStatus: "Active",
-        };
-        await users.insertOne(user);
-        await db.collection("conversations").insertOne({ userId, createdAt: now, updatedAt: now, messages: [] });
-      } else {
-        const updateFields = { lastLogin: new Date() };
-        if (gender) updateFields["preferences.gender"] = gender;
+        const newCount = failedAttempts + 1;
+        const updateFields = { "preferences.failedPinAttempts": newCount };
+        if (newCount >= MAX_PIN_ATTEMPTS) updateFields["preferences.lockedAt"] = new Date();
         await users.updateOne({ _id: user._id }, { $set: updateFields });
-        // Resolve effective gender: sent value or existing in DB
-        if (!gender) user = await users.findOne({ userId: user.userId });
+
+        if (newCount >= MAX_PIN_ATTEMPTS) {
+          return json(res, 423, { error: "To recover your account, please email support@comerciosocialdigital.com" });
+        }
+        return json(res, 401, { error: "Wrong PIN or Nick is taken. Please try again." });
       }
+
+      const updateFields = {
+        lastLogin: new Date(),
+        "preferences.failedPinAttempts": 0,
+        "preferences.lockedAt": null,
+      };
+      if (gender) updateFields["preferences.gender"] = gender;
+      await users.updateOne({ _id: user._id }, { $set: updateFields });
+      // Resolve effective fields (including the reset counters) from a fresh read
+      user = await users.findOne({ userId: user.userId });
     } else {
       const pinHash = await bcrypt.hash(pin, 10);
       const now = new Date();
@@ -89,7 +85,14 @@ export default async function handler(req, res) {
         username,
         userId: baseUserId,
         pinHash,
-        preferences: { gender, consentAcceptedAt: null, talkDisclaimerAcceptedAt: null, policyAcceptedAt: null },
+        preferences: {
+          gender,
+          consentAcceptedAt: null,
+          talkDisclaimerAcceptedAt: null,
+          policyAcceptedAt: null,
+          failedPinAttempts: 0,
+          lockedAt: null,
+        },
         createdAt: now,
         lastLogin: now,
         userAccountStatus: "Active",

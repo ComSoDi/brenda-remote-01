@@ -180,31 +180,31 @@ function buildSystemInstruction(locale, gender) {
   );
 }
 
-function buildMedSystemBlock(meds, locale) {
-  if (!meds || !meds.length) return "";
+function buildTaskSystemBlock(tasks, locale) {
+  if (!tasks || !tasks.length) return "";
   const isEs = locale.startsWith("es");
-  const lines = meds.map((med) => {
-    const times = (med.recurrence?.times || []).join(", ");
-    const dir = med.directions ? ` — ${med.directions}` : "";
-    return times ? `- ${med.name}${dir}: ${times}` : `- ${med.name}${dir}`;
+  const lines = tasks.map((task) => {
+    const times = (task.recurrence?.times || []).join(", ");
+    const dir = task.directions ? ` — ${task.directions}` : "";
+    return times ? `- ${task.name}${dir}: ${times}` : `- ${task.name}${dir}`;
   });
   if (isEs) {
     return (
-      "\n\nMEDICAMENTOS DEL USUARIO (guardados en el sistema):\n" + lines.join("\n") +
-      "\n\nCuando el usuario pregunte por sus medicamentos:\n" +
+      "\n\nTAREAS DEL USUARIO (guardados en el sistema):\n" + lines.join("\n") +
+      "\n\nCuando el usuario pregunte por sus tareas:\n" +
       "1. Confirma con entusiasmo que puedes ayudar.\n" +
-      "2. Avisa brevemente que puedes cometer errores y que siempre es mejor confirmar con la receta médica oficial o con el farmacéutico.\n" +
-      "3. Lee cada medicamento con su horario en formato 24 horas.\n" +
-      "4. Termina siempre con: «No olvides confirmar siempre con la receta médica oficial.»"
+      "2. Avisa brevemente que puedes cometer errores y que siempre es mejor confirmar con las indicaciones del experto.\n" +
+      "3. Lee cada tarea con su horario en formato 24 horas.\n" +
+      "4. Termina siempre con: «No olvides confirmar siempre con las indicaciones del experto.»"
     );
   }
   return (
-    "\n\nUSER MEDICATIONS (saved in system):\n" + lines.join("\n") +
-    "\n\nWhen the user asks about their medications:\n" +
+    "\n\nUSER TASKS (saved in system):\n" + lines.join("\n") +
+    "\n\nWhen the user asks about their tasks:\n" +
     "1. Warmly confirm you can help.\n" +
-    "2. Add a brief disclaimer: you can make mistakes and they should always confirm with the doctor's prescription or pharmacist.\n" +
-    "3. List each medication with its scheduled times.\n" +
-    "4. Always end with: 'Remember to always confirm with the official medical prescription.'"
+    "2. Add a brief disclaimer: you can make mistakes and they should always confirm with the expert's instructions.\n" +
+    "3. List each task with its scheduled times.\n" +
+    "4. Always end with: 'Remember to always confirm with the official expert instructions.'"
   );
 }
 
@@ -278,9 +278,9 @@ server.on("upgrade", async (req, socket, head) => {
       return;
     }
 
-    // Resolve gender, medications, and RDS profile from session / DB (non-fatal)
+    // Resolve gender, tasks, and RDS profile from session / DB (non-fatal)
     let gender = session.gender || null;
-    let activeMeds = [];
+    let activeTasks = [];
     const userId = session.userId;
     const isAuthenticated = true;
     let rdsProfile = null;
@@ -315,7 +315,7 @@ server.on("upgrade", async (req, socket, head) => {
           .catch(e => { console.error(`[voice-proxy] quota check failed for userId=${userId}:`, e.message); return "active"; }),
       ]);
       if (!gender) gender = userDoc?.preferences?.gender || null;
-      activeMeds = tasks || [];
+      activeTasks = tasks || [];
       rdsProfile = profile || null;
       savedLocation = userDoc?.preferences?.location || null;
       if (planInfo) {
@@ -342,7 +342,7 @@ server.on("upgrade", async (req, socket, head) => {
       ws.userId = userId;
       ws.userLocale = locale;
       ws.userGender = gender;
-      ws.activeMeds = activeMeds;
+      ws.activeTasks = activeTasks;
       ws.isAuthenticated = isAuthenticated;
       ws.rdsProfile = rdsProfile;
       ws.rdsUsername = rdsUsername;
@@ -384,7 +384,7 @@ wss.on("connection", (ws) => {
     : "";
 
   const systemText = buildSystemInstruction(locale, ws.userGender || null)
-    + buildMedSystemBlock(ws.activeMeds || [], locale)
+    + buildTaskSystemBlock(ws.activeTasks || [], locale)
     + locationLine
     + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "");
 

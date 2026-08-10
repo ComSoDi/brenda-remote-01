@@ -1,77 +1,77 @@
 // public/taskManager.js
-// Medication Reminder Module — UI manager
-// Instantiated by app.js: new MedicationManager(app)
+// Task Reminder Module — UI manager
+// Instantiated by app.js: new TaskManager(app)
 
 import { t } from "./i18n/index.js";
 
 const DAYS_KEYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const DAYS_VALUES = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
 
-export class MedicationManager {
+export class TaskManager {
   constructor(app) {
     this.app = app;
-    this.medications = [];
+    this.tasks = [];
     this._editingId   = null;  // null = adding new
     this._editMode    = "correct"; // "correct" | "change"
     this._timeCount   = 1;
 
     this._els = {
-      overlay:           document.getElementById("medOverlay"),
-      card:              document.getElementById("medCard"),
+      overlay:           document.getElementById("taskOverlay"),
+      card:              document.getElementById("taskCard"),
       // disclaimer
-      disclaimer:        document.getElementById("medDisclaimer"),
-      disclaimerTitle:   document.getElementById("medDisclaimerTitle"),
-      disclaimerText:    document.getElementById("medDisclaimerText"),
-      disclaimerBtn:     document.getElementById("medDisclaimerBtn"),
+      disclaimer:        document.getElementById("taskDisclaimer"),
+      disclaimerTitle:   document.getElementById("taskDisclaimerTitle"),
+      disclaimerText:    document.getElementById("taskDisclaimerText"),
+      disclaimerBtn:     document.getElementById("taskDisclaimerBtn"),
       // main list
-      main:              document.getElementById("medMain"),
-      mainTitle:         document.getElementById("medMainTitle"),
-      persistentNote:    document.getElementById("medPersistentNote"),
-      list:              document.getElementById("medList"),
-      addBtn:            document.getElementById("medAddBtn"),
-      viewScheduleBtn:   document.getElementById("medViewScheduleBtn"),
-      closeBtn:          document.getElementById("medCloseBtn"),
-      notifPrompt:       document.getElementById("medNotifPrompt"),
-      notifPromptText:   document.getElementById("medNotifPromptText"),
-      notifBtn:          document.getElementById("medNotifBtn"),
+      main:              document.getElementById("taskMain"),
+      mainTitle:         document.getElementById("taskMainTitle"),
+      persistentNote:    document.getElementById("taskPersistentNote"),
+      list:              document.getElementById("taskList"),
+      addBtn:            document.getElementById("taskAddBtn"),
+      viewScheduleBtn:   document.getElementById("taskViewScheduleBtn"),
+      closeBtn:          document.getElementById("taskCloseBtn"),
+      notifPrompt:       document.getElementById("taskNotifPrompt"),
+      notifPromptText:   document.getElementById("taskNotifPromptText"),
+      notifBtn:          document.getElementById("taskNotifBtn"),
       // form
-      form:              document.getElementById("medForm"),
-      formTitle:         document.getElementById("medFormTitle"),
-      toggleRow:         document.getElementById("medToggleRow"),
-      toggleInput:       document.getElementById("medToggle"),
-      toggleCorrectLbl:  document.getElementById("medToggleCorrectLbl"),
-      toggleChangeLbl:   document.getElementById("medToggleChangeLbl"),
-      formEl:            document.getElementById("medFormEl"),
-      nameInput:         document.getElementById("medNameInput"),
-      doseInput:         document.getElementById("medDoseInput"),
-      freqSelect:        document.getElementById("medFreqSelect"),
-      daysRow:           document.getElementById("medDaysRow"),
-      intervalRow:       document.getElementById("medIntervalRow"),
-      intervalInput:     document.getElementById("medIntervalInput"),
-      directionsInput:   document.getElementById("medDirectionsInput"),
-      timesContainer:    document.getElementById("medTimesContainer"),
-      addTimeBtn:        document.getElementById("medAddTimeBtn"),
-      startInput:        document.getElementById("medStartInput"),
-      limitedCheck:      document.getElementById("medLimitedCheck"),
-      endRow:            document.getElementById("medEndRow"),
-      endInput:          document.getElementById("medEndInput"),
-      notesInput:        document.getElementById("medNotesInput"),
-      enteredByInput:    document.getElementById("medEnteredByInput"),
-      changeReasonRow:   document.getElementById("medChangeReasonRow"),
-      changeReasonInput: document.getElementById("medChangeReasonInput"),
-      timezoneInput:     document.getElementById("medTimezoneInput"),
-      formCancelBtn:     document.getElementById("medFormCancelBtn"),
-      formCloseBtn:      document.getElementById("medFormCloseBtn"),
-      formScheduleBtn:   document.getElementById("medFormScheduleBtn"),
-      formSaveBtn:       document.getElementById("medFormSaveBtn"),
-      formStatus:        document.getElementById("medFormStatus"),
+      form:              document.getElementById("taskForm"),
+      formTitle:         document.getElementById("taskFormTitle"),
+      toggleRow:         document.getElementById("taskToggleRow"),
+      toggleInput:       document.getElementById("taskToggle"),
+      toggleCorrectLbl:  document.getElementById("taskToggleCorrectLbl"),
+      toggleChangeLbl:   document.getElementById("taskToggleChangeLbl"),
+      formEl:            document.getElementById("taskFormEl"),
+      nameInput:         document.getElementById("taskNameInput"),
+      quantityInput:     document.getElementById("taskQuantityInput"),
+      freqSelect:        document.getElementById("taskFreqSelect"),
+      daysRow:           document.getElementById("taskDaysRow"),
+      intervalRow:       document.getElementById("taskIntervalRow"),
+      intervalInput:     document.getElementById("taskIntervalInput"),
+      directionsInput:   document.getElementById("taskDirectionsInput"),
+      timesContainer:    document.getElementById("taskTimesContainer"),
+      addTimeBtn:        document.getElementById("taskAddTimeBtn"),
+      startInput:        document.getElementById("taskStartInput"),
+      limitedCheck:      document.getElementById("taskLimitedCheck"),
+      endRow:            document.getElementById("taskEndRow"),
+      endInput:          document.getElementById("taskEndInput"),
+      notesInput:        document.getElementById("taskNotesInput"),
+      enteredByInput:    document.getElementById("taskEnteredByInput"),
+      changeReasonRow:   document.getElementById("taskChangeReasonRow"),
+      changeReasonInput: document.getElementById("taskChangeReasonInput"),
+      timezoneInput:     document.getElementById("taskTimezoneInput"),
+      formCancelBtn:     document.getElementById("taskFormCancelBtn"),
+      formCloseBtn:      document.getElementById("taskFormCloseBtn"),
+      formScheduleBtn:   document.getElementById("taskFormScheduleBtn"),
+      formSaveBtn:       document.getElementById("taskFormSaveBtn"),
+      formStatus:        document.getElementById("taskFormStatus"),
       // schedule
-      schedule:          document.getElementById("medSchedule"),
-      scheduleTitle:     document.getElementById("medScheduleTitle"),
-      scheduleCloseBtn:  document.getElementById("medScheduleCloseBtn"),
-      scheduleContent:   document.getElementById("medScheduleContent"),
-      scheduleBackBtn:   document.getElementById("medScheduleBackBtn"),
-      schedulePrintBtn:  document.getElementById("medSchedulePrintBtn"),
+      schedule:          document.getElementById("taskSchedule"),
+      scheduleTitle:     document.getElementById("taskScheduleTitle"),
+      scheduleCloseBtn:  document.getElementById("taskScheduleCloseBtn"),
+      scheduleContent:   document.getElementById("taskScheduleContent"),
+      scheduleBackBtn:   document.getElementById("taskScheduleBackBtn"),
+      schedulePrintBtn:  document.getElementById("taskSchedulePrintBtn"),
     };
 
     this._bindEvents();
@@ -116,52 +116,52 @@ export class MedicationManager {
     const v = this._v();
     const s = k => t(v, k);
 
-    this._els.disclaimerTitle.textContent  = s("medDisclaimerTitle");
-    this._els.disclaimerText.textContent   = s("medDisclaimerText");
-    this._els.disclaimerBtn.textContent    = s("medDisclaimerConfirm");
-    this._els.mainTitle.textContent        = s("medTitle");
-    this._els.persistentNote.textContent   = s("medPersistentNote");
-    this._els.addBtn.textContent           = s("medAddBtn");
-    this._els.viewScheduleBtn.textContent  = s("medViewSchedule");
-    if (this._els.scheduleTitle) this._els.scheduleTitle.textContent = s("medScheduleTitle");
-    this._els.scheduleBackBtn.textContent  = s("medScheduleBack");
-    this._els.schedulePrintBtn.textContent = s("medSchedulePrint");
+    this._els.disclaimerTitle.textContent  = s("taskDisclaimerTitle");
+    this._els.disclaimerText.textContent   = s("taskDisclaimerText");
+    this._els.disclaimerBtn.textContent    = s("taskDisclaimerConfirm");
+    this._els.mainTitle.textContent        = s("taskTitle");
+    this._els.persistentNote.textContent   = s("taskPersistentNote");
+    this._els.addBtn.textContent           = s("taskAddBtn");
+    this._els.viewScheduleBtn.textContent  = s("taskViewSchedule");
+    if (this._els.scheduleTitle) this._els.scheduleTitle.textContent = s("taskScheduleTitle");
+    this._els.scheduleBackBtn.textContent  = s("taskScheduleBack");
+    this._els.schedulePrintBtn.textContent = s("taskSchedulePrint");
 
     // Form labels
-    document.getElementById("medNameLabel").textContent        = s("medNameLabel");
-    document.getElementById("medDoseLabel").textContent        = s("medDoseLabel");
-    document.getElementById("medFreqLabel").textContent        = s("medFreqLabel");
-    document.getElementById("medDaysLabel").textContent        = s("medDaysLabel");
-    document.getElementById("medIntervalLabel").textContent    = s("medIntervalLabel");
-    document.getElementById("medDirectionsLabel").textContent  = s("medDirectionsLabel");
-    document.getElementById("medTimesLabel").innerHTML         = s("medTimesLabel").replace(/\s*\*\s*$/, "") + ' <span style="color:red" aria-hidden="true">*</span>';
-    document.getElementById("medStartLabel").textContent       = s("medStartLabel");
-    document.getElementById("medLimitedLabel").textContent     = s("medLimitedLabel");
-    document.getElementById("medEndLabel").textContent         = s("medEndLabel");
-    document.getElementById("medNotesLabel").textContent       = s("medNotesLabel");
-    document.getElementById("medEnteredByLabel").textContent   = s("medEnteredByLabel");
-    document.getElementById("medChangeReasonLabel").textContent = s("medChangeReasonLabel");
-    document.getElementById("medTimezoneLabel").textContent    = s("medTimezone");
+    document.getElementById("taskNameLabel").textContent        = s("taskNameLabel");
+    document.getElementById("taskQuantityLabel").textContent    = s("taskQuantityLabel");
+    document.getElementById("taskFreqLabel").textContent        = s("taskFreqLabel");
+    document.getElementById("taskDaysLabel").textContent        = s("taskDaysLabel");
+    document.getElementById("taskIntervalLabel").textContent    = s("taskIntervalLabel");
+    document.getElementById("taskDirectionsLabel").textContent  = s("taskDirectionsLabel");
+    document.getElementById("taskTimesLabel").innerHTML         = s("taskTimesLabel").replace(/\s*\*\s*$/, "") + ' <span style="color:red" aria-hidden="true">*</span>';
+    document.getElementById("taskStartLabel").textContent       = s("taskStartLabel");
+    document.getElementById("taskLimitedLabel").textContent     = s("taskLimitedLabel");
+    document.getElementById("taskEndLabel").textContent         = s("taskEndLabel");
+    document.getElementById("taskNotesLabel").textContent       = s("taskNotesLabel");
+    document.getElementById("taskEnteredByLabel").textContent   = s("taskEnteredByLabel");
+    document.getElementById("taskChangeReasonLabel").textContent = s("taskChangeReasonLabel");
+    document.getElementById("taskTimezoneLabel").textContent    = s("taskTimezone");
 
     // Frequency options
-    this._els.freqSelect.options[0].text = s("medFreqDaily");
-    this._els.freqSelect.options[1].text = s("medFreqWeekly");
-    this._els.freqSelect.options[2].text = s("medFreqInterval");
+    this._els.freqSelect.options[0].text = s("taskFreqDaily");
+    this._els.freqSelect.options[1].text = s("taskFreqWeekly");
+    this._els.freqSelect.options[2].text = s("taskFreqInterval");
 
     // Day checkboxes
     DAYS_KEYS.forEach((k) => {
-      const lbl = document.getElementById(`medDay${k}Lbl`);
-      if (lbl) lbl.textContent = s(`medDay${k}`);
+      const lbl = document.getElementById(`taskDay${k}Lbl`);
+      if (lbl) lbl.textContent = s(`taskDay${k}`);
     });
 
-    this._els.toggleCorrectLbl.textContent = s("medToggleCorrect");
-    this._els.toggleChangeLbl.textContent  = s("medToggleChange");
-    if (this._els.notifPromptText) this._els.notifPromptText.textContent = s("medNotifPrompt");
-    if (this._els.notifBtn)        this._els.notifBtn.textContent        = s("medNotifBtn");
-    this._els.addTimeBtn.textContent       = s("medAddTime");
-    this._els.formCancelBtn.textContent    = s("medCancelBtn");
-    this._els.formScheduleBtn.textContent  = s("medShowScheduleBtn");
-    this._els.formSaveBtn.textContent      = s("medSaveBtn");
+    this._els.toggleCorrectLbl.textContent = s("taskToggleCorrect");
+    this._els.toggleChangeLbl.textContent  = s("taskToggleChange");
+    if (this._els.notifPromptText) this._els.notifPromptText.textContent = s("taskNotifPrompt");
+    if (this._els.notifBtn)        this._els.notifBtn.textContent        = s("taskNotifBtn");
+    this._els.addTimeBtn.textContent       = s("taskAddTime");
+    this._els.formCancelBtn.textContent    = s("taskCancelBtn");
+    this._els.formScheduleBtn.textContent  = s("taskShowScheduleBtn");
+    this._els.formSaveBtn.textContent      = s("taskSaveBtn");
   }
 
   // ── data load ────────────────────────────────────────────────────────────
@@ -169,12 +169,12 @@ export class MedicationManager {
   async _load() {
     try {
       const data = await this.app.apiJSON("/api/tasks", { method: "GET" });
-      this.medications = data.tasks || [];
+      this.tasks = data.tasks || [];
     } catch {
-      this.medications = [];
+      this.tasks = [];
     }
 
-    if (this.medications.length === 0) {
+    if (this.tasks.length === 0) {
       // First time: show disclaimer
       this._showPanel("disclaimer");
     } else {
@@ -191,7 +191,7 @@ export class MedicationManager {
       const el = this._els[p];
       if (el) el.style.display = p === name ? "flex" : "none";
     });
-    this._els.card?.classList.toggle("med-card--schedule", name === "schedule");
+    this._els.card?.classList.toggle("task-card--schedule", name === "schedule");
     if (name === "main") this._renderNotifPrompt();
   }
 
@@ -217,10 +217,10 @@ export class MedicationManager {
   _showOsNotification(reminder, msg) {
     if (!this._notifSupported() || Notification.permission !== "granted") return;
     try {
-      new Notification(reminder.taskName || this._t("medNotifTitle"), {
+      new Notification(reminder.taskName || this._t("taskNotifTitle"), {
         body: msg,
         icon: "/images/brenda-avatar.png",
-        tag:  `med-${reminder.taskName || "reminder"}`,
+        tag:  `task-${reminder.taskName || "reminder"}`,
       });
     } catch { /* non-fatal */ }
   }
@@ -231,43 +231,43 @@ export class MedicationManager {
     const container = this._els.list;
     container.innerHTML = "";
 
-    if (!this.medications.length) {
+    if (!this.tasks.length) {
       const empty = document.createElement("p");
-      empty.className = "med-empty";
-      empty.textContent = this._t("medEmpty");
+      empty.className = "task-empty";
+      empty.textContent = this._t("taskEmpty");
       container.appendChild(empty);
       return;
     }
 
-    for (const med of this.medications) {
+    for (const med of this.tasks) {
       const item = document.createElement("div");
-      item.className = "med-list-item";
+      item.className = "task-list-item";
 
       const info = document.createElement("div");
-      info.className = "med-list-info";
+      info.className = "task-list-info";
 
       const name = document.createElement("div");
-      name.className = "med-list-name";
-      name.textContent = med.name + (med.dose ? ` — ${med.dose}` : "");
+      name.className = "task-list-name";
+      name.textContent = med.name + (med.quantity ? ` — ${med.quantity}` : "");
       info.appendChild(name);
 
       const sched = document.createElement("div");
-      sched.className = "med-list-sched";
+      sched.className = "task-list-sched";
       sched.textContent = this._humanSchedule(med);
       info.appendChild(sched);
 
       const actions = document.createElement("div");
-      actions.className = "med-list-actions";
+      actions.className = "task-list-actions";
 
       const editBtn = document.createElement("button");
-      editBtn.className = "med-item-btn med-item-edit";
-      editBtn.textContent = this._t("medEditBtn");
+      editBtn.className = "task-item-btn task-item-edit";
+      editBtn.textContent = this._t("taskEditBtn");
       editBtn.addEventListener("click", () => this._openForm(med));
       actions.appendChild(editBtn);
 
       const stopBtn = document.createElement("button");
-      stopBtn.className = "med-item-btn med-item-stop";
-      stopBtn.textContent = this._t("medStopBtn");
+      stopBtn.className = "task-item-btn task-item-stop";
+      stopBtn.textContent = this._t("taskStopBtn");
       stopBtn.addEventListener("click", () => this._stopMed(med));
       actions.appendChild(stopBtn);
 
@@ -280,17 +280,17 @@ export class MedicationManager {
   _humanSchedule(med) {
     const { type, times, daysOfWeek, intervalDays, nextDue } = med.recurrence || {};
     const timesStr = (times || []).join(" & ");
-    if (type === "daily")    return `${this._t("medFreqDaily")} : ${timesStr}`;
+    if (type === "daily")    return `${this._t("taskFreqDaily")} : ${timesStr}`;
     if (type === "weekly") {
       const dayLabels = (daysOfWeek || []).map(d => {
         const i = DAYS_VALUES.indexOf(d.toLowerCase());
-        return i >= 0 ? this._t(`medDay${DAYS_KEYS[i]}`) : d;
+        return i >= 0 ? this._t(`taskDay${DAYS_KEYS[i]}`) : d;
       }).join(", ");
       return `${dayLabels} : ${timesStr}`;
     }
     if (type === "interval") {
-      const next = nextDue ? ` | ${this._t("medNextDue")}: ${nextDue}` : "";
-      return `${this._t("medFreqInterval").replace("N", intervalDays || "?")} : ${timesStr}${next}`;
+      const next = nextDue ? ` | ${this._t("taskNextDue")}: ${nextDue}` : "";
+      return `${this._t("taskFreqInterval").replace("N", intervalDays || "?")} : ${timesStr}${next}`;
     }
     return timesStr;
   }
@@ -308,9 +308,9 @@ export class MedicationManager {
     this._els.changeReasonRow.classList.add("hidden");
 
     // Reset form
-    this._els.formTitle.textContent   = med ? this._t("medFormTitleEdit") : this._t("medFormTitleAdd");
+    this._els.formTitle.textContent   = med ? this._t("taskFormTitleEdit") : this._t("taskFormTitleAdd");
     this._els.nameInput.value         = med?.name         || "";
-    this._els.doseInput.value         = med?.dose         || "";
+    this._els.quantityInput.value     = med?.quantity     || "";
     this._els.directionsInput.value   = med?.directions   || "";
     this._els.notesInput.value        = med?.notes        || "";
     this._els.enteredByInput.value    = med?.enteredBy    || "";
@@ -336,7 +336,7 @@ export class MedicationManager {
     if (type === "weekly") {
       const days = (med?.recurrence?.daysOfWeek || []).map(d => d.toLowerCase());
       DAYS_VALUES.forEach((d, i) => {
-        const cb = document.getElementById(`medDayCb${i}`);
+        const cb = document.getElementById(`taskDayCb${i}`);
         if (cb) cb.checked = days.includes(d);
       });
     }
@@ -355,25 +355,25 @@ export class MedicationManager {
   }
 
   _updateTimesLabel() {
-    const lbl = document.getElementById("medTimesLabel");
-    if (lbl) lbl.innerHTML = this._t("medTimesLabel").replace(/\s*\*\s*$/, "") + ' <span style="color:red" aria-hidden="true">*</span>';
+    const lbl = document.getElementById("taskTimesLabel");
+    if (lbl) lbl.innerHTML = this._t("taskTimesLabel").replace(/\s*\*\s*$/, "") + ' <span style="color:red" aria-hidden="true">*</span>';
   }
 
   _addTimeField(value = "") {
     this._timeCount++;
     const wrap = document.createElement("div");
-    wrap.className = "med-time-row";
+    wrap.className = "task-time-row";
 
     const input = document.createElement("input");
     input.type  = "time";
-    input.className = "med-time-input";
+    input.className = "task-time-input";
     input.value = value;
     wrap.appendChild(input);
 
     if (this._timeCount > 1) {
       const rm = document.createElement("button");
       rm.type = "button";
-      rm.className = "med-time-remove";
+      rm.className = "task-time-remove";
       rm.textContent = "×";
       rm.addEventListener("click", () => wrap.remove());
       wrap.appendChild(rm);
@@ -389,23 +389,23 @@ export class MedicationManager {
 
   async _saveForm() {
     const name = this._els.nameInput.value.trim();
-    if (!name) { this._els.formStatus.textContent = this._t("medNameRequired"); return; }
+    if (!name) { this._els.formStatus.textContent = this._t("taskNameRequired"); return; }
 
     const directions = this._els.directionsInput.value.trim().slice(0, 30);
-    const times = Array.from(this._els.timesContainer.querySelectorAll(".med-time-input"))
+    const times = Array.from(this._els.timesContainer.querySelectorAll(".task-time-input"))
       .map(i => i.value).filter(Boolean);
-    if (!times.length) { this._els.formStatus.textContent = this._t("medTimesRequired"); return; }
+    if (!times.length) { this._els.formStatus.textContent = this._t("taskTimesRequired"); return; }
 
     const freqType = this._els.freqSelect.value;
 
     if (freqType === "weekly") {
-      const anyDay = DAYS_VALUES.some((_, i) => document.getElementById(`medDayCb${i}`)?.checked);
-      if (!anyDay) { this._els.formStatus.textContent = this._t("medDaysRequired"); return; }
+      const anyDay = DAYS_VALUES.some((_, i) => document.getElementById(`taskDayCb${i}`)?.checked);
+      if (!anyDay) { this._els.formStatus.textContent = this._t("taskDaysRequired"); return; }
     }
 
     const recurrence = { type: freqType, times };
     if (freqType === "weekly") {
-      recurrence.daysOfWeek = DAYS_VALUES.filter((_, i) => document.getElementById(`medDayCb${i}`)?.checked);
+      recurrence.daysOfWeek = DAYS_VALUES.filter((_, i) => document.getElementById(`taskDayCb${i}`)?.checked);
     }
     if (freqType === "interval") {
       recurrence.intervalDays = parseInt(this._els.intervalInput.value, 10) || 1;
@@ -414,7 +414,7 @@ export class MedicationManager {
 
     const payload = {
       name,
-      dose:       this._els.doseInput.value.trim() || null,
+      quantity:   this._els.quantityInput.value.trim() || null,
       directions: directions || null,
       recurrence,
       startDate:  this._els.startInput.value,
@@ -426,7 +426,7 @@ export class MedicationManager {
     };
 
     this._els.formSaveBtn.disabled    = true;
-    this._els.formStatus.textContent  = this._t("medSaving");
+    this._els.formStatus.textContent  = this._t("taskSaving");
 
     try {
       if (this._editingId) {
@@ -440,7 +440,7 @@ export class MedicationManager {
         await this.app.apiJSON("/api/tasks", { method: "POST", body: payload });
       }
 
-      this._els.formStatus.textContent = this._t("medSaved");
+      this._els.formStatus.textContent = this._t("taskSaved");
       await this._load();
       this._showPanel("main");
       this._renderList();
@@ -452,7 +452,7 @@ export class MedicationManager {
   }
 
   async _stopMed(med) {
-    if (!confirm(`${this._t("medStopConfirm")} ${med.name}?`)) return;
+    if (!confirm(`${this._t("taskStopConfirm")} ${med.name}?`)) return;
     try {
       await this.app.apiJSON(`/api/tasks?id=${encodeURIComponent(med.id)}`, { method: "DELETE" });
       await this._load();
@@ -467,32 +467,32 @@ export class MedicationManager {
     const name = this.app.user?.displayName || this.app.user?.username || "User";
     const now  = new Date().toLocaleDateString(v, { dateStyle: "long" });
 
-    const header = t(v, "medScheduleHeader").replace("{name}", name);
+    const header = t(v, "taskScheduleHeader").replace("{name}", name);
 
     let html = `
-      <div class="med-schedule-header">
-        <div class="med-schedule-user">${header}</div>
-        <div class="med-schedule-meta">${t(v,"medScheduleGenerated")} ${now} &nbsp;|&nbsp; ${t(v,"medScheduleCount")} ${this.medications.length}</div>
+      <div class="task-schedule-header">
+        <div class="task-schedule-user">${header}</div>
+        <div class="task-schedule-meta">${t(v,"taskScheduleGenerated")} ${now} &nbsp;|&nbsp; ${t(v,"taskScheduleCount")} ${this.tasks.length}</div>
       </div>
-      <div class="med-schedule-table-wrap"><table class="med-schedule-table">
+      <div class="task-schedule-table-wrap"><table class="task-schedule-table">
         <thead><tr>
-          <th>${t(v,"medColTask")}</th>
-          <th>${t(v,"medColDose")}</th>
-          <th>${t(v,"medColSchedule")}</th>
-          <th>${t(v,"medColDirections")}</th>
-          <th>${t(v,"medColStart")}</th>
-          <th>${t(v,"medColUntil")}</th>
-          <th>${t(v,"medColNotes")}</th>
+          <th>${t(v,"taskColTask")}</th>
+          <th>${t(v,"taskColQuantity")}</th>
+          <th>${t(v,"taskColSchedule")}</th>
+          <th>${t(v,"taskColDirections")}</th>
+          <th>${t(v,"taskColStart")}</th>
+          <th>${t(v,"taskColUntil")}</th>
+          <th>${t(v,"taskColNotes")}</th>
         </tr></thead>
         <tbody>`;
 
-    for (const med of this.medications) {
+    for (const med of this.tasks) {
       const until = med.endDate
-        ? `<span class="med-pill med-pill-amber">${med.endDate}</span>`
-        : `<span class="med-pill med-pill-green">${t(v,"medOngoing")}</span>`;
+        ? `<span class="task-pill task-pill-amber">${med.endDate}</span>`
+        : `<span class="task-pill task-pill-green">${t(v,"taskOngoing")}</span>`;
       html += `<tr>
         <td><strong>${med.name}</strong></td>
-        <td>${med.dose || "—"}</td>
+        <td>${med.quantity || "—"}</td>
         <td>${this._humanSchedule(med)}</td>
         <td>${med.directions || "—"}</td>
         <td>${med.startDate || "—"}</td>
@@ -502,7 +502,7 @@ export class MedicationManager {
     }
 
     html += `</tbody></table></div>
-      <div class="med-schedule-footer">${t(v,"medFooterDisclaimer")}</div>`;
+      <div class="task-schedule-footer">${t(v,"taskFooterDisclaimer")}</div>`;
 
     this._els.scheduleContent.innerHTML = html;
     this._showPanel("schedule");
@@ -516,9 +516,9 @@ export class MedicationManager {
     const type = reminder.reminderType;
 
     let key;
-    if (type === "course-ending") key = name ? "medReminderCourseEnding" : "medReminderCourseEndingAnon";
-    else if (type === "limited-course") key = name ? "medReminderLimited" : "medReminderLimitedAnon";
-    else key = name ? "medReminderStandard" : "medReminderStandardAnon";
+    if (type === "course-ending") key = name ? "taskReminderCourseEnding" : "taskReminderCourseEndingAnon";
+    else if (type === "limited-course") key = name ? "taskReminderLimited" : "taskReminderLimitedAnon";
+    else key = name ? "taskReminderStandard" : "taskReminderStandardAnon";
 
     return t(v, key).replace("{name}", name);
   }
@@ -526,7 +526,7 @@ export class MedicationManager {
   // ── print ────────────────────────────────────────────────────────────────
 
   _buildPrintFilename() {
-    const prefix = this._v().startsWith("es") ? "Horario Medicaciones" : "Medication Schedule";
+    const prefix = this._v().startsWith("es") ? "Plan de Tareas" : "Task Schedule";
     const now = new Date();
     const pad = n => String(n).padStart(2, "0");
     const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -544,17 +544,17 @@ export class MedicationManager {
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; color: #0f172a; }
-  .med-schedule-header { margin-bottom: 16px; }
-  .med-schedule-user { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-  .med-schedule-meta { font-size: 12px; color: #64748b; }
-  .med-schedule-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
-  .med-schedule-table th,
-  .med-schedule-table td { padding: 7px 10px; border: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
-  .med-schedule-table th { background: #f1f5f9; font-weight: 600; font-size: 11px; text-transform: uppercase; color: #374151; }
-  .med-schedule-footer { margin-top: 16px; font-size: 11px; color: #92400e; background: #fef3c7; border-radius: 6px; padding: 8px 12px; }
-  .med-pill { display: inline-block; border-radius: 9999px; padding: 1px 8px; font-size: 11px; font-weight: 600; }
-  .med-pill-green { background: #dcfce7; color: #16a34a; }
-  .med-pill-amber { background: #fef3c7; color: #92400e; }
+  .task-schedule-header { margin-bottom: 16px; }
+  .task-schedule-user { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .task-schedule-meta { font-size: 12px; color: #64748b; }
+  .task-schedule-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+  .task-schedule-table th,
+  .task-schedule-table td { padding: 7px 10px; border: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+  .task-schedule-table th { background: #f1f5f9; font-weight: 600; font-size: 11px; text-transform: uppercase; color: #374151; }
+  .task-schedule-footer { margin-top: 16px; font-size: 11px; color: #92400e; background: #fef3c7; border-radius: 6px; padding: 8px 12px; }
+  .task-pill { display: inline-block; border-radius: 9999px; padding: 1px 8px; font-size: 11px; font-weight: 600; }
+  .task-pill-green { background: #dcfce7; color: #16a34a; }
+  .task-pill-amber { background: #fef3c7; color: #92400e; }
   @media print { body { padding: 0; } }
 </style>
 </head>
@@ -602,7 +602,7 @@ ${content}
     this._els.addTimeBtn?.addEventListener("click", () => this._addTimeField());
 
     this._els.formCancelBtn?.addEventListener("click", () => {
-      this._showPanel(this.medications.length ? "main" : "disclaimer");
+      this._showPanel(this.tasks.length ? "main" : "disclaimer");
     });
 
     this._els.formCloseBtn?.addEventListener("click", () => this.close());
@@ -615,7 +615,7 @@ ${content}
     this._els.scheduleCloseBtn?.addEventListener("click", () => this.close());
 
     this._els.scheduleBackBtn?.addEventListener("click", () => {
-      this._showPanel(this.medications.length ? "main" : "form");
+      this._showPanel(this.tasks.length ? "main" : "form");
     });
 
     this._els.schedulePrintBtn?.addEventListener("click", () => this._printSchedule());

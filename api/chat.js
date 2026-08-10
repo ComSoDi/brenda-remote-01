@@ -306,12 +306,12 @@ HOME LOCATION (when the user explicitly asks to change or set their default loca
 - Spanish: "He actualizado tu ubicación a Málaga, España."
 - English: "Your location has been updated to Málaga, Spain."
 
-PERSONAL REMINDER SCHEDULE (medication reminders the user entered themselves — this is like a phone alarm list, not a medical record):
+PERSONAL REMINDER SCHEDULE (task reminders the user entered themselves — this is like a phone alarm list, not official records):
 - NEVER say you cannot access this information. NEVER use the phrase "medical records". This is the user's own personal reminder list, equivalent to entries they made in their own calendar.
 - You have full permission to read and share this data — it belongs to the user.
 - The system retrieves the reminder list automatically. When responding, use informative non-imperative language: "your reminder plan shows", "I can see in your schedule", "according to your plan". NEVER say "take", "you must", "you need to".
-- If no reminders are on record, say warmly that you don't see any saved reminders and suggest the Medications section of the app.
-- Always end with: "Please review your doctor's prescription or your pharmacist's suggestions."`;
+- If no reminders are on record, say warmly that you don't see any saved reminders and suggest the Tasks section of the app.
+- Always end with: "Please review your professional's instructions or indications."`;
 
   if (localeVariant === "es-ES") {
     return baseInstructions + "\n\nResponde en español de España (castellano peninsular)." + genderAddressLine(localeVariant, gender);
@@ -325,43 +325,41 @@ PERSONAL REMINDER SCHEDULE (medication reminders the user entered themselves —
   return baseInstructions + "\n\nReply in American English.";
 }
 
-// ── Medication query detection & formatting ────────────────────────────────
+// ── Task query detection & formatting ────────────────────────────────
 
-function isMedicationQuery(text, locale) {
+function isTaskQuery(text, locale) {
   const lower = String(text || "").toLowerCase();
   // Always check BOTH languages — users often mix or switch
   const esWords = [
-    "medicamento", "medicina", "pastilla", "medicaci", "remedio",
-    "píldora", "pildora", "comprimido", "dosis", "mis medic",
+    "qué hacer", "mi trabajo", "mis tareas", "mi tarea", "tarea", "tareas", "trabajo", "trabajos", "mi deber", "mis deberes", "quehacer", "mi quehacer",
+
   ];
   const enWords = [
-    "medication", "medicine", "pill", "pills", "meds", "tablet",
-    "tablets", "prescription", "my meds", "my med",
+    "what to do", "my work", "my tasks", "my task", "task", "tasks", "job", 
+    "jobs", "my duty", "my duties", "chore", "my chore",
   ];
   if ([...esWords, ...enWords].some((w) => lower.includes(w))) return true;
-  // Natural-language schedule queries (no explicit med noun needed) — check both
+  // Natural-language schedule queries (no explicit task noun needed) — check both
   const esPhrases = [
     "tengo que tomar", "debo tomar", "que tomar", "cuando tomo", "cuándo tomo",
-    "cuándo tengo que", "cuando tengo que",
-    "qué tengo hoy", "que tengo hoy", "qué hay programado", "que hay programado",
+    "cuándo tengo que", "cuando tengo que", "qué tengo hoy", "que tengo hoy", "qué hay programado", "que hay programado", "que hacer", "que tarea", 
     "cuándo toca", "cuando toca", "qué toca", "que toca",
-    "próxima dosis", "proxima dosis", "tengo hoy",
-    "qué me corresponde", "que me corresponde", "algo que tomar",
+    "tengo hoy", "qué me corresponde", "que me corresponde", "algo que tomar",
     "recordatorio", "mis recordatorios",
   ];
   const enPhrases = [
-    "need to take", "have to take", "supposed to take", "should i take",
-    "when do i take", "what do i take",
+    "need to do", "have to do", "supposed to do", "should i do",
+    "when do i do", "what do i do",
     "coming up", "what do i have", "what's due", "what is due",
-    "scheduled today", "planned for today", "anything to take",
+    "scheduled today", "planned for today", "anything to do",
     "anything scheduled", "my schedule", "what's on my list",
-    "due today", "any reminders", "today's dose", "today's meds",
+    "due today", "any reminders", "today's quantity", "today's tasks",
     "do i have anything", "what have i got", "my reminder",
   ];
   return [...esPhrases, ...enPhrases].some((p) => lower.includes(p));
 }
 
-function formatMedTime(hhmm, locale) {
+function formatTaskTime(hhmm, locale) {
   const [hStr, mStr] = String(hhmm || "").split(":");
   const h = parseInt(hStr, 10);
   const m = parseInt(mStr || "0", 10);
@@ -372,17 +370,17 @@ function formatMedTime(hhmm, locale) {
   return m === 0 ? `${h12}:00 ${period}` : `${h12}:${String(m).padStart(2, "0")} ${period}`;
 }
 
-function buildMedReplyParts(meds, locale) {
+function buildTaskReplyParts(tasks, locale) {
   const isEs = locale.startsWith("es");
 
-  // Expand meds to sorted {name, time} entries
+  // Expand tasks to sorted {name, time} entries
   const entries = [];
-  for (const med of meds) {
-    const times = med.recurrence?.times || [];
+  for (const task of tasks) {
+    const times = task.recurrence?.times || [];
     if (times.length) {
-      for (const t of times) entries.push({ name: med.name, time: t, directions: med.directions || null });
+      for (const t of times) entries.push({ name: task.name, time: t, directions: task.directions || null });
     } else {
-      entries.push({ name: med.name, time: null, directions: med.directions || null });
+      entries.push({ name: task.name, time: null, directions: task.directions || null });
     }
   }
   entries.sort((a, b) => {
@@ -397,7 +395,7 @@ function buildMedReplyParts(meds, locale) {
     const parts = entries.map((e) => {
       const dir = e.directions ? ` (${e.directions})` : "";
       if (!e.time) return e.name + dir;
-      const tf = formatMedTime(e.time, locale);
+      const tf = formatTaskTime(e.time, locale);
       return (isEs ? `${e.name} a las ${tf}` : `${e.name} at ${tf}`) + dir;
     });
     if (parts.length === 1) {
@@ -411,20 +409,20 @@ function buildMedReplyParts(meds, locale) {
   if (isEs) {
     return [
       "¡Claro, con mucho gusto!",
-      "Ten en cuenta que puedo cometer errores, así que lo ideal es que siempre consultes la receta médica oficial o a tu farmacéutico de confianza.",
+      "Ten en cuenta que puedo cometer errores, así que lo ideal es que siempre consultes los documentos e indicaciones formales.",
       listText
         ? `En tu plan veo lo siguiente: ${listText}.`
-        : "No parece que tenga medicamentos guardados para ti. Por favor, usa el botón «Medicamentos» en el menú superior.",
-      "Por favor, revisa la receta de tu médico o las indicaciones de tu farmacéutico.",
+        : "No parece que tenga Tareas guardadas para ti. Por favor, usa el botón «Tareas» en el menú superior.",
+      "Por favor, revisa las indicaciones de profesionales cualificados.",
     ];
   }
   return [
     "Sure, happy to help!",
-    "Just keep in mind I can make mistakes — it's always best to check with your doctor's prescription or your pharmacist.",
+    "Just keep in mind I can make mistakes — it's always best to check with a professional instructions or indications.",
     listText
       ? `Your plan shows: ${listText}.`
-      : "I don't seem to have any medications on record for you. Please check the Medications button in the top menu.",
-    "Please review your doctor's prescription or your pharmacist's suggestions.",
+      : "I don't seem to have any tasks on record for you. Please check the Tasks button in the top menu.",
+    "Please review the instructions given by certified professionals.",
   ];
 }
 
@@ -863,7 +861,7 @@ export default async function handler(req, res) {
 
     const weatherIntent = isWeatherQuery(lastUserText, localeVariant) || !!body.weatherPending;
     const timeIntent = detectTimeIntent(lastUserText, localeVariant);
-    const medicationIntent = !session.isAnonymous && isMedicationQuery(lastUserText, localeVariant);
+    const taskIntent = !session.isAnonymous && isTaskQuery(lastUserText, localeVariant);
     let savedLocation = userPrefsDoc?.preferences?.location || null;
     let hasSavedLocation = !!savedLocation?.city;
     let savedLocationLoaded = true;
@@ -1027,15 +1025,15 @@ export default async function handler(req, res) {
     }
 
     // ────────────────────────────────────────────────────────────────────────
-    // MEDICATION QUERY BRANCH — deterministic, no Gemini needed
+    // TASKS QUERY BRANCH — deterministic, no Gemini needed
     // ────────────────────────────────────────────────────────────────────────
-    if (medicationIntent) {
-      const activeMeds = await db.collection("tasks")
+    if (taskIntent) {
+      const activeTasks = await db.collection("tasks")
         .find({ userId: session.userId, active: true })
         .sort({ name: 1 })
         .toArray();
 
-      const parts = buildMedReplyParts(activeMeds, localeVariant);
+      const parts = buildTaskReplyParts(activeTasks, localeVariant);
       const combinedReply = parts.join(" ");
 
       await db.collection("conversations").updateOne(

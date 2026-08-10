@@ -4,7 +4,7 @@ import { t, preloadLocale } from "./i18n/index.js";
 import { SideNavManager } from "./sideNavManager.js";
 import { renderTranscript, wireAutoScroll } from "./transcriptRenderer.js";
 import { getConversationContent } from "./conversationContent.js";
-import { MedicationManager } from "./taskManager.js";
+import { TaskManager } from "./taskManager.js";
 
 class BrendaApp {
   constructor() {
@@ -182,7 +182,7 @@ class BrendaApp {
 
       // Subjects UI
       startBtn: document.getElementById("startBtn"),
-      medBtn: document.getElementById("medBtn"),
+      taskBtn: document.getElementById("taskBtn"),
       subjectsBtn: document.getElementById("subjectsBtn"),
 
       // I am Brenda Overlay
@@ -322,8 +322,8 @@ class BrendaApp {
     this.canvasCtx = this.elements.canvas.getContext("2d");
     this.audioData = new Float32Array(128);
 
-    // Medication manager
-    this.medicationManager = new MedicationManager(this);
+    // Task manager
+    this.taskManager = new TaskManager(this);
 
     this.init();
   }
@@ -376,8 +376,8 @@ class BrendaApp {
     if (this.elements.toggleBtnText) {
       this.elements.toggleBtnText.textContent = t(this.locale.variant, "textMode");
     }
-    if (this.elements.medBtn) {
-      this.elements.medBtn.textContent = t(this.locale.variant, "medBtn");
+    if (this.elements.taskBtn) {
+      this.elements.taskBtn.textContent = t(this.locale.variant, "taskBtn");
     }
     if (this.elements.helpTitle) {
       this.elements.helpTitle.textContent = t(this.locale.variant, "helpTitle");
@@ -389,7 +389,7 @@ class BrendaApp {
     // Buttons
     this.elements.toggleBtnTalk.addEventListener("click", () => this.onTalkButton());
     this.elements.toggleBtnText.addEventListener("click", () => this.onTextButton());
-    this.elements.medBtn?.addEventListener("click", () => this.medicationManager.open());
+    this.elements.taskBtn?.addEventListener("click", () => this.taskManager.open());
 
     // Text send
     this.elements.chatSendBtn.addEventListener("click", () => this.sendTextMessage());
@@ -3499,9 +3499,9 @@ class BrendaApp {
         this.scheduleVoiceGreeting();
       }
 
-      // Deliver pending medication reminders (non-fatal)
+      // Deliver pending task reminders (non-fatal)
       if (data?.pendingReminders?.length) {
-        await this.medicationManager.deliverReminders(data.pendingReminders, displayName, this.locale.variant);
+        await this.taskManager.deliverReminders(data.pendingReminders, displayName, this.locale.variant);
       }
 
       // RDS first-time intro

@@ -15,7 +15,7 @@
     rel="stylesheet" />
 
   <link rel="stylesheet" href="styles.css?GAGv22A" />
-  <link rel="stylesheet" href="med-styles.css?v=1" />
+  <link rel="stylesheet" href="task-styles.css?v=1" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#FFFFFF" />
   <link rel="privacy-policy" href="/privacy.html">
@@ -40,7 +40,7 @@
         </div>
         <div class="header-actions">
           <button id="subjectsBtn" class="subjects-btn" type="button"></button>
-          <button id="medBtn" class="med-btn" type="button"></button>
+          <button id="taskBtn" class="task-btn" type="button"></button>
           <button id="latestBtn" class="latest-btn" type="button"></button>
           <button id="headlinesBtn" class="headlines-btn" type="button"></button>
           <button id="chatBtn" class="chat-rds-btn" type="button"></button>
@@ -479,67 +479,67 @@
       </div>
     </div>
 
-    <!-- MEDICATION OVERLAY -->
-    <div id="medOverlay" class="med-overlay hidden" aria-hidden="true">
-      <div id="medCard" class="med-card" role="dialog" aria-modal="true">
+    <!-- TASK OVERLAY -->
+    <div id="taskOverlay" class="task-overlay hidden" aria-hidden="true">
+      <div id="taskCard" class="task-card" role="dialog" aria-modal="true">
 
         <!-- ── DISCLAIMER PANEL ── -->
-        <div id="medDisclaimer" class="med-panel" style="display:none">
-          <h2 id="medDisclaimerTitle" class="med-panel-title"></h2>
-          <p  id="medDisclaimerText"  class="med-disclaimer-text"></p>
-          <button id="medDisclaimerBtn" class="med-primary-btn" type="button"></button>
+        <div id="taskDisclaimer" class="task-panel" style="display:none">
+          <h2 id="taskDisclaimerTitle" class="task-panel-title"></h2>
+          <p  id="taskDisclaimerText"  class="task-disclaimer-text"></p>
+          <button id="taskDisclaimerBtn" class="task-primary-btn" type="button"></button>
         </div>
 
         <!-- ── MAIN LIST PANEL ── -->
-        <div id="medMain" class="med-panel" style="display:none">
-          <div class="med-panel-header">
-            <h2 id="medMainTitle" class="med-panel-title"></h2>
-            <button id="medCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+        <div id="taskMain" class="task-panel" style="display:none">
+          <div class="task-panel-header">
+            <h2 id="taskMainTitle" class="task-panel-title"></h2>
+            <button id="taskCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
           </div>
-          <p id="medPersistentNote" class="med-persistent-note"></p>
-          <div id="medNotifPrompt" class="med-notif-prompt" style="display:none">
-            <span id="medNotifPromptText" class="med-notif-text"></span>
-            <button id="medNotifBtn" class="med-notif-enable-btn" type="button"></button>
+          <p id="taskPersistentNote" class="task-persistent-note"></p>
+          <div id="taskNotifPrompt" class="task-notif-prompt" style="display:none">
+            <span id="taskNotifPromptText" class="task-notif-text"></span>
+            <button id="taskNotifBtn" class="task-notif-enable-btn" type="button"></button>
           </div>
-          <div id="medList" class="med-list"></div>
-          <div class="med-main-actions">
-            <button id="medAddBtn"          class="med-primary-btn"   type="button"></button>
-            <button id="medViewScheduleBtn" class="med-secondary-btn" type="button"></button>
+          <div id="taskList" class="task-list"></div>
+          <div class="task-main-actions">
+            <button id="taskAddBtn"          class="task-primary-btn"   type="button"></button>
+            <button id="taskViewScheduleBtn" class="task-secondary-btn" type="button"></button>
           </div>
         </div>
 
         <!-- ── FORM PANEL ── -->
-        <div id="medForm" class="med-panel med-form-panel" style="display:none">
-          <div class="med-panel-header">
-            <h2 id="medFormTitle" class="med-panel-title"></h2>
-            <button id="medFormCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+        <div id="taskForm" class="task-panel task-form-panel" style="display:none">
+          <div class="task-panel-header">
+            <h2 id="taskFormTitle" class="task-panel-title"></h2>
+            <button id="taskFormCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
           </div>
 
           <!-- Correct / Record-change toggle (only when editing) -->
-          <div id="medToggleRow" class="med-toggle-row hidden">
-            <span id="medToggleCorrectLbl" class="med-toggle-lbl"></span>
-            <label class="med-toggle-switch">
-              <input id="medToggle" type="checkbox" />
-              <span class="med-toggle-slider"></span>
+          <div id="taskToggleRow" class="task-toggle-row hidden">
+            <span id="taskToggleCorrectLbl" class="task-toggle-lbl"></span>
+            <label class="task-toggle-switch">
+              <input id="taskToggle" type="checkbox" />
+              <span class="task-toggle-slider"></span>
             </label>
-            <span id="medToggleChangeLbl" class="med-toggle-lbl"></span>
+            <span id="taskToggleChangeLbl" class="task-toggle-lbl"></span>
           </div>
 
-          <form id="medFormEl" class="med-form-fields" autocomplete="off" onsubmit="return false">
+          <form id="taskFormEl" class="task-form-fields" autocomplete="off" onsubmit="return false">
 
-            <label class="med-field">
-              <span id="medNameLabel" class="med-field-label"></span>
-              <input id="medNameInput" class="med-input" type="text" maxlength="120" required />
+            <label class="task-field">
+              <span id="taskNameLabel" class="task-field-label"></span>
+              <input id="taskNameInput" class="task-input" type="text" maxlength="120" required />
             </label>
 
-            <label class="med-field">
-              <span id="medDoseLabel" class="med-field-label"></span>
-              <input id="medDoseInput" class="med-input" type="text" maxlength="80" />
+            <label class="task-field">
+              <span id="taskQuantityLabel" class="task-field-label"></span>
+              <input id="taskQuantityInput" class="task-input" type="text" maxlength="80" />
             </label>
 
-            <div class="med-field">
-              <span id="medFreqLabel" class="med-field-label"></span>
-              <select id="medFreqSelect" class="med-select">
+            <div class="task-field">
+              <span id="taskFreqLabel" class="task-field-label"></span>
+              <select id="taskFreqSelect" class="task-select">
                 <option value="daily"></option>
                 <option value="weekly"></option>
                 <option value="interval"></option>
@@ -547,99 +547,99 @@
             </div>
 
             <!-- Weekly days (hidden unless weekly) -->
-            <div id="medDaysRow" class="med-field hidden">
-              <span id="medDaysLabel" class="med-field-label"></span>
-              <div class="med-days-grid">
-                <label class="med-day-check"><input id="medDayCb0" type="checkbox" value="sunday" />    <span id="medDaySunLbl"></span></label>
-                <label class="med-day-check"><input id="medDayCb1" type="checkbox" value="monday" />   <span id="medDayMonLbl"></span></label>
-                <label class="med-day-check"><input id="medDayCb2" type="checkbox" value="tuesday" />  <span id="medDayTueLbl"></span></label>
-                <label class="med-day-check"><input id="medDayCb3" type="checkbox" value="wednesday" /><span id="medDayWedLbl"></span></label>
-                <label class="med-day-check"><input id="medDayCb4" type="checkbox" value="thursday" /> <span id="medDayThuLbl"></span></label>
-                <label class="med-day-check"><input id="medDayCb5" type="checkbox" value="friday" />   <span id="medDayFriLbl"></span></label>
-                <label class="med-day-check"><input id="medDayCb6" type="checkbox" value="saturday" /> <span id="medDaySatLbl"></span></label>
+            <div id="taskDaysRow" class="task-field hidden">
+              <span id="taskDaysLabel" class="task-field-label"></span>
+              <div class="task-days-grid">
+                <label class="task-day-check"><input id="taskDayCb0" type="checkbox" value="sunday" />    <span id="taskDaySunLbl"></span></label>
+                <label class="task-day-check"><input id="taskDayCb1" type="checkbox" value="monday" />   <span id="taskDayMonLbl"></span></label>
+                <label class="task-day-check"><input id="taskDayCb2" type="checkbox" value="tuesday" />  <span id="taskDayTueLbl"></span></label>
+                <label class="task-day-check"><input id="taskDayCb3" type="checkbox" value="wednesday" /><span id="taskDayWedLbl"></span></label>
+                <label class="task-day-check"><input id="taskDayCb4" type="checkbox" value="thursday" /> <span id="taskDayThuLbl"></span></label>
+                <label class="task-day-check"><input id="taskDayCb5" type="checkbox" value="friday" />   <span id="taskDayFriLbl"></span></label>
+                <label class="task-day-check"><input id="taskDayCb6" type="checkbox" value="saturday" /> <span id="taskDaySatLbl"></span></label>
               </div>
             </div>
 
             <!-- Interval days (hidden unless interval) -->
-            <div id="medIntervalRow" class="med-field hidden">
-              <span id="medIntervalLabel" class="med-field-label"></span>
-              <input id="medIntervalInput" class="med-input med-input-short" type="number" min="1" max="365" value="1" />
+            <div id="taskIntervalRow" class="task-field hidden">
+              <span id="taskIntervalLabel" class="task-field-label"></span>
+              <input id="taskIntervalInput" class="task-input task-input-short" type="number" min="1" max="365" value="1" />
             </div>
 
             <!-- Directions -->
-            <label class="med-field">
-              <span id="medDirectionsLabel" class="med-field-label"></span>
-              <input id="medDirectionsInput" class="med-input" type="text" maxlength="30" />
+            <label class="task-field">
+              <span id="taskDirectionsLabel" class="task-field-label"></span>
+              <input id="taskDirectionsInput" class="task-input" type="text" maxlength="30" />
             </label>
 
             <!-- Times -->
-            <div class="med-field">
-              <span id="medTimesLabel" class="med-field-label">Med Times <span style="color:red">*</span></span>
-              <div id="medTimesContainer" class="med-times-container">
-                <div class="med-time-row"><input type="time" class="med-time-input" required></div>
+            <div class="task-field">
+              <span id="taskTimesLabel" class="task-field-label">Med Times <span style="color:red">*</span></span>
+              <div id="taskTimesContainer" class="task-times-container">
+                <div class="task-time-row"><input type="time" class="task-time-input" required></div>
               </div>
-              <button id="medAddTimeBtn" class="med-link-btn" type="button">+ Añadir hora</button>
+              <button id="taskAddTimeBtn" class="task-link-btn" type="button">+ Añadir hora</button>
             </div>
 
-            <label class="med-field">
-              <span id="medStartLabel" class="med-field-label"></span>
-              <input id="medStartInput" class="med-input med-input-date" type="date" />
+            <label class="task-field">
+              <span id="taskStartLabel" class="task-field-label"></span>
+              <input id="taskStartInput" class="task-input task-input-date" type="date" />
             </label>
 
             <!-- Limited course checkbox -->
-            <div class="med-field med-field-inline">
-              <input id="medLimitedCheck" type="checkbox" class="med-checkbox" />
-              <span id="medLimitedLabel" class="med-field-label"></span>
+            <div class="task-field task-field-inline">
+              <input id="taskLimitedCheck" type="checkbox" class="task-checkbox" />
+              <span id="taskLimitedLabel" class="task-field-label"></span>
             </div>
 
             <!-- End date (hidden unless limited) -->
-            <div id="medEndRow" class="med-field hidden">
-              <span id="medEndLabel" class="med-field-label"></span>
-              <input id="medEndInput" class="med-input med-input-date" type="date" />
+            <div id="taskEndRow" class="task-field hidden">
+              <span id="taskEndLabel" class="task-field-label"></span>
+              <input id="taskEndInput" class="task-input task-input-date" type="date" />
             </div>
 
-            <label class="med-field">
-              <span id="medNotesLabel" class="med-field-label"></span>
-              <textarea id="medNotesInput" class="med-input med-textarea" rows="2" maxlength="300"></textarea>
+            <label class="task-field">
+              <span id="taskNotesLabel" class="task-field-label"></span>
+              <textarea id="taskNotesInput" class="task-input task-textarea" rows="2" maxlength="300"></textarea>
             </label>
 
-            <label class="med-field">
-              <span id="medEnteredByLabel" class="med-field-label"></span>
-              <input id="medEnteredByInput" class="med-input" type="text" maxlength="80" />
+            <label class="task-field">
+              <span id="taskEnteredByLabel" class="task-field-label"></span>
+              <input id="taskEnteredByInput" class="task-input" type="text" maxlength="80" />
             </label>
 
             <!-- Change reason (hidden unless toggle = "change") -->
-            <div id="medChangeReasonRow" class="med-field hidden">
-              <span id="medChangeReasonLabel" class="med-field-label"></span>
-              <input id="medChangeReasonInput" class="med-input" type="text" maxlength="200" />
+            <div id="taskChangeReasonRow" class="task-field hidden">
+              <span id="taskChangeReasonLabel" class="task-field-label"></span>
+              <input id="taskChangeReasonInput" class="task-input" type="text" maxlength="200" />
             </div>
 
-            <label class="med-field">
-              <span id="medTimezoneLabel" class="med-field-label"></span>
-              <input id="medTimezoneInput" class="med-input" type="text" maxlength="60" />
+            <label class="task-field">
+              <span id="taskTimezoneLabel" class="task-field-label"></span>
+              <input id="taskTimezoneInput" class="task-input" type="text" maxlength="60" />
             </label>
 
           </form>
 
-          <div class="med-form-status" id="medFormStatus" role="status" aria-live="polite"></div>
+          <div class="task-form-status" id="taskFormStatus" role="status" aria-live="polite"></div>
 
-          <div class="med-form-actions">
-            <button id="medFormCancelBtn"   class="med-secondary-btn" type="button"></button>
-            <button id="medFormScheduleBtn" class="med-link-btn"      type="button"></button>
-            <button id="medFormSaveBtn"     class="med-primary-btn"   type="button"></button>
+          <div class="task-form-actions">
+            <button id="taskFormCancelBtn"   class="task-secondary-btn" type="button"></button>
+            <button id="taskFormScheduleBtn" class="task-link-btn"      type="button"></button>
+            <button id="taskFormSaveBtn"     class="task-primary-btn"   type="button"></button>
           </div>
         </div>
 
         <!-- ── SCHEDULE PANEL ── -->
-        <div id="medSchedule" class="med-panel med-schedule-panel" style="display:none">
-          <div class="med-panel-header">
-            <h2 id="medScheduleTitle" class="med-panel-title"></h2>
-            <button id="medScheduleCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+        <div id="taskSchedule" class="task-panel task-schedule-panel" style="display:none">
+          <div class="task-panel-header">
+            <h2 id="taskScheduleTitle" class="task-panel-title"></h2>
+            <button id="taskScheduleCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
           </div>
-          <div id="medScheduleContent" class="med-schedule-content"></div>
-          <div class="med-form-actions">
-            <button id="medScheduleBackBtn"  class="med-secondary-btn" type="button"></button>
-            <button id="medSchedulePrintBtn" class="med-primary-btn"   type="button"></button>
+          <div id="taskScheduleContent" class="task-schedule-content"></div>
+          <div class="task-form-actions">
+            <button id="taskScheduleBackBtn"  class="task-secondary-btn" type="button"></button>
+            <button id="taskSchedulePrintBtn" class="task-primary-btn"   type="button"></button>
           </div>
         </div>
 

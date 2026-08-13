@@ -1,84 +1,87 @@
 {
-"name": "IA Brenda",
-"short_name": "Brenda",
-"id": "brendaconversation_v01.00",
-"start_url": "/",
-"categories": ["lifestyle", "entertainment"],
-"display": "standalone",
-"description": "Tu compañera de conversación, siempre disponible, amistosa y atenta.",
-"lang": "es-ES",
-"dir": "auto",
-"theme_color": "#F5E6D3",
-"background_color": "#C496E4",
-"orientation": "any",
-"icons": [
-  {
-    "src": "/images_play/icon-192.png",
-    "sizes": "192x192",
-    "type": "image/png",
-    "purpose": "any"
-  },
-  {
-    "src": "/images_play/icon-512.png",
-    "sizes": "512x512",
-    "type": "image/png",
-    "purpose": "any"
-  },
-  {
-    "src": "/images_play/icon-512-maskable.png",
-    "sizes": "512x512",
-    "type": "image/png",
-    "purpose": "maskable"
-  }
-],
-"screenshots": [
+  "name": "IA Brenda",
+  "short_name": "Brenda",
+  "id": "brendaconversation_v01.00",
+  "start_url": "/",
+  "categories": [
+    "lifestyle",
+    "entertainment"
+  ],
+  "display": "standalone",
+  "description": "Tu compañera de conversación, siempre disponible, amistosa y atenta.",
+  "lang": "es-ES",
+  "dir": "auto",
+  "theme_color": "#F5E6D3",
+  "background_color": "#C496E4",
+  "orientation": "any",
+  "icons": [
     {
-        "src": "/images_play/a-brendascreenshot.png",
-        "sizes": "810x1440",
-        "type": "image/png",
-        "description": "Screenshot of Create Account"
+      "src": "/images_play/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-        "src": "/images_play/b-brendascreenshot-tareas.png",
-        "sizes": "810x1440",
-        "type": "image/png",
-        "description": "Screenshot of Talk / Chat"
+      "src": "/images_play/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-        "src": "/images_play/c-brendascreenshot-tareas.png",
-        "sizes": "810x1440",
-        "type": "image/png",
-        "description": "Screenshot of My Info"
-    },
-    {
-        "src": "/images_play/d-brendascreenshot-tareas.png",
-        "sizes": "810x1440",
-        "type": "image/png",
-        "description": "Screenshot of Talking"
-    },
-    {
-        "src": "/images_play/e-brendascreenshot-tareas.png",
-        "sizes": "810x1440",
-        "type": "image/png",
-        "description": "Screenshot of Help Screen"
-    },
-    {
-        "src": "/images_play/f-brendascreenshot.png",
-        "sizes": "810x1440",
-        "type": "image/png",
-        "description": "Screenshot of Top Up"
-    },
-    {
-        "src": "/images_play/g-brendascreenshot.png",
-        "sizes": "810x1440",
-        "type": "image/png",
-        "description": "Screenshot of Select Plan"
-    },
-        {
-        "src": "/images_play/h-brendascreenshot.png",
-        "sizes": "810x1440",
-        "type": "image/png",
-        "description": "Screenshot of Select Plan"
+      "src": "/images_play/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-]
+  ],
+  "screenshots": [
+    {
+      "src": "/images_play/a-brendascreenshot.png",
+      "sizes": "810x1440",
+      "type": "image/png",
+      "description": "Screenshot of Create Account"
+    },
+    {
+      "src": "/images_play/b-brendascreenshot-tareas.png",
+      "sizes": "810x1440",
+      "type": "image/png",
+      "description": "Screenshot of Talk / Chat"
+    },
+    {
+      "src": "/images_play/c-brendascreenshot-tareas.png",
+      "sizes": "810x1440",
+      "type": "image/png",
+      "description": "Screenshot of My Info"
+    },
+    {
+      "src": "/images_play/d-brendascreenshot-tareas.png",
+      "sizes": "810x1440",
+      "type": "image/png",
+      "description": "Screenshot of Talking"
+    },
+    {
+      "src": "/images_play/e-brendascreenshot-tareas.png",
+      "sizes": "810x1440",
+      "type": "image/png",
+      "description": "Screenshot of Help Screen"
+    },
+    {
+      "src": "/images_play/f-brendascreenshot.png",
+      "sizes": "810x1440",
+      "type": "image/png",
+      "description": "Screenshot of Top Up"
+    },
+    {
+      "src": "/images_play/g-brendascreenshot.png",
+      "sizes": "810x1440",
+      "type": "image/png",
+      "description": "Screenshot of Select Plan"
+    },
+    {
+      "src": "/images_play/h-brendascreenshot.png",
+      "sizes": "810x1440",
+      "type": "image/png",
+      "description": "Screenshot of Select Plan"
+    }
+  ]
 }

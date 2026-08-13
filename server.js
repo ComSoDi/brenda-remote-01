@@ -249,6 +249,26 @@ function processClientMessage(rawData, isGemini31) {
   return rawData;
 }
 
+// Gemini Live's automatic_activity_detection (server-side VAD) — tunable via
+// env so "Brenda didn't respond, had to repeat myself" reports can be dialed
+// out without a redeploy of the setup message shape itself. See
+// docs/voice-vad-tuning.md for what each knob does and how to read the
+// [voice-vad] diagnostic logs below.
+function resolveVadSensitivity(envVal, fallback) {
+  const v = String(envVal || "").trim().toUpperCase();
+  return v === "HIGH" || v === "LOW" ? v : fallback;
+}
+
+function buildAutomaticActivityDetectionConfig() {
+  return {
+    disabled: false,
+    start_of_speech_sensitivity: `START_SENSITIVITY_${resolveVadSensitivity(process.env.GEMINI_VAD_START_SENSITIVITY, "HIGH")}`,
+    end_of_speech_sensitivity: `END_SENSITIVITY_${resolveVadSensitivity(process.env.GEMINI_VAD_END_SENSITIVITY, "LOW")}`,
+    prefix_padding_ms: Number(process.env.GEMINI_VAD_PREFIX_PADDING_MS) || 300,
+    silence_duration_ms: Number(process.env.GEMINI_VAD_SILENCE_DURATION_MS) || 800,
+  };
+}
+
 const wss = new WebSocketServer({ noServer: true });
 
 server.on("upgrade", async (req, socket, head) => {
@@ -418,6 +438,9 @@ wss.on("connection", (ws) => {
         generation_config,
         input_audio_transcription: {},
         output_audio_transcription: {},
+        realtime_input_config: {
+          automatic_activity_detection: buildAutomaticActivityDetectionConfig(),
+        },
         system_instruction: {
           parts: [{ text: systemText }]
         },
@@ -487,19 +510,27 @@ wss.on("connection", (ws) => {
         }
       }
 
-      // RDS: accumulate transcripts and extract on turn complete
+      // Voice VAD diagnostics + RDS: accumulate transcripts on every session
+      // (not just RDS-enabled ones) so a "Brenda didn't respond" report can
+      // be traced to what Gemini's own turn-detection actually decided — see
+      // docs/voice-vad-tuning.md. RDS extraction itself stays gated below.
       const sc = parsed?.serverContent;
-      if (sc && ws.isAuthenticated && userId && ws.rdsProfile) {
+      if (sc) {
         if (sc.inputTranscription?.text)  inputTranscriptBuf  += sc.inputTranscription.text;
         if (sc.outputTranscription?.text) outputTranscriptBuf += sc.outputTranscription.text;
+
+        if (sc.interrupted) {
+          console.log(`🗣️ [voice-vad] session=${voiceSessionId} userId=${userId ?? "null"} — Gemini reported an interruption (serverContent.interrupted)`);
+        }
 
         if (sc.turnComplete) {
           const userMsg = inputTranscriptBuf.trim();
           const aiReply = outputTranscriptBuf.trim();
+          console.log(`🗣️ [voice-vad] session=${voiceSessionId} userId=${userId ?? "null"} — turn complete. user="${userMsg}" brenda="${aiReply}"`);
           inputTranscriptBuf  = "";
           outputTranscriptBuf = "";
 
-          if (userMsg && aiReply) {
+          if (userMsg && aiReply && ws.isAuthenticated && userId && ws.rdsProfile) {
             const extractModel = process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash";
             extractRdsItems(GEMINI_API_KEY, extractModel, userMsg, aiReply, ws.rdsUsername || "")
               .then(async ({ extractions }) => {

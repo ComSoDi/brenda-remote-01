@@ -278,6 +278,25 @@ const GEMINI_LIVE_URL =
 
 const VOICE_MAP = { "en-US": "Aoede", "en-GB": "Aoede", "es-ES": "Vindemiatrix", "es-419": "Vindemiatrix" };
 
+// Gemini Live's automatic_activity_detection (server-side VAD) — mirrors the
+// same env-driven tuning in server.js so it applies to the production path
+// too (this file is what Render's brenda-voice-proxy service actually runs).
+// See docs/voice-vad-tuning.md.
+function resolveVadSensitivity(envVal, fallback) {
+  const v = String(envVal || "").trim().toUpperCase();
+  return v === "HIGH" || v === "LOW" ? v : fallback;
+}
+
+function buildAutomaticActivityDetectionConfig() {
+  return {
+    disabled: false,
+    startOfSpeechSensitivity: `START_SENSITIVITY_${resolveVadSensitivity(process.env.GEMINI_VAD_START_SENSITIVITY, "HIGH")}`,
+    endOfSpeechSensitivity: `END_SENSITIVITY_${resolveVadSensitivity(process.env.GEMINI_VAD_END_SENSITIVITY, "LOW")}`,
+    prefixPaddingMs: Number(process.env.GEMINI_VAD_PREFIX_PADDING_MS) || 300,
+    silenceDurationMs: Number(process.env.GEMINI_VAD_SILENCE_DURATION_MS) || 800,
+  };
+}
+
 async function createGeminiVoiceProxy(browserWs, req) {
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   if (!GEMINI_API_KEY) {
@@ -347,6 +366,8 @@ async function createGeminiVoiceProxy(browserWs, req) {
 
   const voiceSessionId = crypto.randomUUID();
   let voiceResponseCounter = 0;
+  let vadInputBuf = "";
+  let vadOutputBuf = "";
 
   const geminiWs = new WebSocket(`${GEMINI_LIVE_URL}?key=${GEMINI_API_KEY}`);
 
@@ -361,6 +382,9 @@ async function createGeminiVoiceProxy(browserWs, req) {
         systemInstruction: { parts: [{ text: systemText }] },
         inputAudioTranscription: {},
         outputAudioTranscription: {},
+        realtimeInputConfig: {
+          automaticActivityDetection: buildAutomaticActivityDetectionConfig(),
+        },
       },
     }));
   });
@@ -377,6 +401,25 @@ async function createGeminiVoiceProxy(browserWs, req) {
             planId, planDisplayName,
           }))
           .catch(e => console.error("[voice-proxy/usage]", e.message));
+      }
+
+      // Voice VAD diagnostics — logs Gemini's own turn-detection decisions so
+      // a "Brenda didn't respond" report can be traced to a missed/merged
+      // turn vs. something else. See docs/voice-vad-tuning.md.
+      const sc = msg.serverContent;
+      if (sc) {
+        if (sc.inputTranscription?.text)  vadInputBuf  += sc.inputTranscription.text;
+        if (sc.outputTranscription?.text) vadOutputBuf += sc.outputTranscription.text;
+
+        if (sc.interrupted) {
+          console.log(`🗣️ [voice-vad] session=${voiceSessionId} userId=${userId ?? "null"} — Gemini reported an interruption (serverContent.interrupted)`);
+        }
+
+        if (sc.turnComplete) {
+          console.log(`🗣️ [voice-vad] session=${voiceSessionId} userId=${userId ?? "null"} — turn complete. user="${vadInputBuf.trim()}" brenda="${vadOutputBuf.trim()}"`);
+          vadInputBuf = "";
+          vadOutputBuf = "";
+        }
       }
     } catch { /* not JSON — ignore */ }
   });

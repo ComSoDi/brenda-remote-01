@@ -33,6 +33,12 @@
       this.audioBuffer = [];
       this.bufferSize = 0;
       this._pcmSendThreshold = 4096;
+
+      // Voice VAD diagnostics — accumulated transcripts logged on each
+      // Gemini turnComplete/interrupted, so a "Brenda didn't respond" report
+      // can be checked in DevTools console. See docs/voice-vad-tuning.md.
+      this._vadInputBuf = "";
+      this._vadOutputBuf = "";
     }
 
     updateStatus(s) {
@@ -750,6 +756,7 @@
       if (this.backend !== "gemini") return;
       // 1. Interruptions
       if (response.serverContent?.interrupted) {
+        console.log("🗣️ [voice-vad] Gemini reported an interruption (serverContent.interrupted)");
         this.stopAudioQueue();
         this.updateStatus("connected");
         return;
@@ -795,6 +802,7 @@
       if (this.onTranscript) {
         for (const text of userTexts) {
           console.log("ðŸŽ¤ Received User Transcript:", text);
+          this._vadInputBuf += text;
           this.onTranscript("user", text);
         }
       }
@@ -817,6 +825,7 @@
 
         if (this.onTranscript) {
           for (const text of assistantTexts) {
+            this._vadOutputBuf += text;
             this.onTranscript("assistant", text);
           }
         }
@@ -834,6 +843,9 @@
       }
 
       if (response.serverContent?.turnComplete) {
+        console.log(`🗣️ [voice-vad] turn complete. user="${this._vadInputBuf.trim()}" brenda="${this._vadOutputBuf.trim()}"`);
+        this._vadInputBuf = "";
+        this._vadOutputBuf = "";
         this.isSpeaking = false;
         this.updateStatus("connected");
         const wasSuppressed = this._suppressAssistantOutput;

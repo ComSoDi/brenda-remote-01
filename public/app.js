@@ -6,6 +6,14 @@ import { renderTranscript, wireAutoScroll } from "./transcriptRenderer.js";
 import { getConversationContent } from "./conversationContent.js";
 import { TaskManager } from "./taskManager.js";
 
+// TALK ringback tone, by locale variant — see startRingback()
+const RINGBACK_FILES = {
+  "es-ES": "ONE Ringback EU-Asia-South-CentralAmerica.wav",
+  "es-419": "ONE Ringback EU-Asia-South-CentralAmerica.wav",
+  "en-US": "ONE Ringback NorthAmerica - South Korea.wav",
+  "en-GB": "ONE Ringback UK-Ireland-New Zealand-Singapore.wav",
+};
+
 class BrendaApp {
   constructor() {
     this.locale = detectLocale(); // { lang, variant }
@@ -53,6 +61,10 @@ class BrendaApp {
     this._voiceWeatherInFlight = false;
     this._voiceChatInFlight = false;
     this._voiceChatQueue = [];
+
+    // TALK ringback tone (plays from tap until Brenda starts speaking, or connect gives up)
+    this._ringbackAudio = null;
+    this._ringbackGeneration = 0;
 
     // Transcript autoscroll control
     this._stickToBottom = { value: true };
@@ -2044,6 +2056,7 @@ class BrendaApp {
 
   hangUp() {
     this.clearVoiceCountdown();
+    this.stopRingback();
     try { this.agent.disconnect(); } catch { }
     this._voiceChatQueue = [];
     this._voiceChatInFlight = false;
@@ -2234,12 +2247,58 @@ class BrendaApp {
   /* --------------------
      VOICE (TALK)
   -------------------- */
+  startRingback() {
+    this.stopRingback();
+    const generation = ++this._ringbackGeneration;
+    const fallback = this.locale?.variant || "en-US";
+
+    // Play instantly on the browser-detected variant — this runs inside the
+    // TALK click handler, so calling audio.play() synchronously here (rather
+    // than after an awaited fetch) keeps it inside the user-gesture window
+    // autoplay policies require.
+    this._playRingbackFile(fallback);
+
+    // Refine to the account's saved location, same DB-first precedence
+    // resolveLocaleVariant() uses for Brenda's spoken language — swap the
+    // loop in place if it resolves to a different variant before the call
+    // connects or gives up.
+    Promise.resolve(
+      window?.Config?.resolveLocaleVariant ? window.Config.resolveLocaleVariant(fallback) : fallback
+    )
+      .then((resolved) => {
+        if (generation !== this._ringbackGeneration) return; // stopped/superseded meanwhile
+        if (resolved && resolved !== fallback) this._playRingbackFile(resolved);
+      })
+      .catch(() => { /* ignore — fallback tone keeps playing */ });
+  }
+
+  _playRingbackFile(variant) {
+    const file = RINGBACK_FILES[variant] || RINGBACK_FILES["en-US"];
+    const audio = new Audio(`audio/ringbacks/${encodeURIComponent(file)}`);
+    audio.loop = true;
+    audio.volume = 0.5;
+    audio.play().catch((e) => console.warn("Ringback playback failed:", e?.message || e));
+    if (this._ringbackAudio) { try { this._ringbackAudio.pause(); } catch { } }
+    this._ringbackAudio = audio;
+  }
+
+  stopRingback() {
+    this._ringbackGeneration++; // invalidate any in-flight startRingback() resolution
+    if (!this._ringbackAudio) return;
+    try {
+      this._ringbackAudio.pause();
+      this._ringbackAudio.currentTime = 0;
+    } catch { }
+    this._ringbackAudio = null;
+  }
+
   async connectVoice() {
     try {
       this._voiceGreetingSent = false;
       this.clearVoiceGreetingTimer();
       this.setTalkButtonState({ connected: false, disabled: true });
       this.setConnectingIndicator(true);
+      this.startRingback();
 
       // reset voice ordering buffers (do NOT clear messages â€” timeline persists)
       this._awaitingUserTranscript = true;
@@ -2259,6 +2318,7 @@ class BrendaApp {
       await this.agent.connect(userId, this.locale.variant, this.user?.gender || null);
     } catch (e) {
       console.error(e);
+      this.stopRingback();
       alert("Voice connect failed: " + e.message);
       this.setConnectingIndicator(false);
       this.setTalkButtonState({ connected: false, disabled: false });
@@ -2332,6 +2392,7 @@ class BrendaApp {
       if (this.callUI === "closed") this.setCallUI("open");
       this.recordVoiceActivity();
       if (status === "speaking" && prevStatus !== "speaking") {
+        this.stopRingback(); // Brenda's voice has started — stop the ringback loop
         this.setConnectingIndicator(false); // hide pill only when Brenda actually starts speaking
         this.setThinkingIndicator(false);
         this.flushPendingUserTranscript();
@@ -2347,6 +2408,7 @@ class BrendaApp {
       this.clearVoiceCountdown();
       this.clearVoiceGreetingTimer();
     } else {
+      this.stopRingback(); // connect gave up (error/disconnected) — stop the ringback loop
       this.setTalkButtonState({ connected: false, disabled: false });
       this.setCallUI("closed");
       this.setConnectingIndicator(false);

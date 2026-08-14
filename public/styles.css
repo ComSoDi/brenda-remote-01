@@ -2568,7 +2568,7 @@ body {
   text-align: center;
   font-size: 18px;
   color: #1a1a2e;
-  padding: 4px 18px 14px;
+  padding: 4px 18px 2px;
   margin: 0;
   line-height: 1.5;
 }
@@ -2709,6 +2709,20 @@ body {
 .sidenav-rectangular-img-wrap img {
   height: 42px;
   width: auto;
+}
+
+.sidenav-screenshot-img-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 6px 0;
+}
+
+.sidenav-screenshot-img-wrap img {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 @media (max-width: 720px) {

@@ -4,6 +4,7 @@ import { t } from "./i18n/index.js";
 const SIDENAV_HOME_PILLS = [
   { pillKey: "sideNavPillHelp",     pillClass: "snp-light",      labelKey: "sideNavLabelHelp",     nav: null },
   { pillKey: "sideNavPillMyInfo",   pillClass: "snp-light",      labelKey: "sideNavLabelMyInfo",   nav: "miInfo" },
+  { pillKey: "sideNavPillMyInfo2",  pillClass: "snp-light",      labelKey: "sideNavLabelMyInfo2",  nav: "miInfo02" },
   // account pill is inserted here dynamically
   { pillKey: "sideNavPillTomas",    pillClass: "snp-salmon",     labelKey: "sideNavLabelTomas",    nav: "tomas" },
   { pillKey: "sideNavPillInit",     pillClass: "snp-yellow",     labelKey: "sideNavLabelInit",     nav: "iniciaTu" },
@@ -45,6 +46,21 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",     key: "sideNavMiInfoText5" },
       { type: "text",     key: "sideNavMiInfoText6" },
       { type: "pill-btn", key: "sideNavSaveBtn", pillClass: "snp-green" },
+    ],
+  },
+  miInfo02: {
+    pillKey:  "sideNavPillMyInfo2",
+    pillClass: "snp-light",
+    titleKey: "sideNavMiInfo02TitleText",
+    blocks: [
+      { type: "text",  key: "sideNavMiInfo02Text1" },
+      { type: "text",  key: "sideNavMiInfo02Text2" },
+      { type: "image", src: "images/usageMonitor.webp", wrapClass: "sidenav-screenshot-img-wrap" },
+      { type: "text",  key: "sideNavMiInfo02Text3" },
+      { type: "text",  key: "sideNavMiInfo02Text4" },
+      { type: "image", src: "images/masTiempo.webp", wrapClass: "sidenav-rectangular-img-wrap" },
+      { type: "text",  key: "sideNavMiInfo02Text5" },
+      { type: "text",  key: "sideNavMiInfo02Text6" },
     ],
   },
   anon: {
@@ -238,8 +254,8 @@ export class SideNavManager {
         <span class="sidenav-row-label">${this._snEsc(t(v, accountLabelKey))}</span>
       </div>`;
 
-    const beforeAccount = SIDENAV_HOME_PILLS.slice(0, 2);
-    const afterAccount  = SIDENAV_HOME_PILLS.slice(2);
+    const beforeAccount = SIDENAV_HOME_PILLS.slice(0, 3);
+    const afterAccount  = SIDENAV_HOME_PILLS.slice(3);
 
     const pillsHtml = (pills) => pills.map((pill) => {
       const isNav = !!pill.nav;

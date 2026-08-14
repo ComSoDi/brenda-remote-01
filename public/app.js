@@ -273,7 +273,6 @@ class BrendaApp {
       planPromoBody: document.getElementById("planPromoBody"),
       planSelectionHeader: document.getElementById("planSelectionHeader"),
       planCardsContainer: document.getElementById("planCardsContainer"),
-      otherPlansHeader: document.getElementById("otherPlansHeader"),
       topUpCardContainer: document.getElementById("topUpCardContainer"),
       planNoteTerms: document.getElementById("planNoteTerms"),
       planNoteGP: document.getElementById("planNoteGP"),
@@ -1481,7 +1480,6 @@ class BrendaApp {
     if (this.elements.planPromoTitle) this.elements.planPromoTitle.textContent = t(v, "sub.tryFreeTitle");
     if (this.elements.planPromoBody) this.elements.planPromoBody.innerHTML = t(v, "sub.tryFreeBody");
     if (this.elements.planSelectionHeader) this.elements.planSelectionHeader.textContent = t(v, "sub.header");
-    if (this.elements.otherPlansHeader) this.elements.otherPlansHeader.textContent = t(v, "sub.otherPlansHeader");
     if (this.elements.planNoteTerms) this.elements.planNoteTerms.textContent = t(v, "notes.termsChange");
     if (this.elements.planNoteGP) this.elements.planNoteGP.textContent = t(v, "notes.manageGP");
     if (this.elements.planNoteChange) this.elements.planNoteChange.textContent = t(v, "notes.changeAnytime");
@@ -1610,15 +1608,12 @@ class BrendaApp {
 
   // Top-up: a one-time "add more Brendys" product, not a recurring
   // subscription — no first-month offer, so no intro price / save pill.
-  // Rendered in its own container below the subscription plan cards, under
-  // the "Other plans" header (see index.html + localizePlanSelectionUI()).
+  // Rendered in its own container above the subscription plan cards, right
+  // below the promo box (see index.html).
   _renderTopUpCard(plan) {
     const container = this.elements.topUpCardContainer;
     if (!container) return;
     const hasTopUp = !!plan;
-    if (this.elements.otherPlansHeader) {
-      this.elements.otherPlansHeader.classList.toggle("hidden", !hasTopUp);
-    }
     if (!hasTopUp) {
       container.innerHTML = "";
       return;
@@ -2244,6 +2239,19 @@ class BrendaApp {
     }
   }
 
+  // Overwrites an already-persisted message's saved content — used once
+  // correctTranscript() resolves, so the corrected (non-fragmented) version
+  // is what's still there on reload/history, not the raw fragmented one
+  // persistMessage() saved first for responsiveness.
+  async updateMessageContent(id, content) {
+    if (!this.user || !id || !this._persisted.has(id)) return;
+    try {
+      await this.apiJSON("/api/conversation/update-message", { method: "POST", body: { id, content } });
+    } catch (e) {
+      console.warn("Failed to persist corrected transcript:", e?.message || e);
+    }
+  }
+
   /* --------------------
      VOICE (TALK)
   -------------------- */
@@ -2359,6 +2367,7 @@ class BrendaApp {
             if (corrected === rawText) return;
             const i = this.findMessageIndexById(msgId);
             if (i >= 0) { this.messages[i].text = corrected; this.render(); }
+            this.updateMessageContent(msgId, corrected);
           });
         }
       } else {
@@ -2374,6 +2383,7 @@ class BrendaApp {
               if (corrected === rawText) return;
               const j = this.findMessageIndexById(msgId);
               if (j >= 0) { this.messages[j].text = corrected; this.render(); }
+              this.updateMessageContent(msgId, corrected);
             });
             break;
           }
@@ -2556,6 +2566,7 @@ class BrendaApp {
         if (corrected === cleaned) return;
         const i = this.findMessageIndexById(msgId1);
         if (i >= 0) { this.messages[i].text = corrected; this.render(); }
+        this.updateMessageContent(msgId1, corrected);
       });
       return lastMsg;
     }
@@ -2569,6 +2580,7 @@ class BrendaApp {
       if (corrected === cleaned) return;
       const i = this.findMessageIndexById(msgId2);
       if (i >= 0) { this.messages[i].text = corrected; this.render(); }
+      this.updateMessageContent(msgId2, corrected);
     });
     if (this.mode === "talk") {
       if (this.agent?.needsChatFallback) {

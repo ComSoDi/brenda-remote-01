@@ -23,6 +23,7 @@ import topUpHandler from "./api/user/topup.js";
 import weatherHandler from "./api/weather.js";
 import realtimeKeyHandler from "./api/voice/realtime-key.js";
 import appendHandler from "./api/conversation/append.js";
+import updateMessageHandler from "./api/conversation/update-message.js";
 import transcriptCorrectHandler from "./api/transcript/correct.js";
 import greetingHandler from "./api/greeting.js";
 import tasksHandler from "./api/tasks.js";
@@ -73,6 +74,7 @@ app.post("/api/auth/policy-accept", policyAcceptHandler);
 app.post("/api/auth/delete-account", deleteAccountHandler);
 
 app.post("/api/conversation/append", appendHandler);
+app.post("/api/conversation/update-message", updateMessageHandler);
 
 app.get("/api/history", historyHandler);
 app.get("/api/user/usage", usageHandler);

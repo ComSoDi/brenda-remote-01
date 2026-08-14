@@ -23,16 +23,16 @@ export default {
 
     authGreeting: "¡Hola! Soy IA Brenda",
     authExplain: "Crea tu cuenta para que nuestras conversaciones sean privadas y memorables",
-    authNickLabel: "Apodo",
+    authNickLabel: "Usuario",
     authNickHelp: "Solo letras, numeros y guiones bajos (4-20 caracteres)",
     authPinLabel: "PIN",
     authPinHelp01: "Crea PIN de 4 numeros.",
-    authPinHelp02: "Mejor anota Apodo y PIN para no olvidarlos",
+    authPinHelp02: "Apunta Usuario y PIN en sitio seguro",
     authContinue: "Continuar",
     authLoading: "Espera...",
     authAnonLink: "O haz clic aqui para chatear sin cuenta (anónimo)",
     authPrivacy: "Politica de privacidad personal",
-    authErrorBadNick: "El apodo debe tener 4-20 caracteres: solo letras, numeros y guiones bajos.",
+    authErrorBadNick: "El Usuario debe tener 4-20 caracteres: solo letras, numeros y guiones bajos.",
     authErrorBadPin: "El PIN debe tener exactamente 4 digitos.",
     authGenderLabel: "Género",
     authGenderDefault: "Selecciona...",
@@ -44,7 +44,7 @@ export default {
     consentTitle: "¡Bienvenido a IA Brenda!",
     consentSubtitle: "Lee esto con atención y pulsa «Acepto» para continuar",
     consentContent: `
-      <p><strong>Brenda es una IA, no una persona.</strong> Sus respuestas las genera una inteligencia artificial, no un ser humano. Es estupenda para charlar y darte información general, pero nunca sustituye el consejo de un profesional.</p>
+      <p><strong>Brenda es una IA, no una persona real.</strong> Sus respuestas las genera una inteligencia artificial, no un ser humano. Es estupenda para charlar y darte información general, pero nunca sustituye el consejo de un profesional.</p>
       <p>Piensa en Brenda como una vecina simpática con la que te encanta charlar. No te fíes de ella para temas médicos, legales, financieros o psicológicos: siempre te recomendará que consultes a un profesional certificado.</p>
       <p>Por favor, no le compartas datos personales identificativos, contraseñas, información financiera, historial médico ni otros datos sensibles.</p>
       <p><strong>Tu voz.</strong> En el modo HABLAR, tu micrófono capta tu voz en tiempo real. El audio se envía directamente a un servicio externo de IA para procesarlo y nunca lo almacenamos nosotros.</p>
@@ -371,7 +371,6 @@ export default {
     "sub.tryFreeTitle": "¡Prueba IA Brenda Gratis!",
     "sub.tryFreeBody": "Por tiempo limitado, solo por abrir una cuenta, obtienes <strong>40 minutos de conversación y 100 minutos de interacciones durante un mes sin costo!</strong><br>Puedes cancelar en cualquier momento.",
     "sub.header": "Planes de Suscripción",
-    "sub.otherPlansHeader": "Otros planes",
     "sub.topUpName": "Recarga",
     "sub.topUpPrice": "{n}€",
     "sub.topUpSubtitle": "Añade Brendys cuando quieras",

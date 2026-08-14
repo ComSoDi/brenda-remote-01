@@ -19,6 +19,7 @@ Speech recognition often splits words into syllables or fragments. Your main job
 
 Rules:
 - Merge incorrectly split words (e.g. "Bi en" → "Bien", "pa sa ba" → "pasaba", "gracia s" → "gracias", "Ni lo" → "Nilo")
+- This merging also applies right before punctuation — the fragment immediately before a comma/period is still part of the split word, so merge it too, keeping the punctuation attached to the merged word followed by a single space (e.g. "pas ta, no, pas ta no" → "pasta, no, pasta no")
 - Remove any non-${language || "Spanish"} characters (Arabic script, stray symbols)
 - Restore correct accents and spelling
 - Add missing punctuation, including Spanish opening marks (¿ ¡) where appropriate
@@ -44,7 +45,22 @@ ${text}`;
     const data = await r.json();
     const parts = data?.candidates?.[0]?.content?.parts || [];
     const outputPart = parts.find(p => !p.thought && typeof p.text === "string") ?? parts[0];
-    const corrected = outputPart?.text?.trim() || text;
+    const corrected = outputPart?.text?.trim();
+
+    if (!corrected) {
+      // Blocked/empty response from Gemini — fall back to the raw (fragmented)
+      // text rather than fail the request; log why so this doesn't happen
+      // silently (see docs/voice-vad-tuning.md for the sibling voice-VAD
+      // diagnostics this mirrors).
+      console.warn(
+        "[transcript/correct] no usable candidate — falling back to raw text.",
+        `blockReason=${data?.promptFeedback?.blockReason || "none"}`,
+        `finishReason=${data?.candidates?.[0]?.finishReason || "none"}`
+      );
+      res.statusCode = 200;
+      return res.end(JSON.stringify({ corrected: text }));
+    }
+
     res.statusCode = 200;
     return res.end(JSON.stringify({ corrected }));
   } catch (e) {

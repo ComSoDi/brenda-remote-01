@@ -5,6 +5,7 @@ import { SideNavManager } from "./sideNavManager.js";
 import { renderTranscript, wireAutoScroll } from "./transcriptRenderer.js";
 import { getConversationContent } from "./conversationContent.js";
 import { TaskManager } from "./taskManager.js";
+import { initAnalytics } from "./analytics.js";
 
 // TALK ringback tone, by locale variant — see startRingback()
 const RINGBACK_FILES = {
@@ -3838,6 +3839,7 @@ class BrendaApp {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  initAnalytics();
   window.__app = new BrendaApp();
 });
 

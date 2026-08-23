@@ -14,3 +14,7 @@ services:
         sync: false
       - key: MONGODB_DB
         value: ai_chat
+      - key: NEW_RELIC_LICENSE_KEY
+        sync: false
+      - key: NEW_RELIC_APP_NAME
+        value: brenda-voice-proxy

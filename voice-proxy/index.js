@@ -382,7 +382,7 @@ async function createGeminiVoiceProxy(browserWs, req) {
   const geminiWsCreatedAt = Date.now();
   let msGeminiWsOpen = null;
   let sessionStartRecorded = false;
-  let lastClientMessageAt = null;
+  let lastInputTranscriptionAt = null;
   let turnFirstAudioAt = null;
   let relayMsSum = 0;
   let relayMsMax = 0;
@@ -443,10 +443,18 @@ async function createGeminiVoiceProxy(browserWs, req) {
       // turn vs. something else. See docs/voice-vad-tuning.md.
       const sc = msg.serverContent;
       if (sc) {
-        if (sc.inputTranscription?.text)  vadInputBuf  += sc.inputTranscription.text;
+        if (sc.inputTranscription?.text) {
+          vadInputBuf += sc.inputTranscription.text;
+          // Gemini's own signal that it was still hearing/transcribing the
+          // user — a far more reliable "end of user turn" marker than raw
+          // client WS messages, which stream continuously (mic stays open
+          // during Brenda's reply too, for barge-in) and don't correlate
+          // with when the user actually stopped talking.
+          lastInputTranscriptionAt = Date.now();
+        }
         if (sc.outputTranscription?.text) vadOutputBuf += sc.outputTranscription.text;
 
-        if (turnFirstAudioAt === null && lastClientMessageAt !== null) {
+        if (turnFirstAudioAt === null && lastInputTranscriptionAt !== null) {
           const hasAudio = sc.modelTurn?.parts?.some(
             (p) => p.inlineData?.mimeType?.startsWith("audio/pcm")
           );
@@ -455,26 +463,26 @@ async function createGeminiVoiceProxy(browserWs, req) {
 
         if (sc.interrupted) {
           console.log(`🗣️ [voice-vad] session=${voiceSessionId} userId=${userId ?? "null"} — Gemini reported an interruption (serverContent.interrupted)`);
-          lastClientMessageAt = null;
+          lastInputTranscriptionAt = null;
           turnFirstAudioAt = null;
           relayMsSum = 0; relayMsMax = 0; relayCount = 0;
         }
 
         if (sc.turnComplete) {
           console.log(`🗣️ [voice-vad] session=${voiceSessionId} userId=${userId ?? "null"} — turn complete. user="${vadInputBuf.trim()}" brenda="${vadOutputBuf.trim()}"`);
-          if (lastClientMessageAt !== null) {
+          if (lastInputTranscriptionAt !== null) {
             const now = Date.now();
             newrelic.recordCustomEvent("VoiceTurnLatency", {
               voiceSessionId,
               responseId: `${voiceSessionId}_${voiceResponseCounter}`,
               userId, locale, model,
-              msToFirstAudio: turnFirstAudioAt ? turnFirstAudioAt - lastClientMessageAt : null,
-              msTurnTotal: now - lastClientMessageAt,
+              msToFirstAudio: turnFirstAudioAt ? turnFirstAudioAt - lastInputTranscriptionAt : null,
+              msTurnTotal: now - lastInputTranscriptionAt,
               msMaxRelayOverhead: relayMsMax,
               msAvgRelayOverhead: relayCount ? Math.round(relayMsSum / relayCount) : 0,
             });
           }
-          lastClientMessageAt = null;
+          lastInputTranscriptionAt = null;
           turnFirstAudioAt = null;
           relayMsSum = 0; relayMsMax = 0; relayCount = 0;
           vadInputBuf = "";
@@ -498,7 +506,6 @@ async function createGeminiVoiceProxy(browserWs, req) {
   });
 
   browserWs.on("message", (data) => {
-    lastClientMessageAt = Date.now();
     if (geminiWs.readyState !== WebSocket.OPEN) return;
     try {
       const msg = JSON.parse(typeof data === "string" ? data : data.toString());

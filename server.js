@@ -62,7 +62,13 @@ dns.setServers((process.env.DNS_SERVERS || "1.1.1.1, 8.8.8.8").split(/[,\s]+/).f
 const app = express();
 app.use(express.json({ limit: "2mb" }));
 app.use("/.well-known", express.static(path.join(STATIC_DIR, ".well-known"), { dotfiles: "allow" }));
-app.use(express.static(STATIC_DIR));
+app.use(express.static(STATIC_DIR, {
+  // No content hashing/versioning on these assets (no build step), so force
+  // revalidation on every load -- otherwise a stale cached app.js/voiceAgent.js
+  // can get stuck indefinitely in caches that are hard to clear (e.g. the
+  // Google Play TWA/WebView container, which has no user-facing hard-refresh).
+  setHeaders: (res) => res.setHeader("Cache-Control", "no-cache"),
+}));
 
 app.post("/api/auth/login", loginHandler);
 app.get("/api/auth/me", meHandler);

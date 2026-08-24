@@ -1,4 +1,7 @@
 import newrelic from 'newrelic';
+globalThis.__newrelicLoaded = true; // lets lib/mongo.js know it's safe to record custom events —
+// standalone scripts (backup-db.js etc.) import lib/mongo.js without ever loading newrelic,
+// and requiring it there would start the agent's own timers and keep those scripts from exiting.
 import "dotenv/config";
 import express from "express";
 import { fileURLToPath } from "url";
@@ -44,6 +47,7 @@ import rdsInterestsHandler   from "./api/rds/interests.js";
 import rdsTopicStarterHandler from "./api/rds/topic-starter.js";
 
 import { getSession } from "./lib/auth.js";
+import { requestContext } from "./lib/requestContext.js";
 import { getDb } from "./lib/mongo.js";
 import { recordVoiceUsage } from "./lib/usage.js";
 import { resolvePlanForUsage, getOrCreateSubscription, getUsageSinceDate, computeStatus } from "./lib/subscriptions.js";
@@ -57,6 +61,12 @@ const STATIC_DIR = path.join(__dirname, "public");
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
+// Render sets this automatically on every deploy -- no manual version
+// bookkeeping needed to facet New Relic events by "which deploy produced this".
+// Truncated to the standard git short-SHA length (7 chars) so it's actually
+// readable as a chart legend/facet label instead of a 40-char hex blob.
+const GIT_SHA = process.env.RENDER_GIT_COMMIT?.slice(0, 7) || null;
+
 dns.setServers((process.env.DNS_SERVERS || "1.1.1.1, 8.8.8.8").split(/[,\s]+/).filter(Boolean));
 
 const app = express();
@@ -69,6 +79,25 @@ app.use(express.static(STATIC_DIR, {
   // Google Play TWA/WebView container, which has no user-facing hard-refresh).
   setHeaders: (res) => res.setHeader("Cache-Control", "no-cache"),
 }));
+
+// Tags the current New Relic transaction with userId so APM (Transactions,
+// errors, traces) can be faceted/filtered per user. addCustomAttribute only
+// attaches to an active transaction, so this must run inside Express's
+// request cycle -- it does NOT reach the voice WS flow (a raw server.on
+// ("upgrade") hijack outlives any transaction); that path already tags its
+// own recordCustomEvent() calls with userId directly (VoiceSessionStart,
+// VoiceTurnLatency).
+app.use((req, res, next) => {
+  if (GIT_SHA) newrelic.addCustomAttribute("gitSha", GIT_SHA);
+  const session = getSession(req);
+  const userId = session?.userId || null;
+  if (userId) {
+    newrelic.addCustomAttribute("userId", userId);
+    const displayName = session?.displayName || session?.username || null;
+    if (displayName) newrelic.addCustomAttribute("userDisplayName", displayName);
+  }
+  requestContext.run({ userId }, next);
+});
 
 app.post("/api/auth/login", loginHandler);
 app.get("/api/auth/me", meHandler);
@@ -319,6 +348,7 @@ server.on("upgrade", async (req, socket, head) => {
     let savedLocation = null;
     let voiceQuotaExhausted = false;
     const profileLookupStartAt = Date.now();
+    await requestContext.run({ userId }, async () => {
     try {
       const db = await getDb();
       // Each lookup is isolated with its own .catch() — one failing lookup
@@ -360,6 +390,7 @@ server.on("upgrade", async (req, socket, head) => {
     } catch (e) {
       console.error("[voice-proxy] session/profile resolution failed:", e?.message || e);
     }
+    });
 
     if (voiceQuotaExhausted) {
       console.log(`[voice-proxy] blocked — voice quota exhausted userId=${userId}`);
@@ -390,6 +421,7 @@ server.on("upgrade", async (req, socket, head) => {
 });
 
 wss.on("connection", (ws) => {
+  requestContext.run({ userId: ws.userId || null }, () => {
   console.log("🔌 Proxy: Client connected. Opening Gemini upstream...");
 
   const voiceSessionId = randomUUID();
@@ -524,7 +556,7 @@ wss.on("connection", (ws) => {
       if (!sessionStartRecorded && parsed?.setupComplete !== undefined) {
         sessionStartRecorded = true;
         newrelic.recordCustomEvent("VoiceSessionStart", {
-          voiceSessionId, userId, locale, model: MODEL, source: "server",
+          voiceSessionId, userId, locale, model: MODEL, source: "server", gitSha: GIT_SHA,
           msProfileLookup: ws.msProfileLookup ?? null, msGeminiWsOpen,
           msSetupComplete: Date.now() - geminiWsCreatedAt,
         });
@@ -593,7 +625,7 @@ wss.on("connection", (ws) => {
             newrelic.recordCustomEvent("VoiceTurnLatency", {
               voiceSessionId,
               responseId: `${voiceSessionId}_${voiceResponseCounter}`,
-              userId, locale, model: MODEL,
+              userId, locale, model: MODEL, gitSha: GIT_SHA,
               msToFirstAudio: turnFirstAudioAt ? turnFirstAudioAt - lastInputTranscriptionAt : null,
               msTurnTotal: now - lastInputTranscriptionAt,
               msMaxRelayOverhead: relayMsMax,
@@ -637,5 +669,6 @@ wss.on("connection", (ws) => {
   ws.on("close", () => {
     console.log("🔻 Client disconnected from proxy");
     if (geminiWs.readyState === WebSocket.OPEN) geminiWs.close();
+  });
   });
 });

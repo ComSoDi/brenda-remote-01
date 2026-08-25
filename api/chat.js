@@ -706,6 +706,12 @@ export default async function handler(req, res) {
     const GEMINI_CHAT_MODEL = process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash";
     if (!GEMINI_API_KEY) return json(res, 500, { error: "GEMINI_API_KEY not set" });
 
+    // Configurable so the effect of the cap itself (prompt size vs. latency)
+    // can be A/B tested via env var alone -- no code change/deploy needed per
+    // experiment. Tagged on the transaction below so runs at different limits
+    // are directly comparable in New Relic regardless of which gitSha was live.
+    const CHAT_HISTORY_LIMIT = Number(process.env.CHAT_HISTORY_LIMIT) || 50;
+
     const body = await readJson(req);
     /*
     const localeVariant = body.localeVariant || "en-US";
@@ -809,7 +815,7 @@ export default async function handler(req, res) {
 
     const conv = await db.collection("conversations").findOne(
       { userId: session.userId },
-      { projection: { messages: { $slice: -50 } } }
+      { projection: { messages: { $slice: -CHAT_HISTORY_LIMIT } } }
     );
 
     const history = Array.isArray(conv?.messages) ? conv.messages : [];
@@ -820,6 +826,7 @@ export default async function handler(req, res) {
     // bigger prompt for Gemini to process, independent of any code/model change
     // being measured -- tag it so duration comparisons can control for it.
     newrelic.addCustomAttribute("messageCount", historyMsgs.length);
+    newrelic.addCustomAttribute("chatHistoryLimit", CHAT_HISTORY_LIMIT);
 
     // Load user preferences (gender + location) once — used for system prompt and weather
     const userPrefsDoc = await db.collection("users").findOne(

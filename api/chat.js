@@ -6,6 +6,7 @@ import { getDb } from "../lib/mongo.js";
 import { ObjectId } from "mongodb";
 */
 
+import newrelic from "newrelic";
 import { requireSession } from "../lib/auth.js";
 import { getDb } from "../lib/mongo.js";
 import { ObjectId } from "mongodb";
@@ -815,6 +816,10 @@ export default async function handler(req, res) {
     const historyMsgs = history
       .filter((m) => m && (m.role === "user" || m.role === "assistant"))
       .map((m) => ({ role: m.role, content: String(m.content || "") }));
+    // Conversation length confound: a longer history resent on every call means a
+    // bigger prompt for Gemini to process, independent of any code/model change
+    // being measured -- tag it so duration comparisons can control for it.
+    newrelic.addCustomAttribute("messageCount", historyMsgs.length);
 
     // Load user preferences (gender + location) once — used for system prompt and weather
     const userPrefsDoc = await db.collection("users").findOne(

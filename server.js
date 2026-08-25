@@ -625,6 +625,7 @@ wss.on("connection", (ws) => {
             newrelic.recordCustomEvent("VoiceTurnLatency", {
               voiceSessionId,
               responseId: `${voiceSessionId}_${voiceResponseCounter}`,
+              turnNumber: voiceResponseCounter,
               userId, locale, model: MODEL, gitSha: GIT_SHA,
               msToFirstAudio: turnFirstAudioAt ? turnFirstAudioAt - lastInputTranscriptionAt : null,
               msTurnTotal: now - lastInputTranscriptionAt,

@@ -383,6 +383,7 @@ async function createGeminiVoiceProxy(browserWs, req) {
   let msGeminiWsOpen = null;
   let sessionStartRecorded = false;
   let lastInputTranscriptionAt = null;
+  let firstInputTranscriptionAt = null;
   let turnFirstAudioAt = null;
   let relayMsSum = 0;
   let relayMsMax = 0;
@@ -450,6 +451,9 @@ async function createGeminiVoiceProxy(browserWs, req) {
           // client WS messages, which stream continuously (mic stays open
           // during Brenda's reply too, for barge-in) and don't correlate
           // with when the user actually stopped talking.
+          // First fragment of the user turn ≈ when they started talking; the
+          // last one ≈ when they stopped. The delta is msUserSpeech below.
+          if (firstInputTranscriptionAt === null) firstInputTranscriptionAt = Date.now();
           lastInputTranscriptionAt = Date.now();
         }
         if (sc.outputTranscription?.text) vadOutputBuf += sc.outputTranscription.text;
@@ -464,6 +468,7 @@ async function createGeminiVoiceProxy(browserWs, req) {
         if (sc.interrupted) {
           console.log(`🗣️ [voice-vad] session=${voiceSessionId} userId=${userId ?? "null"} — Gemini reported an interruption (serverContent.interrupted)`);
           lastInputTranscriptionAt = null;
+          firstInputTranscriptionAt = null;
           turnFirstAudioAt = null;
           relayMsSum = 0; relayMsMax = 0; relayCount = 0;
         }
@@ -475,14 +480,17 @@ async function createGeminiVoiceProxy(browserWs, req) {
             newrelic.recordCustomEvent("VoiceTurnLatency", {
               voiceSessionId,
               responseId: `${voiceSessionId}_${voiceResponseCounter}`,
+              turnNumber: voiceResponseCounter,
               userId, locale, model,
               msToFirstAudio: turnFirstAudioAt ? turnFirstAudioAt - lastInputTranscriptionAt : null,
               msTurnTotal: now - lastInputTranscriptionAt,
+              msUserSpeech: firstInputTranscriptionAt ? lastInputTranscriptionAt - firstInputTranscriptionAt : null,
               msMaxRelayOverhead: relayMsMax,
               msAvgRelayOverhead: relayCount ? Math.round(relayMsSum / relayCount) : 0,
             });
           }
           lastInputTranscriptionAt = null;
+          firstInputTranscriptionAt = null;
           turnFirstAudioAt = null;
           relayMsSum = 0; relayMsMax = 0; relayCount = 0;
           vadInputBuf = "";

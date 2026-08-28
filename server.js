@@ -5,6 +5,7 @@ globalThis.__newrelicLoaded = true; // lets lib/mongo.js know it's safe to recor
 import "dotenv/config";
 import express from "express";
 import { fileURLToPath } from "url";
+import { readFileSync } from "fs";
 import path from "path";
 import dns from "dns";
 import { randomUUID } from "crypto";
@@ -67,16 +68,43 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // readable as a chart legend/facet label instead of a 40-char hex blob.
 const GIT_SHA = process.env.RENDER_GIT_COMMIT?.slice(0, 7) || null;
 
+// One build id per deploy (git SHA on Render, restart timestamp locally). It's
+// stamped into index.html's asset ?v= query strings AND into the service worker
+// body, so every deploy is byte-different on the wire -- browsers and the Google
+// Play TWA WebView (which has no hard-refresh) then pick it up, drop old caches,
+// and refetch. No manual ?v= bookkeeping anywhere.
+const BUILD_ID = GIT_SHA || `dev-${Date.now()}`;
+
+const INDEX_HTML = readFileSync(path.join(STATIC_DIR, "index.html"), "utf8")
+  .replace(/(\.(?:js|css))\?v=[\w.-]+/g, `$1?v=${BUILD_ID}`);
+
+const SERVICE_WORKER_JS = readFileSync(path.join(STATIC_DIR, "service-worker.js"), "utf8")
+  .replace(/__BUILD__/g, BUILD_ID);
+
 dns.setServers((process.env.DNS_SERVERS || "1.1.1.1, 8.8.8.8").split(/[,\s]+/).filter(Boolean));
 
 const app = express();
 app.use(express.json({ limit: "2mb" }));
+// index.html is regenerated per build (asset ?v= stamped with BUILD_ID) and must
+// never be reused from cache, or a client keeps loading stale asset references.
+app.get(["/", "/index.html"], (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.type("html").send(INDEX_HTML);
+});
+
+// The service worker carries BUILD_ID in its body: new bytes every deploy, so
+// the browser re-installs it -> it purges old caches and re-claims open pages.
+app.get("/service-worker.js", (_req, res) => {
+  res.set("Cache-Control", "no-cache");
+  res.type("application/javascript").send(SERVICE_WORKER_JS);
+});
+
 app.use("/.well-known", express.static(path.join(STATIC_DIR, ".well-known"), { dotfiles: "allow" }));
 app.use(express.static(STATIC_DIR, {
-  // No content hashing/versioning on these assets (no build step), so force
-  // revalidation on every load -- otherwise a stale cached app.js/voiceAgent.js
-  // can get stuck indefinitely in caches that are hard to clear (e.g. the
-  // Google Play TWA/WebView container, which has no user-facing hard-refresh).
+  // No content hashing (no build step) -> force revalidation every load so a
+  // stale app.js/taskManager.js can't get stuck (esp. the Google Play TWA/
+  // WebView, which has no user-facing hard-refresh). The service worker above
+  // is the stronger guarantee; this is the fallback when it isn't running.
   setHeaders: (res) => res.setHeader("Cache-Control", "no-cache"),
 }));
 
@@ -146,7 +174,10 @@ app.get("/api/rds/interests",      (req, res) => rdsInterestsHandler(req, res));
 app.post("/api/rds/interests",     (req, res) => rdsInterestsHandler(req, res));
 app.post("/api/rds/topic-starter", (req, res) => rdsTopicStarterHandler(req, res));
 
-app.get("*", (_req, res) => res.sendFile(path.join(STATIC_DIR, "index.html")));
+app.get("*", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.type("html").send(INDEX_HTML);
+});
 
 const server = app.listen(PORT, () => console.log(`🚀 Brenda 01 listening on port ${PORT}`));
 

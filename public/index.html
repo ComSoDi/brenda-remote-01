@@ -824,9 +824,20 @@
 
   <script>
     if ('serviceWorker' in navigator) {
+      // If a service worker already controls this page, a later controllerchange
+      // means a new build has taken over — reload once so the user gets a clean
+      // set of assets instead of a half-stale mix.
+      if (navigator.serviceWorker.controller) {
+        let reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (reloaded) return;
+          reloaded = true;
+          window.location.reload();
+        });
+      }
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
-          .then(reg => console.log('Service Worker registered:', reg.scope))
+          .then(reg => { reg.update(); console.log('Service Worker registered:', reg.scope); })
           .catch(err => console.log('Service Worker registration failed:', err));
       });
     }

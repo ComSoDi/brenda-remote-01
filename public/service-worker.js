@@ -1,94 +1,82 @@
+// Brenda service worker.
+//
+// BUILD is stamped by server.js at serve time (git SHA on Render, restart
+// timestamp locally), so every deploy ships byte-different SW source. The
+// browser -- and the Google Play TWA WebView, which has no hard-refresh --
+// then re-installs this SW, which:
+//   * deletes every old cache (activate)
+//   * takes control of open pages immediately (skipWaiting + clients.claim)
+//   * serves same-origin requests network-first, bypassing a stale HTTP cache
+// so a stale index.html / app.js / taskManager.js can never get stuck.
 
-    // Based off of https://github.com/pwa-builder/PWABuilder/blob/main/docs/sw.js
+const BUILD = '__BUILD__';
+const CACHE = 'brenda-' + BUILD;
 
-    /*
-      Welcome to our basic Service Worker! This Service Worker offers a basic offline experience
-      while also being easily customizeable. You can add in your own code to implement the capabilities
-      listed below, or change anything else you would like.
+// Cross-origin hosts we're allowed to cache (fonts + CDN libs). Anything else
+// cross-origin (analytics, third-party APIs) is left entirely to the browser.
+const THIRD_PARTY = ['fonts.gstatic.com', 'fonts.googleapis.com', 'cdn.jsdelivr.net'];
 
+self.addEventListener('install', () => self.skipWaiting());
 
-      Need an introduction to Service Workers? Check our docs here: https://docs.pwabuilder.com/#/home/sw-intro
-      Want to learn more about how our Service Worker generation works? Check our docs here: https://docs.pwabuilder.com/#/studio/existing-app?id=add-a-service-worker
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+    await self.clients.claim();
+  })());
+});
 
-      Did you know that Service Workers offer many more capabilities than just offline? 
-        - Background Sync: https://microsoft.github.io/win-student-devs/#/30DaysOfPWA/advanced-capabilities/06
-        - Periodic Background Sync: https://web.dev/periodic-background-sync/
-        - Push Notifications: https://microsoft.github.io/win-student-devs/#/30DaysOfPWA/advanced-capabilities/07?id=push-notifications-on-the-web
-        - Badges: https://microsoft.github.io/win-student-devs/#/30DaysOfPWA/advanced-capabilities/07?id=application-badges
-    */
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
 
-    const HOSTNAME_WHITELIST = [
-        // Removed self.location.hostname intentionally —
-        // Brenda requires live connection; never serve stale app shell
-        'fonts.gstatic.com',
-        'fonts.googleapis.com',
-        'cdn.jsdelivr.net'
-    ]
+  let url;
+  try { url = new URL(req.url); } catch { return; }
 
-    // The Util Function to hack URLs of intercepted requests
-    const getFixedUrl = (req) => {
-        var now = Date.now()
-        var url = new URL(req.url)
+  const sameOrigin = url.origin === self.location.origin;
 
-        // 1. fixed http URL
-        // Just keep syncing with location.protocol
-        // fetch(httpURL) belongs to active mixed content.
-        // And fetch(httpRequest) is not supported yet.
-        url.protocol = self.location.protocol
+  // Never intercept the API or the SW file itself -- always straight to network.
+  if (sameOrigin && (url.pathname.startsWith('/api/') || url.pathname === '/service-worker.js')) {
+    return;
+  }
 
-        // 2. add query for caching-busting.
-        // Github Pages served with Cache-Control: max-age=600
-        // max-age on mutable content is error-prone, with SW life of bugs can even extend.
-        // Until cache mode of Fetch API landed, we have to workaround cache-busting with query string.
-        // Cache-Control-Bug: https://bugs.chromium.org/p/chromium/issues/detail?id=453190
-        if (url.hostname === self.location.hostname) {
-            url.search += (url.search ? '&' : '?') + 'cache-bust=' + now
+  if (sameOrigin) {
+    // Network-first: fetch revalidating (unchanged files still come back 304),
+    // fall back to cache only when the network fails.
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req, { cache: 'no-cache' });
+        if (fresh && fresh.ok && fresh.type === 'basic') {
+          const cache = await caches.open(CACHE);
+          cache.put(req, fresh.clone());
         }
-        return url.href
-    }
+        return fresh;
+      } catch (err) {
+        const cached = await caches.match(req);
+        if (cached) return cached;
+        if (req.mode === 'navigate') {
+          const shell = (await caches.match('/index.html')) || (await caches.match('/'));
+          if (shell) return shell;
+        }
+        throw err;
+      }
+    })());
+    return;
+  }
 
-    /**
-     *  @Lifecycle Activate
-     *  New one activated when old isnt being used.
-     *
-     *  waitUntil(): activating ====> activated
-     */
-    self.addEventListener('activate', event => {
-      event.waitUntil(self.clients.claim())
-    })
-
-    /**
-     *  @Functional Fetch
-     *  All network requests are being intercepted here.
-     *
-     *  void respondWith(Promise<Response> r)
-     */
-    self.addEventListener('fetch', event => {
-    // Skip some of cross-origin requests, like those for Google Analytics.
-    if (HOSTNAME_WHITELIST.indexOf(new URL(event.request.url).hostname) > -1) {
-        // Stale-while-revalidate
-        // similar to HTTP's stale-while-revalidate: https://www.mnot.net/blog/2007/12/12/stale
-        // Upgrade from Jake's to Surma's: https://gist.github.com/surma/eb441223daaedf880801ad80006389f1
-        const cached = caches.match(event.request)
-        const fixedUrl = getFixedUrl(event.request)
-        const fetched = fetch(fixedUrl, { cache: 'no-store' })
-        const fetchedCopy = fetched.then(resp => resp.clone())
-
-        // Call respondWith() with whatever we get first.
-        // If the fetch fails (e.g disconnected), wait for the cache.
-        // If there’s nothing in cache, wait for the fetch.
-        // If neither yields a response, return offline pages.
-        event.respondWith(
-        Promise.race([fetched.catch(_ => cached), cached])
-            .then(resp => resp || fetched)
-            .catch(_ => { /* eat any errors */ })
-        )
-
-        // Update the cache with the version we fetched (only for ok status)
-        event.waitUntil(
-        Promise.all([fetchedCopy, caches.open("pwa-cache")])
-            .then(([response, cache]) => response.ok && cache.put(event.request, response))
-            .catch(_ => { /* eat any errors */ })
-        )
-    }
-    })
+  if (THIRD_PARTY.includes(url.hostname)) {
+    // Stale-while-revalidate for fonts / CDN.
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      const cached = await cache.match(req);
+      const network = fetch(req)
+        .then((resp) => {
+          if (resp && resp.ok) cache.put(req, resp.clone());
+          return resp;
+        })
+        .catch(() => null);
+      return cached || (await network) || fetch(req);
+    })());
+  }
+  // else: cross-origin and not whitelisted -> leave it to the browser.
+});

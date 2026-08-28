@@ -292,13 +292,13 @@ class BrendaApp {
       helpTitle: document.getElementById("helpTitle"),
 
       // News & Gossip — Latest (category picker)
-      latestBtn: document.getElementById("latestBtn"),
-      latestOverlay: document.getElementById("latestOverlay"),
-      latestCloseBtn: document.getElementById("latestCloseBtn"),
+      latestBtn: document.getElementById("newsSectionsBtn"),
+      latestOverlay: document.getElementById("newsSectionsOverlay"),
+      latestCloseBtn: document.getElementById("newsSectionsCloseBtn"),
       latestTitle: document.getElementById("latestTitle"),
       latestSubtitle: document.getElementById("latestSubtitle"),
-      latestCancelBtn: document.getElementById("latestCancelBtn"),
-      latestSaveBtn: document.getElementById("latestSaveBtn"),
+      latestCancelBtn: document.getElementById("newsSectionsCancelBtn"),
+      latestSaveBtn: document.getElementById("newsSectionsSaveBtn"),
       latestStatus: document.getElementById("latestStatus"),
       latestCatCheckboxes: [
         document.getElementById("latestCatActualidad"),
@@ -317,7 +317,7 @@ class BrendaApp {
 
       // News & Gossip — Headlines feed
       headlinesBtn: document.getElementById("headlinesBtn"),
-      chatBtn: document.getElementById("chatBtn"),
+      chatBtn: document.getElementById("changeSubjectBtn"),
       headlinesOverlay: document.getElementById("headlinesOverlay"),
       headlinesCloseBtn: document.getElementById("headlinesCloseBtn"),
       headlinesTitle: document.getElementById("headlinesTitle"),
@@ -545,6 +545,20 @@ class BrendaApp {
     // Enter key
     this.elements.authPin?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") this.authContinue();
+    });
+
+    // Force the first letter to uppercase as the user types — mirrors the
+    // server-side normalizeUsername() in api/auth/login.js, which stores the
+    // nick Proper-cased regardless.
+    this.elements.authNick?.addEventListener("input", () => {
+      const el = this.elements.authNick;
+      const v = el.value;
+      if (v && v[0] !== v[0].toUpperCase()) {
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        el.value = v[0].toUpperCase() + v.slice(1);
+        el.setSelectionRange(start, end);
+      }
     });
 
     this.elements.authCloseBtn?.addEventListener("click", () => this.closeAuthOverlay());
@@ -1251,6 +1265,8 @@ class BrendaApp {
       card.className = `headline-card headline-card--${tier}`;
       card.setAttribute("role", "button");
       card.setAttribute("tabindex", "0");
+      card.dataset.gaName = "headlines_popup__card_btn";
+      card.dataset.gaItemId = h.id ?? h.headline;
 
       const pillText = t(v, `catPill_${h.cat}`) || h.cat;
       const heatPct  = Math.round(h.heat || 0);
@@ -1578,7 +1594,7 @@ class BrendaApp {
                 <h3 class="plan-card-name">${planLabel}</h3>
                 <span class="plan-card-minutes">${t(v, "sub.totalMinutes", { n: this._formatInt(totalMinutes) })}</span>
               </div>
-              <button type="button" class="plan-card-close" data-action="close" aria-label="Close">×</button>
+              <button type="button" class="plan-card-close" data-action="close" aria-label="Close" data-ga-name="plan_selection_popup__card_close_btn">×</button>
             </div>
 
             <div class="plan-card-pricing">
@@ -1598,7 +1614,7 @@ class BrendaApp {
               </tbody>
             </table>
 
-            <button type="button" class="${btnClass}" data-action="select" data-plan-id="${plan.planId}" data-plan-label="${planLabel}" data-sort-order="${plan.sortOrder ?? 0}" ${isCurrent ? "data-current=\"true\"" : ""}>${btnLabel}</button>
+            <button type="button" class="${btnClass}" data-action="select" data-plan-id="${plan.planId}" data-plan-label="${planLabel}" data-sort-order="${plan.sortOrder ?? 0}" ${isCurrent ? "data-current=\"true\"" : ""} data-ga-name="plan_selection_popup__select_btn">${btnLabel}</button>
 
             <p class="plan-card-footnote">${t(v, "sub.timeNote")}</p>
           </div>
@@ -1632,7 +1648,7 @@ class BrendaApp {
             <h3 class="plan-card-name">${planLabel}</h3>
             <span class="plan-card-minutes">${t(v, "sub.totalMinutes", { n: this._formatInt(totalMinutes) })}</span>
           </div>
-          <button type="button" class="plan-card-close" data-action="close" aria-label="Close">×</button>
+          <button type="button" class="plan-card-close" data-action="close" aria-label="Close" data-ga-name="plan_selection_popup__card_close_btn">×</button>
         </div>
 
         <div class="plan-card-pricing">
@@ -1650,7 +1666,7 @@ class BrendaApp {
           </tbody>
         </table>
 
-        <button type="button" class="plan-select-btn" data-action="topup" data-plan-id="${plan.planId}" data-plan-label="${planLabel}">${t(v, "sub.topUpSelect")}</button>
+        <button type="button" class="plan-select-btn" data-action="topup" data-plan-id="${plan.planId}" data-plan-label="${planLabel}" data-ga-name="plan_selection_popup__topup_btn">${t(v, "sub.topUpSelect")}</button>
 
         <p class="plan-card-footnote">${t(v, "sub.timeNote")}</p>
       </div>

@@ -48,3 +48,6 @@ voice-proxy/node_modules/
 
 # Local DB backups (contain real user PII — never commit)
 backups/
+
+# New relic stuff
+newrelic.js

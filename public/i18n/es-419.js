@@ -338,6 +338,10 @@ export default {
     taskNotifTitle: "Recordatorio de tarea",
     taskNotifPrompt: "Activa las notificaciones del sistema para recibir recordatorios",
     taskNotifBtn: "Activar",
+    taskNotifBtnDisable: "Desactivar",
+    taskNotifOn: "Las notificaciones de recordatorios están activadas",
+    taskNotifOff: "Las notificaciones de recordatorios están desactivadas",
+    taskNotifBlocked: "Las notificaciones están bloqueadas en los ajustes del navegador",
 
     // News & Gossip
     latestBtn: "Secciones",

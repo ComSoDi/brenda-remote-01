@@ -352,6 +352,10 @@ export default {
     taskNotifTitle: "Task reminder",
     taskNotifPrompt: "Set phone or OS notifications for reminders",
     taskNotifBtn: "Enable",
+    taskNotifBtnDisable: "Disable",
+    taskNotifOn: "Reminder notifications are on",
+    taskNotifOff: "Reminder notifications are off",
+    taskNotifBlocked: "Notifications are blocked in your browser settings",
 
     // News & Gossip
     latestBtn: "Sections",

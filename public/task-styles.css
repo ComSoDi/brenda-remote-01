@@ -120,6 +120,14 @@
 }
 .task-notif-enable-btn:hover { background: #1d4ed8; }
 
+/* "Disable" state — notifications currently on, click to turn them off */
+.task-notif-enable-btn--disable          { background: #dc2626; }
+.task-notif-enable-btn--disable:hover    { background: #b91c1c; }
+
+/* permission blocked at the browser level — nothing the button can do */
+.task-notif-enable-btn:disabled          { background: #93c5fd; cursor: not-allowed; }
+.task-notif-enable-btn:disabled:hover    { background: #93c5fd; }
+
 /* Persistent note */
 .task-persistent-note {
   font-size: 12px;

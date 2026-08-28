@@ -48,23 +48,23 @@
     <!-- Fixed header inside container -->
     <div class="header">
       <div class="header-left">
-        <img src="images/brenda-avatar.png" alt="Brenda" class="avatar" id="brendaAvatar" />
+        <img src="images/brenda-avatar.png" alt="Brenda" class="avatar" id="brendaAvatar" data-ga-name="about_brenda_avatar_btn" />
         <div class="header-title-block">
           <div class="header-top">
-            <h1>IA Brenda</h1>
+            <h1 data-ga-name="about_brenda_title_btn">IA Brenda</h1>
             <div class="header-top-buttons">
-              <button id="accountBtn" class="account-btn" type="button"></button>
-              <button id="myInfoBtn" class="my-info-btn" type="button"></button>
+              <button id="accountBtn" class="account-btn" type="button" data-ga-name="account_open_btn"></button>
+              <button id="myInfoBtn" class="my-info-btn" type="button" data-ga-name="my_info_open_btn"></button>
             </div>
-            <button id="helpBtn" class="help-btn" type="button" aria-label="Help">?</button>
+            <button id="helpBtn" class="help-btn" type="button" aria-label="Help" data-ga-name="help_open_btn">?</button>
           </div>
         </div>
         <div class="header-actions">
-          <button id="subjectsBtn" class="subjects-btn" type="button"></button>
-          <button id="taskBtn" class="task-btn" type="button"></button>
-          <button id="latestBtn" class="latest-btn" type="button"></button>
-          <button id="headlinesBtn" class="headlines-btn" type="button"></button>
-          <button id="chatBtn" class="chat-rds-btn" type="button"></button>
+          <button id="subjectsBtn" class="subjects-btn" type="button" data-ga-name="subjects_open_btn"></button>
+          <button id="taskBtn" class="task-btn" type="button" data-ga-name="task_open_btn"></button>
+          <button id="newsSectionsBtn" class="latest-btn" type="button" data-ga-name="news_sections_open_btn"></button>
+          <button id="headlinesBtn" class="headlines-btn" type="button" data-ga-name="headlines_open_btn"></button>
+          <button id="changeSubjectBtn" class="chat-rds-btn" type="button" data-ga-name="change_subject_btn"></button>
         </div>
       </div>
     </div>
@@ -119,9 +119,9 @@
         </div>
       </div>
 
-      <div id="callOverlay" class="call-overlay hidden" aria-hidden="true">
+      <div id="callOverlay" class="call-overlay hidden" aria-hidden="true" data-ga-name="call_popup">
         <div class="call-card">
-          <button id="callMinBtn" class="call-min-btn" type="button" aria-label="Minimise">
+          <button id="callMinBtn" class="call-min-btn" type="button" aria-label="Minimise" data-ga-name="call_min_btn">
             <!-- square + hyphen -->
             <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
               <path d="M7 7h10v10H7z" fill="none" stroke="currentColor" stroke-width="2" />
@@ -134,7 +134,7 @@
             <div class="call-title" id="callTitle"></div>
           </div>
 
-          <button id="callHangBtn" class="call-hang-btn" type="button" aria-label="Hang up">
+          <button id="callHangBtn" class="call-hang-btn" type="button" aria-label="Hang up" data-ga-name="call_hangup_btn">
             <div class="call-hang-progress" aria-hidden="true"></div>
             <img src="images/hangup-icon-100x100.png" alt="" class="call-hang-icon" draggable="false" />
           </button>
@@ -145,8 +145,8 @@
       </div>
 
       <!-- MINIMISED CALL TILE (new) -->
-      <div id="callTile" class="call-tile hidden" aria-hidden="true">
-        <button id="callExpandBtn" class="call-expand-btn" type="button" aria-label="Expand">
+      <div id="callTile" class="call-tile hidden" aria-hidden="true" data-ga-name="call_tile_popup">
+        <button id="callExpandBtn" class="call-expand-btn" type="button" aria-label="Expand" data-ga-name="call_expand_btn">
           <!-- hyphen icon (square + short line) -->
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
             <path d="M7 7h10v10H7z" fill="none" stroke="currentColor" stroke-width="2" />
@@ -164,7 +164,7 @@
         <div id="textInputWrap" class="text-input-wrap hidden">
           <div class="chat-inputbar">
             <textarea id="chatInput" class="chat-input" rows="1" placeholder="Type a message..."></textarea>
-            <button id="chatSendBtn" class="chat-send" type="button">Send</button>
+            <button id="chatSendBtn" class="chat-send" type="button" data-ga-name="chat_send_btn">Send</button>
           </div>
         </div>
 
@@ -178,8 +178,8 @@
 
         <!--  <button id="toggleBtnTalk" class="btn-toggle-talk btn-connect-talk" type="button"></button> -->
         <!--  <button id="toggleBtnText" class="btn-toggle-text btn-connect-text" type="button"></button> -->
-        <button id="toggleBtnTalk" class="btn-toggle-talk btn-connect-talk" type="button">Talk</button>
-        <button id="toggleBtnText" class="btn-toggle-text btn-connect-text" type="button">Text</button>
+        <button id="toggleBtnTalk" class="btn-toggle-talk btn-connect-talk" type="button" data-ga-name="talk_mode_btn">Talk</button>
+        <button id="toggleBtnText" class="btn-toggle-text btn-connect-text" type="button" data-ga-name="text_mode_btn">Text</button>
 
       </div>
 
@@ -194,9 +194,9 @@
     </div>
 
     <!-- AUTH OVERLAY (Sign in / Sign up) -->
-    <div id="authOverlay" class="auth-overlay hidden" aria-hidden="true">
+    <div id="authOverlay" class="auth-overlay hidden" aria-hidden="true" data-ga-name="account_popup">
       <div class="auth-card">
-        <button id="authCloseBtn" class="popup-close-btn auth-close hidden" type="button" aria-label="Close">×</button>
+        <button id="authCloseBtn" class="popup-close-btn auth-close hidden" type="button" aria-label="Close" data-ga-name="account_close_btn">×</button>
 
         <div class="auth-top">
           <img src="images/brenda-avatar.png" alt="Brenda" class="auth-avatar" />
@@ -206,7 +206,7 @@
 
         <div class="auth-form">
           <label class="auth-label" for="authNick" id="authNickLabel"></label>
-          <input id="authNick" class="auth-input" type="text" inputmode="text" autocomplete="username" />
+          <input id="authNick" class="auth-input" type="text" inputmode="text" autocomplete="username" autocapitalize="words" />
           <div class="auth-help" id="authNickHelp"></div>
 
           <label class="auth-label" for="authPin" id="authPinLabel"></label>
@@ -215,22 +215,22 @@
           <div class="auth-help" id="authPinHelp01"></div>
           <div class="auth-help" id="authPinHelp02"></div>
 
-          <button id="authContinueBtn" class="auth-continue" type="button"></button>
+          <button id="authContinueBtn" class="auth-continue" type="button" data-ga-name="account_continue_btn"></button>
 
           <div class="auth-error" id="authError" role="alert" aria-live="polite"></div>
 
-          <button id="authAnonBtn" class="auth-anon-link" type="button"></button>
+          <button id="authAnonBtn" class="auth-anon-link" type="button" data-ga-name="account_anon_btn"></button>
 
-          <a class="auth-privacy" id="authPrivacyLink" href="privacy.html" target="_blank" rel="noopener"></a>
+          <a class="auth-privacy" id="authPrivacyLink" href="privacy.html" target="_blank" rel="noopener" data-ga-name="account_popup__privacy_link_btn"></a>
 
           <!-- Only shown when logged in as a named account (auth overlay reopened via the Account button) -->
-          <button id="deleteAccountLinkBtn" class="delete-account-link hidden" type="button"></button>
+          <button id="deleteAccountLinkBtn" class="delete-account-link hidden" type="button" data-ga-name="account_delete_link_btn"></button>
         </div>
       </div>
     </div>
 
     <!-- CONSENT OVERLAY (AI disclosure, shown once after account creation/login until accepted) -->
-    <div id="consentOverlay" class="brenda-overlay consent-overlay hidden" aria-hidden="true">
+    <div id="consentOverlay" class="brenda-overlay consent-overlay hidden" aria-hidden="true" data-ga-name="consent_popup">
       <div class="brenda-card consent-card" role="dialog" aria-modal="true">
         <div class="brenda-top">
           <img src="images/brenda-avatar.png" alt="Brenda" class="brenda-avatar" />
@@ -243,14 +243,14 @@
         <div class="consent-error" id="consentError" role="alert" aria-live="polite"></div>
 
         <div class="consent-actions">
-          <button id="consentDeclineBtn" class="consent-decline-btn" type="button"></button>
-          <button id="consentAgreeBtn" class="consent-agree-btn" type="button"></button>
+          <button id="consentDeclineBtn" class="consent-decline-btn" type="button" data-ga-name="consent_decline_btn"></button>
+          <button id="consentAgreeBtn" class="consent-agree-btn" type="button" data-ga-name="consent_agree_btn"></button>
         </div>
       </div>
     </div>
 
     <!-- TALK DISCLAIMER OVERLAY (shown once, first time TALK is tapped on an account) -->
-    <div id="talkOverlay" class="brenda-overlay talk-overlay hidden" aria-hidden="true">
+    <div id="talkOverlay" class="brenda-overlay talk-overlay hidden" aria-hidden="true" data-ga-name="talk_disclaimer_popup">
       <div class="brenda-card consent-card" role="dialog" aria-modal="true">
         <div class="brenda-top">
           <img src="images/brenda-avatar.png" alt="Brenda" class="brenda-avatar" />
@@ -263,15 +263,15 @@
         <div class="consent-error" id="talkError" role="alert" aria-live="polite"></div>
 
         <div class="consent-actions">
-          <button id="talkGotItBtn" class="talk-gotit-btn" type="button"></button>
+          <button id="talkGotItBtn" class="talk-gotit-btn" type="button" data-ga-name="talk_disclaimer_gotit_btn"></button>
         </div>
       </div>
     </div>
 
     <!-- PRIVACY POLICY OVERLAY (on-demand, viewable anytime, not gated) -->
-    <div id="privacyOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true">
+    <div id="privacyOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true" data-ga-name="privacy_popup">
       <div class="brenda-card consent-card privacy-card" role="dialog" aria-modal="true">
-        <button id="privacyCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close">×</button>
+        <button id="privacyCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close" data-ga-name="privacy_close_btn">×</button>
 
         <div class="brenda-top">
           <h1 id="privacyTitle" class="brenda-title"></h1>
@@ -280,15 +280,15 @@
         <div id="privacyContent" class="brenda-content"></div>
 
         <div class="privacy-actions">
-          <button id="privacyUnderstoodBtn" class="privacy-understood-btn" type="button"></button>
+          <button id="privacyUnderstoodBtn" class="privacy-understood-btn" type="button" data-ga-name="privacy_understood_btn"></button>
         </div>
       </div>
     </div>
 
     <!-- ACCOUNT DELETION OVERLAY (from the Account/auth overlay, named accounts only) -->
-    <div id="deleteAccountOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true">
+    <div id="deleteAccountOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true" data-ga-name="account_popup__delete_confirm_popup">
       <div class="brenda-card consent-card" role="dialog" aria-modal="true">
-        <button id="deleteAccountCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close">×</button>
+        <button id="deleteAccountCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close" data-ga-name="account_popup__delete_confirm_close_btn">×</button>
 
         <div class="brenda-top">
           <h1 id="deleteAccountTitle" class="brenda-title"></h1>
@@ -300,15 +300,15 @@
         <div class="consent-error" id="deleteAccountError" role="alert" aria-live="polite"></div>
 
         <div class="privacy-actions">
-          <button id="deleteAccountConfirmBtn" class="delete-account-confirm-btn" type="button"></button>
+          <button id="deleteAccountConfirmBtn" class="delete-account-confirm-btn" type="button" data-ga-name="account_popup__delete_confirm_continue_btn"></button>
         </div>
       </div>
     </div>
 
     <!-- ACCOUNT DELETION — FINAL CONFIRMATION (re-enter Nick + PIN) -->
-    <div id="deleteAccountFinalOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true">
+    <div id="deleteAccountFinalOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true" data-ga-name="account_popup__delete_final_popup">
       <div class="brenda-card consent-card" role="dialog" aria-modal="true">
-        <button id="deleteAccountFinalCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close">×</button>
+        <button id="deleteAccountFinalCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close" data-ga-name="account_popup__delete_final_close_btn">×</button>
 
         <div class="brenda-top">
           <h1 id="deleteAccountFinalTitle" class="brenda-title"></h1>
@@ -326,17 +326,17 @@
         <div class="consent-error" id="deleteAccountFinalError" role="alert" aria-live="polite"></div>
 
         <div class="privacy-actions">
-          <button id="deleteAccountFinalBtn" class="delete-account-confirm-btn" type="button"></button>
+          <button id="deleteAccountFinalBtn" class="delete-account-confirm-btn" type="button" data-ga-name="account_popup__delete_final_confirm_btn"></button>
         </div>
       </div>
     </div>
 
     <!-- SUBJECTS POPUP -->
-    <div id="subjectsOverlay" class="popup-overlay hidden" aria-hidden="true">
+    <div id="subjectsOverlay" class="popup-overlay hidden" aria-hidden="true" data-ga-name="subjects_popup">
       <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="subjectsTitle">
         <div class="popup-card-header">
           <h1 id="subjectsTitle"></h1>
-          <button id="subjectsCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+          <button id="subjectsCloseBtn" class="popup-close-btn" type="button" aria-label="Close" data-ga-name="subjects_close_btn">×</button>
         </div>
         <h2 id="subjectsSubtitle" class="popup-subtitle"></h2>
 
@@ -364,8 +364,8 @@
         </form>
 
         <div class="popup-actions">
-          <button id="subjectsCancelBtn" class="popup-btn-cancel" type="button"></button>
-          <button id="subjectsSaveBtn" class="popup-btn-save" type="button"></button>
+          <button id="subjectsCancelBtn" class="popup-btn-cancel" type="button" data-ga-name="subjects_cancel_btn"></button>
+          <button id="subjectsSaveBtn" class="popup-btn-save" type="button" data-ga-name="subjects_save_btn"></button>
         </div>
         <div id="subjectsStatus" class="popup-status" role="status" aria-live="polite"></div>
       </div>
@@ -381,10 +381,10 @@
     </div>
 
     <!-- I AM BRENDA OVERLAY -->
-    <div id="brendaOverlay" class="brenda-overlay hidden" aria-hidden="true">
+    <div id="brendaOverlay" class="brenda-overlay hidden" aria-hidden="true" data-ga-name="about_brenda_popup">
       <div class="brenda-card" role="dialog" aria-modal="true">
-        <button id="brendaCloseBtn" class="brenda-close-btn" type="button" aria-label="Close">×</button>
-        
+        <button id="brendaCloseBtn" class="brenda-close-btn" type="button" aria-label="Close" data-ga-name="about_brenda_close_top_btn">×</button>
+
         <div class="brenda-top">
           <img src="images/brenda-avatar.png" alt="Brenda" class="brenda-avatar" />
           <h1 id="brendaTitle" class="brenda-title"></h1>
@@ -393,16 +393,16 @@
 
         <div id="brendaContent" class="brenda-content"></div>
         
-        <button id="brendaBottomCloseBtn" class="brenda-bottom-close" type="button"></button>
+        <button id="brendaBottomCloseBtn" class="brenda-bottom-close" type="button" data-ga-name="about_brenda_close_bottom_btn"></button>
       </div>
     </div>
 
     <!-- MY INFO OVERLAY -->
-    <div id="myInfoOverlay" class="popup-overlay hidden" aria-hidden="true">
+    <div id="myInfoOverlay" class="popup-overlay hidden" aria-hidden="true" data-ga-name="my_info_popup">
       <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="myInfoTitle">
         <div class="popup-card-header">
           <h1 id="myInfoTitle"></h1>
-          <button id="myInfoCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+          <button id="myInfoCloseBtn" class="popup-close-btn" type="button" aria-label="Close" data-ga-name="my_info_close_btn">×</button>
         </div>
         <h2 id="myInfoSubtitle" class="popup-subtitle"></h2>
 
@@ -431,8 +431,8 @@
         </form>
 
         <div class="popup-actions">
-          <button id="myInfoCancelBtn" class="popup-btn-cancel" type="button"></button>
-          <button id="myInfoSaveBtn" class="popup-btn-save" type="button"></button>
+          <button id="myInfoCancelBtn" class="popup-btn-cancel" type="button" data-ga-name="my_info_cancel_btn"></button>
+          <button id="myInfoSaveBtn" class="popup-btn-save" type="button" data-ga-name="my_info_save_btn"></button>
         </div>
         <div id="myInfoStatus" class="popup-status" role="status" aria-live="polite"></div>
 
@@ -461,15 +461,15 @@
           </p>
 
           <div class="popup-actions">
-            <button id="usageCloseBtn" class="popup-btn-cancel" type="button"></button>
-            <button id="usageGetMoreTimeBtn" class="popup-btn-save" type="button"></button>
+            <button id="usageCloseBtn" class="popup-btn-cancel" type="button" data-ga-name="my_info_popup__usage_close_btn"></button>
+            <button id="usageGetMoreTimeBtn" class="popup-btn-save" type="button" data-ga-name="my_info_popup__usage_get_more_time_btn"></button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- PLAN SELECTION OVERLAY -->
-    <div id="planSelectionOverlay" class="popup-overlay hidden" aria-hidden="true">
+    <div id="planSelectionOverlay" class="popup-overlay hidden" aria-hidden="true" data-ga-name="plan_selection_popup">
       <div class="plan-selection-card" role="dialog" aria-modal="true" aria-labelledby="planSelectionHeader">
         <div class="plan-selection-scroll">
 
@@ -491,7 +491,7 @@
             <p id="planNoteBrendy" class="plan-notes-p"></p>
             <p id="planNoteRestrictions" class="plan-notes-p"></p>
             <p id="planNoteAccept" class="plan-notes-p"></p>
-            <p class="plan-notes-p"><a id="planNotePrivacy" class="plan-notes-link" href="privacy.html" target="_blank" rel="noopener"></a></p>
+            <p class="plan-notes-p"><a id="planNotePrivacy" class="plan-notes-link" href="privacy.html" target="_blank" rel="noopener" data-ga-name="plan_selection_popup__privacy_link_btn"></a></p>
           </div>
 
         </div>
@@ -499,31 +499,31 @@
     </div>
 
     <!-- TASK OVERLAY -->
-    <div id="taskOverlay" class="task-overlay hidden" aria-hidden="true">
+    <div id="taskOverlay" class="task-overlay hidden" aria-hidden="true" data-ga-name="task_popup">
       <div id="taskCard" class="task-card" role="dialog" aria-modal="true">
 
         <!-- ── DISCLAIMER PANEL ── -->
         <div id="taskDisclaimer" class="task-panel" style="display:none">
           <h2 id="taskDisclaimerTitle" class="task-panel-title"></h2>
           <p  id="taskDisclaimerText"  class="task-disclaimer-text"></p>
-          <button id="taskDisclaimerBtn" class="task-primary-btn" type="button"></button>
+          <button id="taskDisclaimerBtn" class="task-primary-btn" type="button" data-ga-name="task_popup__disclaimer_confirm_btn"></button>
         </div>
 
         <!-- ── MAIN LIST PANEL ── -->
         <div id="taskMain" class="task-panel" style="display:none">
           <div class="task-panel-header">
             <h2 id="taskMainTitle" class="task-panel-title"></h2>
-            <button id="taskCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+            <button id="taskCloseBtn" class="popup-close-btn" type="button" aria-label="Close" data-ga-name="task_popup__close_btn">×</button>
           </div>
           <p id="taskPersistentNote" class="task-persistent-note"></p>
           <div id="taskNotifPrompt" class="task-notif-prompt"         style="display:none">
             <span id="taskNotifPromptText" class="task-notif-text"></span>
-            <button id="taskNotifBtn" class="task-notif-enable-btn" type="button"></button>
+            <button id="taskNotifBtn" class="task-notif-enable-btn" type="button" data-ga-name="task_popup__notif_enable_btn"></button>
           </div>
           <div id="taskList" class="task-list"></div>
           <div class="task-main-actions">
-            <button id="taskAddBtn"          class="task-primary-btn"   type="button"></button>
-            <button id="taskViewScheduleBtn" class="task-secondary-btn" type="button"></button>
+            <button id="taskAddBtn"          class="task-primary-btn"   type="button" data-ga-name="task_popup__add_btn"></button>
+            <button id="taskViewScheduleBtn" class="task-secondary-btn" type="button" data-ga-name="task_popup__view_schedule_btn"></button>
           </div>
         </div>
 
@@ -531,7 +531,7 @@
         <div id="taskForm" class="task-panel task-form-panel" style="display:none">
           <div class="task-panel-header">
             <h2 id="taskFormTitle" class="task-panel-title"></h2>
-            <button id="taskFormCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+            <button id="taskFormCloseBtn" class="popup-close-btn" type="button" aria-label="Close" data-ga-name="task_popup__form_close_btn">×</button>
           </div>
 
           <!-- Correct / Record-change toggle (only when editing) -->
@@ -597,7 +597,7 @@
               <div id="taskTimesContainer" class="task-times-container">
                 <div class="task-time-row"><input type="time" class="task-time-input" required></div>
               </div>
-              <button id="taskAddTimeBtn" class="task-link-btn" type="button">+ Añadir hora</button>
+              <button id="taskAddTimeBtn" class="task-link-btn" type="button" data-ga-name="task_popup__form_add_time_btn">+ Añadir hora</button>
             </div>
 
             <label class="task-field">
@@ -643,9 +643,9 @@
           <div class="task-form-status" id="taskFormStatus" role="status" aria-live="polite"></div>
 
           <div class="task-form-actions">
-            <button id="taskFormCancelBtn"   class="task-secondary-btn" type="button"></button>
-            <button id="taskFormScheduleBtn" class="task-link-btn"      type="button"></button>
-            <button id="taskFormSaveBtn"     class="task-primary-btn"   type="button"></button>
+            <button id="taskFormCancelBtn"   class="task-secondary-btn" type="button" data-ga-name="task_popup__form_cancel_btn"></button>
+            <button id="taskFormScheduleBtn" class="task-link-btn"      type="button" data-ga-name="task_popup__form_show_schedule_btn"></button>
+            <button id="taskFormSaveBtn"     class="task-primary-btn"   type="button" data-ga-name="task_popup__form_save_btn"></button>
           </div>
         </div>
 
@@ -653,12 +653,12 @@
         <div id="taskSchedule" class="task-panel task-schedule-panel" style="display:none">
           <div class="task-panel-header">
             <h2 id="taskScheduleTitle" class="task-panel-title"></h2>
-            <button id="taskScheduleCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+            <button id="taskScheduleCloseBtn" class="popup-close-btn" type="button" aria-label="Close" data-ga-name="task_popup__schedule_close_btn">×</button>
           </div>
           <div id="taskScheduleContent" class="task-schedule-content"></div>
           <div class="task-form-actions">
-            <button id="taskScheduleBackBtn"  class="task-secondary-btn" type="button"></button>
-            <button id="taskSchedulePrintBtn" class="task-primary-btn"   type="button"></button>
+            <button id="taskScheduleBackBtn"  class="task-secondary-btn" type="button" data-ga-name="task_popup__schedule_back_btn"></button>
+            <button id="taskSchedulePrintBtn" class="task-primary-btn"   type="button" data-ga-name="task_popup__schedule_print_btn"></button>
           </div>
         </div>
 
@@ -666,11 +666,11 @@
     </div>
 
     <!-- LATEST (MY NEWS CATEGORIES) OVERLAY -->
-    <div id="latestOverlay" class="popup-overlay hidden" aria-hidden="true">
+    <div id="newsSectionsOverlay" class="popup-overlay hidden" aria-hidden="true" data-ga-name="news_sections_popup">
       <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="latestTitle">
         <div class="popup-card-header">
           <h1 id="latestTitle"></h1>
-          <button id="latestCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+          <button id="newsSectionsCloseBtn" class="popup-close-btn" type="button" aria-label="Close" data-ga-name="news_sections_close_btn">×</button>
         </div>
         <h2 id="latestSubtitle" class="popup-subtitle"></h2>
 
@@ -698,21 +698,21 @@
         </div>
 
         <div class="popup-actions">
-          <button id="latestCancelBtn" class="popup-btn-cancel" type="button"></button>
-          <button id="latestSaveBtn" class="popup-btn-save" type="button"></button>
+          <button id="newsSectionsCancelBtn" class="popup-btn-cancel" type="button" data-ga-name="news_sections_cancel_btn"></button>
+          <button id="newsSectionsSaveBtn" class="popup-btn-save" type="button" data-ga-name="news_sections_save_btn"></button>
         </div>
         <div id="latestStatus" class="popup-status" role="status" aria-live="polite"></div>
       </div>
     </div>
 
     <!-- HEADLINES OVERLAY -->
-    <div id="headlinesOverlay" class="popup-overlay hidden" aria-hidden="true">
+    <div id="headlinesOverlay" class="popup-overlay hidden" aria-hidden="true" data-ga-name="headlines_popup">
       <div class="headlines-card" role="dialog" aria-modal="true" aria-labelledby="headlinesTitle">
 
         <!-- Header -->
         <div class="popup-card-header">
           <h1 id="headlinesTitle"></h1>
-          <button id="headlinesCloseBtn" class="popup-close-btn" type="button" aria-label="Close">×</button>
+          <button id="headlinesCloseBtn" class="popup-close-btn" type="button" aria-label="Close" data-ga-name="headlines_close_btn">×</button>
         </div>
 
         <!-- Heat tier legend -->
@@ -746,7 +746,7 @@
         <div id="headlinesList" class="headlines-list"></div>
 
         <!-- Pinned refresh button -->
-        <button id="headlinesRefreshBtn" class="headlines-refresh-btn" type="button"></button>
+        <button id="headlinesRefreshBtn" class="headlines-refresh-btn" type="button" data-ga-name="headlines_refresh_btn"></button>
 
       </div>
     </div>
@@ -757,62 +757,62 @@
   <div id="sideNavWrapper" class="sidenav-wrapper">
 
     <!-- SIDENAV HOME -->
-    <div id="sideNavHome" class="sidenav-panel sidenav-home" aria-hidden="true">
+    <div id="sideNavHome" class="sidenav-panel sidenav-home" aria-hidden="true" data-ga-name="sidenav_home_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV TOMAS (detail) -->
-    <div id="sideNavTomas" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavTomas" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_tomas_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV MI INFO (detail) -->
-    <div id="sideNavMiInfo" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavMiInfo" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_mi_info_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV MI INFO 02 (detail) -->
-    <div id="sideNavMiInfo02" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavMiInfo02" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_mi_info2_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV ANON (detail) -->
-    <div id="sideNavAnon" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavAnon" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_anon_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV CUENTA (detail) -->
-    <div id="sideNavCuenta" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavCuenta" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_cuenta_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV WRITE / ESCRIBIR (detail) -->
-    <div id="sideNavWrite" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavWrite" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_write_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV TALK / HABLAR (detail) -->
-    <div id="sideNavTalk" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavTalk" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_talk_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV NEWS / SECCIONES (detail) -->
-    <div id="sideNavNews" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavNews" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_news_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV LATEST / TITULARES (detail) -->
-    <div id="sideNavLatest" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavLatest" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_latest_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV MIS TEMAS (detail) -->
-    <div id="sideNavMisTemas" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavMisTemas" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_mis_temas_popup">
       <div class="sidenav-inner"></div>
     </div>
 
     <!-- SIDENAV INICIA TU (detail) -->
-    <div id="sideNavIniciaTu" class="sidenav-panel sidenav-detail" aria-hidden="true">
+    <div id="sideNavIniciaTu" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_inicia_tu_popup">
       <div class="sidenav-inner"></div>
     </div>
 

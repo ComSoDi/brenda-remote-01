@@ -15,6 +15,22 @@ const SIDENAV_HOME_PILLS = [
   { pillKey: "sideNavPillWrite",    pillClass: "snp-dark-blue",  labelKey: "sideNavLabelWrite",    nav: "write" },
 ];
 
+// GA4 name suffix per nav target — mirrors the sidenav_{name}_popup ids below,
+// not a literal snake_case of the nav key (miInfo02 -> mi_info2, not mi_info02).
+const SIDENAV_NAV_GA_SUFFIX = {
+  miInfo: "mi_info",
+  miInfo02: "mi_info2",
+  tomas: "tomas",
+  iniciaTu: "inicia_tu",
+  misTemas: "mis_temas",
+  latest: "latest",
+  news: "news",
+  talk: "talk",
+  write: "write",
+  anon: "anon",
+  cuenta: "cuenta",
+};
+
 const SIDENAV_DETAIL_CONFIGS = {
   tomas: {
     pillKey:  "sideNavPillTomas",
@@ -269,7 +285,7 @@ export class SideNavManager {
 
     inner.innerHTML = `
       <div class="sidenav-close-row">
-        <button class="sidenav-close-btn js-snav-home-close">
+        <button class="sidenav-close-btn js-snav-home-close" data-ga-name="sidenav_home_close_btn">
           <span class="sidenav-close-label">${this._snEsc(t(v, "sideNavCloseLabel"))}</span>
           <span class="sidenav-close-x">×</span>
         </button>
@@ -286,7 +302,10 @@ export class SideNavManager {
 
     inner.querySelectorAll(".sidenav-pill-row--nav").forEach((row) => {
       const nav = row.dataset.nav;
-      if (nav) row.addEventListener("click", () => this.openSideNavDetail(nav));
+      if (nav) {
+        row.dataset.gaName = `sidenav_home_popup__${SIDENAV_NAV_GA_SUFFIX[nav] || nav}_pill_btn`;
+        row.addEventListener("click", () => this.openSideNavDetail(nav));
+      }
     });
   }
 
@@ -330,6 +349,8 @@ export class SideNavManager {
       </div>
       <div class="sidenav-body">${blocksHtml}</div>`;
 
+    inner.querySelector(".js-snav-detail-close")
+      ?.setAttribute("data-ga-name", `sidenav_${SIDENAV_NAV_GA_SUFFIX[name] || name}_close_btn`);
     inner.querySelector(".js-snav-detail-close")
       ?.addEventListener("click", () => this.closeSideNavDetail(name));
   }

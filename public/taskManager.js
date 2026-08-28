@@ -7,6 +7,9 @@ import { t } from "./i18n/index.js";
 const DAYS_KEYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const DAYS_VALUES = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
 
+// localStorage flag: user turned off spontaneous task-reminder OS notifications
+const NOTIF_SUPPRESSED_KEY = "brenda:taskNotifSuppressed";
+
 export class TaskManager {
   constructor(app) {
     this.app = app;
@@ -156,8 +159,7 @@ export class TaskManager {
 
     this._els.toggleCorrectLbl.textContent = s("taskToggleCorrect");
     this._els.toggleChangeLbl.textContent  = s("taskToggleChange");
-    if (this._els.notifPromptText) this._els.notifPromptText.textContent = s("taskNotifPrompt");
-    if (this._els.notifBtn)        this._els.notifBtn.textContent        = s("taskNotifBtn");
+    this._renderNotifPrompt(); // sets notif row text + button label for current locale & state
     this._els.addTimeBtn.textContent       = s("taskAddTime");
     this._els.formCancelBtn.textContent    = s("taskCancelBtn");
     this._els.formScheduleBtn.textContent  = s("taskShowScheduleBtn");
@@ -201,21 +203,93 @@ export class TaskManager {
     return typeof window !== "undefined" && "Notification" in window;
   }
 
+  // User-set "don't send spontaneous task reminder notifications" flag.
+  // Persisted so it survives reloads; only affects _showOsNotification below.
+  _notifSuppressed() {
+    try { return localStorage.getItem(NOTIF_SUPPRESSED_KEY) === "1"; }
+    catch { return false; }
+  }
+  _setNotifSuppressed(v) {
+    try {
+      if (v) localStorage.setItem(NOTIF_SUPPRESSED_KEY, "1");
+      else   localStorage.removeItem(NOTIF_SUPPRESSED_KEY);
+    } catch { /* non-fatal */ }
+  }
+
+  // The notif row is a 3-state toggle:
+  //   permission "default"                 → "Enable"  (blue)  → asks the browser
+  //   permission "granted" & not suppressed → "Disable" (red)  → suppresses
+  //   permission "granted" & suppressed     → "Enable"  (blue)  → un-suppresses
+  //   permission "denied"                  → "Enable"  disabled + "blocked" hint
   _renderNotifPrompt() {
     const el = this._els.notifPrompt;
     if (!el) return;
-    const show = this._notifSupported() && Notification.permission === "default";
-    el.style.display = show ? "flex" : "none";
+
+    if (!this._notifSupported()) { el.style.display = "none"; return; }
+    el.style.display = "flex";
+
+    const perm       = Notification.permission;
+    const active     = perm === "granted" && !this._notifSuppressed();
+    const btn        = this._els.notifBtn;
+    const txt        = this._els.notifPromptText;
+
+    if (btn) {
+      btn.disabled = perm === "denied";
+      btn.classList.toggle("task-notif-enable-btn--disable", active);
+      btn.textContent = this._t(active ? "taskNotifBtnDisable" : "taskNotifBtn");
+      // Distinct GA label per state — analytics.js reads dataset.gaName at click time.
+      btn.dataset.gaName = active ? "task_popup__notif_disable_btn" : "task_popup__notif_enable_btn";
+    }
+    if (txt) {
+      txt.textContent = this._t(
+        perm === "denied" ? "taskNotifBlocked"
+        : active          ? "taskNotifOn"
+        :                   "taskNotifPrompt"
+      );
+    }
   }
 
-  async _requestNotifPermission() {
+  async _onNotifBtnClick() {
     if (!this._notifSupported()) return;
-    await Notification.requestPermission();
-    this._renderNotifPrompt();
+    const perm = Notification.permission;
+
+    if (perm === "denied") return;            // button is disabled in this state
+
+    if (perm === "granted") {                 // toggle suppression
+      const suppressed = !this._notifSuppressed();
+      this._setNotifSuppressed(suppressed);
+      this._renderNotifPrompt();
+      this._fireNotifToggleConfirmation(!suppressed);
+      return;
+    }
+
+    await Notification.requestPermission();   // perm === "default" → ask the browser
+    if (Notification.permission === "granted") {
+      this._setNotifSuppressed(false);
+      this._renderNotifPrompt();
+      this._fireNotifToggleConfirmation(true);
+    } else {
+      this._renderNotifPrompt();
+    }
+  }
+
+  // Confirmation notification fired on every user toggle (on AND off). Direct
+  // new Notification() so it bypasses the _notifSuppressed() gate — this is an
+  // explicit user action, not a spontaneous reminder. No `tag`: a repeated tag
+  // makes the browser replace the tray entry silently, so later toggles would
+  // never re-alert.
+  _fireNotifToggleConfirmation(active) {
+    if (!this._notifSupported() || Notification.permission !== "granted") return;
+    try {
+      new Notification(this._t(active ? "taskNotifOn" : "taskNotifOff"), {
+        icon: "/images/brenda-avatar.png",
+      });
+    } catch { /* non-fatal */ }
   }
 
   _showOsNotification(reminder, msg) {
     if (!this._notifSupported() || Notification.permission !== "granted") return;
+    if (this._notifSuppressed()) return;
     try {
       new Notification(reminder.taskName || this._t("taskNotifTitle"), {
         body: msg,
@@ -262,12 +336,16 @@ export class TaskManager {
       const editBtn = document.createElement("button");
       editBtn.className = "task-item-btn task-item-edit";
       editBtn.textContent = this._t("taskEditBtn");
+      editBtn.dataset.gaName = "task_popup__item_edit_btn";
+      editBtn.dataset.gaItemId = med.id;
       editBtn.addEventListener("click", () => this._openForm(med));
       actions.appendChild(editBtn);
 
       const stopBtn = document.createElement("button");
       stopBtn.className = "task-item-btn task-item-stop";
       stopBtn.textContent = this._t("taskStopBtn");
+      stopBtn.dataset.gaName = "task_popup__item_stop_btn";
+      stopBtn.dataset.gaItemId = med.id;
       stopBtn.addEventListener("click", () => this._stopMed(med));
       actions.appendChild(stopBtn);
 
@@ -375,6 +453,7 @@ export class TaskManager {
       rm.type = "button";
       rm.className = "task-time-remove";
       rm.textContent = "×";
+      rm.dataset.gaName = "task_popup__form_remove_time_btn";
       rm.addEventListener("click", () => wrap.remove());
       wrap.appendChild(rm);
     }
@@ -583,7 +662,7 @@ ${content}
     this._els.closeBtn?.addEventListener("click", () => this.close());
     this._els.addBtn?.addEventListener("click", () => this._openForm(null));
     this._els.viewScheduleBtn?.addEventListener("click", () => this._openSchedule());
-    this._els.notifBtn?.addEventListener("click", () => this._requestNotifPermission());
+    this._els.notifBtn?.addEventListener("click", () => this._onNotifBtnClick());
 
     // Form
     this._els.toggleInput?.addEventListener("change", () => {

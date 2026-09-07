@@ -28,7 +28,10 @@ export default async function handler(req, res) {
 
   try {
     const db = await getDb();
-    const sub = await switchPlan(db, s.userId, planId);
+    const sub = await switchPlan(db, s.userId, planId, {
+      localeVariant: req.body?.localeVariant,
+      username: s.displayName || s.username,
+    });
     return json(res, 200, {
       planId: sub.planId,
       planDisplayName: sub.planDisplayName,

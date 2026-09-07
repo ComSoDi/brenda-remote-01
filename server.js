@@ -43,6 +43,7 @@ import googleCallbackHandler from "./api/auth/google-callback.js";
 import dashUsersHandler      from "./api/dashboard/users.js";
 import dashVoiceHandler      from "./api/dashboard/voice-events.js";
 import dashChatHandler       from "./api/dashboard/chat-events.js";
+import ledgerEntriesHandler  from "./api/ledger/entries.js";
 import rdsStateHandler       from "./api/rds/state.js";
 import rdsInterestsHandler   from "./api/rds/interests.js";
 import rdsTopicStarterHandler from "./api/rds/topic-starter.js";
@@ -51,7 +52,7 @@ import { getSession } from "./lib/auth.js";
 import { requestContext } from "./lib/requestContext.js";
 import { getDb } from "./lib/mongo.js";
 import { recordVoiceUsage } from "./lib/usage.js";
-import { resolvePlanForUsage, getOrCreateSubscription, getUsageSinceDate, computeStatus } from "./lib/subscriptions.js";
+import { resolvePlanForUsage, getEffectiveUsage } from "./lib/subscriptions.js";
 import { PLAN_ANONYMOUS } from "./lib/plans.js";
 import { getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem } from "./lib/rdsService.js";
 
@@ -167,6 +168,9 @@ app.get("/api/auth/google-callback", (req, res) => googleCallbackHandler(req, re
 app.get("/api/dashboard/users",       (req, res) => dashUsersHandler(req, res));
 app.get("/api/dashboard/voice-events",(req, res) => dashVoiceHandler(req, res));
 app.get("/api/dashboard/chat-events", (req, res) => dashChatHandler(req, res));
+
+// Admin "Ledger" report — reuses the dashboard session (requireDashboardSession).
+app.get("/api/ledger/entries",        (req, res) => ledgerEntriesHandler(req, res));
 
 app.get("/api/rds/state",          (req, res) => rdsStateHandler(req, res));
 app.post("/api/rds/state",         (req, res) => rdsStateHandler(req, res));
@@ -400,9 +404,9 @@ server.on("upgrade", async (req, socket, head) => {
           .catch(e => { console.error(`[voice-proxy] plan resolution failed for userId=${userId}:`, e.message); return null; }),
         // Fail-open on error — a transient DB hiccup shouldn't lock out a
         // legitimate user, matching the fallback philosophy of the lookups above.
-        getOrCreateSubscription(db, userId)
-          .then((sub) => getUsageSinceDate(db, userId, sub.periodStartDate)
-            .then((u) => computeStatus(u.voiceTokensUsed, sub.voiceQuota)))
+        // Effective voice status = plan quota + non-expiring top-up balance.
+        getEffectiveUsage(db, userId)
+          .then((eu) => eu.voice.status)
           .catch(e => { console.error(`[voice-proxy] quota check failed for userId=${userId}:`, e.message); return "active"; }),
       ]);
       if (!gender) gender = userDoc?.preferences?.gender || null;

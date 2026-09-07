@@ -1,7 +1,7 @@
 // api/user/topup.js
 import { getDb } from "../../lib/mongo.js";
 import { requireSession } from "../../lib/auth.js";
-import { addTopUp } from "../../lib/subscriptions.js";
+import { addTopUp, getEffectiveUsage } from "../../lib/subscriptions.js";
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -22,12 +22,24 @@ export default async function handler(req, res) {
 
   try {
     const db = await getDb();
-    const sub = await addTopUp(db, s.userId);
+    await addTopUp(db, s.userId, {
+      localeVariant: req.body?.localeVariant,
+      username: s.displayName || s.username,
+    });
+    // Report the fresh effective picture so the client can update the bars
+    // without a second round-trip.
+    const eu = await getEffectiveUsage(db, s.userId);
     return json(res, 200, {
-      planId: sub.planId,
-      planDisplayName: sub.planDisplayName,
-      voiceQuota: sub.voiceQuota,
-      chatQuota: sub.chatQuota,
+      planId: eu.planId,
+      planDisplayName: eu.planDisplayName,
+      voiceQuota: eu.voice.ceiling,
+      chatQuota: eu.chat.ceiling,
+      voicePlanQuota: eu.voice.planQuota,
+      chatPlanQuota: eu.chat.planQuota,
+      voiceTopUpRemaining: eu.voice.topUpRemaining,
+      chatTopUpRemaining: eu.chat.topUpRemaining,
+      voiceTotalRemaining: eu.voice.totalRemaining,
+      chatTotalRemaining: eu.chat.totalRemaining,
     });
   } catch (e) {
     return json(res, 500, { error: e?.message || String(e) });

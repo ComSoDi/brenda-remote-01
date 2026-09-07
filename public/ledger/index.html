@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ledger</title>
+  <link rel="stylesheet" href="/dashboard/dashboard.css" />
+  <link rel="stylesheet" href="/ledger/ledger.css" />
+</head>
+<body>
+
+  <div class="ledger-head">
+    <h1 class="page-title">Ledger</h1>
+    <nav class="ledger-nav">
+      <a href="/dashboard/">&larr; Voice &amp; Chat Events</a>
+    </nav>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label for="filter-user">user:</label>
+      <select id="filter-user"><option value="">ALL</option></select>
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-plan">plan:</label>
+      <select id="filter-plan"><option value="">ALL</option></select>
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-from">From:</label>
+      <input type="date" id="filter-from" />
+    </div>
+
+    <div class="filter-group">
+      <label for="filter-to">To:</label>
+      <input type="date" id="filter-to" />
+    </div>
+
+    <button id="btn-refresh" type="button">Refresh</button>
+    <button id="btn-csv" type="button">Export CSV</button>
+  </div>
+
+  <div id="status-msg"></div>
+
+  <section class="ledger-tiles" id="ledger-tiles"></section>
+
+  <div class="table-wrap">
+    <table class="dashboard-table ledger-table">
+      <thead>
+        <tr class="row-groups">
+          <th colspan="4">Transaction</th>
+          <th>&nbsp;</th>
+          <th colspan="2" class="grp-credit">Credited</th>
+          <th colspan="2" class="grp-debit">Debited</th>
+          <th colspan="4" class="grp-bal">Balance &mdash; sub / top-up</th>
+        </tr>
+        <tr class="row-cols">
+          <th class="col-l">User</th>
+          <th class="col-l">Date / time (UTC)</th>
+          <th class="col-l">Type</th>
+          <th class="col-l">Plan</th>
+          <th>Paid</th>
+          <th>Voice</th>
+          <th>Text</th>
+          <th>Voice</th>
+          <th>Text</th>
+          <th>Voice sub</th>
+          <th>Voice top-up</th>
+          <th>Text sub</th>
+          <th>Text top-up</th>
+        </tr>
+      </thead>
+      <tbody id="ledger-tbody"></tbody>
+      <tfoot id="ledger-tfoot"></tfoot>
+    </table>
+  </div>
+
+  <p class="ledger-foot-note">
+    Subscription Brendys reset at each monthly grant; top-up Brendys are cumulative.
+    Consumption drains the subscription bucket first, then the top-up bucket
+    (negative = ran past both). &ldquo;Spent&rdquo; rows are one-per-user-per-day
+    rollups of raw usage events.
+  </p>
+
+  <script src="/ledger/ledger.js"></script>
+</body>
+</html>

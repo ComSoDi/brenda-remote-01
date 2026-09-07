@@ -62,6 +62,10 @@ api/                        Handler modules (export default async function handl
   dashboard/
     users.js, voice-events.js, chat-events.js   Read-only admin dashboard data endpoints
                                                   (own HMAC session via lib/dashboard-auth.js)
+  ledger/
+    entries.js               Admin "Ledger" report data (billing transactions + daily usage
+                             rollups + running balances). Reuses the dashboard session
+                             (requireDashboardSession). Served page: public/ledger/
   chat.js                    Main chat endpoint (Gemini function calling, deterministic weather/time)
   greeting.js                Check-in / heartbeat for greeting logic + pending task_reminders
   history.js                 Fetch conversation history
@@ -237,8 +241,27 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
 | `subscriptions` | Per-user subscription state (plan, period, deferred downgrades, top-ups) |
 | `gemini_voice_usage_events` / `_summary` | Per-response voice usage events / rolling rollups |
 | `gemini_chat_usage_events` / `_summary` | Per-response chat usage events / rolling rollups, grouped by `chatSessionId` |
+| `ledger_entries` | Formal billing-transaction log for the admin Ledger report — one immutable doc per `grant` / `topup` / `downgrade_scheduled`, written synchronously by `lib/subscriptions.js` (mirrored in `voice-proxy/index.js` for rollover) + backfilled once via `npm run migrate:backfill-ledger`. Idempotent on `dedupeKey`. Consumption is NOT copied here — the report derives daily debit rows from `gemini_*_usage_events`. See `lib/ledger.js`. |
 
 > The `gemini_` prefix matches the active Gemini backend for both chat and voice.
+
+### Admin Ledger report (`lib/ledger.js`, `api/ledger/entries.js`, `public/ledger/`)
+- Password-gated by the **same** Google sign-in as the dashboard (`requireDashboardSession`,
+  `DASHBOARD_ALLOWED_EMAIL`). Page served at `/ledger/`, sibling of `/dashboard/` (a future
+  "Reports" landing page will parent both).
+- Filters: user (incl. All), plan (incl. All), From / To dates. Rows = billing entries merged
+  with one derived Voice + one Text debit row per user per UTC day. Per-(user,plan) and per-user
+  subtotals + grand total; client-side CSV export.
+- **Balance model**: subscription Brendys reset to the new grant at each monthly rollover;
+  top-up Brendys are cumulative (never reset). Consumption drains the subscription bucket first,
+  then the top-up bucket; the top-up bucket never goes below zero — an overrun past **both** shows
+  as a **negative subscription balance** (cleared at the next monthly grant). Consumption from
+  before a user's first subscription period (pre-quota era) still shows in Debited / Spent but
+  leaves the balance buckets untouched (balance cells render as `–`). Balances are computed on
+  read over each user's full history up to `To`; the `From` date only narrows what's shown.
+- **"Amount paid"**: `firstMonthPriceCents` on a plan's first period, `fullPriceCents` on renewals,
+  0 for Free. Currency (`£`/`€`/`$`) captured on live entries from request locale; backfilled rows
+  default to `$` and the report falls back to the user's last-seen currency.
 
 ### Chat (`api/chat.js`)
 - Uses Gemini (`GEMINI_API_KEY` / `GEMINI_CHAT_MODEL`). Message history is converted via `toGeminiContents()`.
@@ -267,7 +290,22 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
 - "Monthly" = calendar month (UTC), not a rolling 30 days.
 - Downgrades are deferred to the next billing period (subscriber keeps paid-tier quota until
   period end); upgrades apply immediately.
-- Top-up adds free, uncapped "Brendys" (quota tokens) on top of the plan quota — `api/user/topup.js`.
+- **Two separate Brendy pools, consumed plan-quota-first then top-up:**
+  - `subscriptions.voiceQuota` / `chatQuota` = the **plan's** monthly allowance. Resets to the
+    plan base at each calendar-month rollover (unused = lost — no rollover).
+  - `subscriptions.topUpVoiceRemaining` / `topUpChatRemaining` = purchased top-up balance. Does
+    **NOT** expire — `getOrCreateSubscription()` carries it forward at rollover, minus only what
+    spilled past that period's plan quota ("lazy settle"). `addTopUp()` adds to this, never to
+    `voiceQuota`/`chatQuota`.
+  - `getEffectiveUsage(db, userId)` / `effectiveDimension()` are the single source of truth for
+    every quota gate (voice WS in `server.js`, chat in `api/chat.js`, voice-proxy) and
+    `api/user/usage.js`. A dimension is "exhausted" only when plan allowance **and** top-up
+    balance are both spent. `effectiveDimension().ceiling` (= plan + top-up-at-period-start) is
+    the stable denominator for the usage bar; `api/user/usage.js` returns it as `voiceQuota` for
+    back-compat plus `voicePlanQuota` / `voiceTopUpRemaining` / `voiceTotalRemaining` (and chat).
+  - Migration to split legacy inflated `voiceQuota` into the new fields:
+    `npm run migrate:topup-balance` (idempotent). Mirror any change to this logic by hand in
+    `voice-proxy/index.js` (see [[project_deployment]] — can't import `lib/`).
 - Quota is tracked internally as raw Gemini token counts ("Brendys"); never expose the word
   "tokens" in user-facing i18n strings.
 - **Pricing currency by locale**: `en-GB` → £, `es-ES` → €, `en-US`/`es-419`/rest-of-world → $.

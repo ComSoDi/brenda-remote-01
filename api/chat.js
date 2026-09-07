@@ -12,7 +12,7 @@ import { getDb } from "../lib/mongo.js";
 import { ObjectId } from "mongodb";
 import { randomUUID } from "crypto";
 import { recordChatUsage } from "../lib/usage.js";
-import { resolvePlanForUsage, getOrCreateSubscription, getUsageSinceDate, computeStatus } from "../lib/subscriptions.js";
+import { resolvePlanForUsage, getUsageSinceDate, computeStatus, getEffectiveUsage } from "../lib/subscriptions.js";
 import { ANONYMOUS_CHAT_QUOTA } from "../lib/plans.js";
 import {
   getRdsProfile, buildRdsSystemAddendum, detectRdsIntent, buildMemoryNarrative,
@@ -748,18 +748,17 @@ export default async function handler(req, res) {
     // recorded for it.
     // ────────────────────────────────────────────────────────────────────────
     if (db) {
-      let chatTokensUsed = 0;
-      let chatQuota = 0;
+      let chatExhausted = false;
       if (session.isAnonymous) {
-        chatQuota = ANONYMOUS_CHAT_QUOTA;
-        ({ chatTokensUsed } = await getUsageSinceDate(db, session.userId, new Date(0)));
+        const { chatTokensUsed } = await getUsageSinceDate(db, session.userId, new Date(0));
+        chatExhausted = computeStatus(chatTokensUsed, ANONYMOUS_CHAT_QUOTA) === "exhausted";
       } else {
-        const sub = await getOrCreateSubscription(db, session.userId);
-        chatQuota = sub.chatQuota;
-        ({ chatTokensUsed } = await getUsageSinceDate(db, session.userId, sub.periodStartDate));
+        // Effective = plan quota (resets monthly) + non-expiring top-up balance.
+        const eu = await getEffectiveUsage(db, session.userId);
+        chatExhausted = eu.chat.status === "exhausted";
       }
 
-      if (computeStatus(chatTokensUsed, chatQuota) === "exhausted") {
+      if (chatExhausted) {
         const quotaMsg = session.isAnonymous
           ? (lang === "es"
               ? "Has agotado tu tiempo de chat gratuito de esta sesión. Abre una cuenta gratuita para seguir chateando conmigo."

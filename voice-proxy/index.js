@@ -93,6 +93,34 @@ async function getOrCreateSubscription(db, userId) {
   const planId = sub?.pendingPlanId || sub?.planId || PLAN_FREE;
   const plan = await getPlan(db, planId);
 
+  // Top-up Brendys don't expire — carry the prior period's remaining balance
+  // forward, minus only what spilled past that period's PLAN quota. Mirrors
+  // lib/subscriptions.js getOrCreateSubscription(); keep in sync by hand.
+  let carriedTopUpVoice = 0;
+  let carriedTopUpChat = 0;
+  if (sub) {
+    try {
+      const [vAgg, cAgg] = await Promise.all([
+        db.collection("gemini_voice_usage_events").aggregate([
+          { $match: { userId, createdAt: { $gte: sub.periodStartDate } } },
+          { $group: { _id: null, total: { $sum: "$usage.totalTokens" } } },
+        ]).toArray(),
+        db.collection("gemini_chat_usage_events").aggregate([
+          { $match: { userId, createdAt: { $gte: sub.periodStartDate } } },
+          { $group: { _id: null, total: { $sum: "$usage.totalTokens" } } },
+        ]).toArray(),
+      ]);
+      const vOverflow = Math.max((vAgg[0]?.total || 0) - (sub.voiceQuota || 0), 0);
+      const cOverflow = Math.max((cAgg[0]?.total || 0) - (sub.chatQuota || 0), 0);
+      carriedTopUpVoice = Math.max((sub.topUpVoiceRemaining || 0) - vOverflow, 0);
+      carriedTopUpChat = Math.max((sub.topUpChatRemaining || 0) - cOverflow, 0);
+    } catch (e) {
+      console.error(`[voice-proxy] top-up settle failed for userId=${userId}:`, e?.message || e);
+      carriedTopUpVoice = sub.topUpVoiceRemaining || 0;
+      carriedTopUpChat = sub.topUpChatRemaining || 0;
+    }
+  }
+
   const newSub = {
     userId,
     planId,
@@ -104,6 +132,8 @@ async function getOrCreateSubscription(db, userId) {
     updatedAt: now,
     voiceQuota: plan?.voiceQuota ?? 0,
     chatQuota: plan?.chatQuota ?? 0,
+    topUpVoiceRemaining: carriedTopUpVoice,
+    topUpChatRemaining: carriedTopUpChat,
     previousPlanId: sub?.planId ?? null,
     previousPurchaseToken: null,
     planChangedAt: null,
@@ -124,6 +154,46 @@ async function getOrCreateSubscription(db, userId) {
   }
   const insertRes = await subs.insertOne(newSub);
   newSub._id = insertRes.insertedId;
+
+  // Ledger: mirror lib/ledger.js writeLedgerEntry() for the rollover `grant`
+  // row (voice-proxy can't import lib/ — see note at top of this section).
+  // Kept minimal; the main app / backfill create the unique dedupeKey index.
+  try {
+    const isFirstPeriod = !sub || sub.planId !== planId;
+    let username = userId;
+    try {
+      const u = await db.collection("users").findOne(
+        { userId }, { projection: { username: 1, displayName: 1 } },
+      );
+      username = u?.displayName || u?.username || userId;
+    } catch { /* best-effort */ }
+    const amountPaidCents = isFirstPeriod && plan?.firstMonthPriceCents != null
+      ? plan.firstMonthPriceCents
+      : (plan?.fullPriceCents || 0);
+    await db.collection("ledger_entries").insertOne({
+      dedupeKey: `grant:${userId}:${newSub.periodStartDate.toISOString()}`,
+      userId,
+      username,
+      ts: newSub.periodStartDate,
+      type: "grant",
+      planId,
+      planName: newSub.planDisplayName,
+      amountPaidCents,
+      currency: null,
+      voiceCredited: newSub.voiceQuota,
+      textCredited: newSub.chatQuota,
+      voiceDebited: 0,
+      textDebited: 0,
+      periodStartDate: newSub.periodStartDate,
+      isFirstPeriod,
+      note: sub ? "monthly rollover" : "first period",
+      source: "live",
+      createdAt: new Date(),
+    });
+  } catch (e) {
+    if (!e || e.code !== 11000) console.error("[voice-proxy][ledger] grant write failed:", e?.message || e);
+  }
+
   return newSub;
 }
 
@@ -350,7 +420,9 @@ async function createGeminiVoiceProxy(browserWs, req) {
         planDisplayName = sub.planDisplayName;
         const voiceTokensUsed = await getVoiceTokensUsedSince(db, userId, sub.periodStartDate)
           .catch(e => { console.error(`[voice-proxy] usage lookup failed for userId=${userId}:`, e.message); return 0; });
-        voiceQuotaExhausted = computeStatus(voiceTokensUsed, sub.voiceQuota) === "exhausted";
+        // Effective ceiling = monthly plan quota + non-expiring top-up balance.
+        const voiceCeiling = (sub.voiceQuota || 0) + (sub.topUpVoiceRemaining || 0);
+        voiceQuotaExhausted = computeStatus(voiceTokensUsed, voiceCeiling) === "exhausted";
       }
     }
   } catch (e) {

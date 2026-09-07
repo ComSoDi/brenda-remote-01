@@ -1,7 +1,7 @@
 // api/user/usage.js
 import { getDb } from "../../lib/mongo.js";
 import { requireSession } from "../../lib/auth.js";
-import { getOrCreateSubscription, getUsageSinceDate, computeStatus, getPlan } from "../../lib/subscriptions.js";
+import { getEffectiveUsage, getPlan } from "../../lib/subscriptions.js";
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -22,8 +22,8 @@ export default async function handler(req, res) {
 
   try {
     const db = await getDb();
-    const sub = await getOrCreateSubscription(db, s.userId);
-    const { voiceTokensUsed, chatTokensUsed } = await getUsageSinceDate(db, s.userId, sub.periodStartDate);
+    const eu = await getEffectiveUsage(db, s.userId);
+    const { sub, voice, chat } = eu;
 
     let pendingPlanDisplayName = null;
     if (sub.pendingPlanId) {
@@ -34,12 +34,27 @@ export default async function handler(req, res) {
     return json(res, 200, {
       planId: sub.planId,
       planDisplayName: sub.planDisplayName,
-      voiceTokensUsed,
-      voiceQuota: sub.voiceQuota,
-      chatTokensUsed,
-      chatQuota: sub.chatQuota,
-      voiceStatus: computeStatus(voiceTokensUsed, sub.voiceQuota),
-      chatStatus: computeStatus(chatTokensUsed, sub.chatQuota),
+
+      // Back-compat: `*Quota` is the spendable ceiling for the period
+      // (plan allowance + top-up balance), `*TokensUsed` is period usage,
+      // `*Status` flips to "exhausted" only when BOTH are spent.
+      voiceTokensUsed: voice.used,
+      voiceQuota: voice.ceiling,
+      voiceStatus: voice.status,
+      chatTokensUsed: chat.used,
+      chatQuota: chat.ceiling,
+      chatStatus: chat.status,
+
+      // Transparent split — subscription vs non-expiring top-up.
+      voicePlanQuota: voice.planQuota,
+      voicePlanRemaining: voice.planRemaining,
+      voiceTopUpRemaining: voice.topUpRemaining,
+      voiceTotalRemaining: voice.totalRemaining,
+      chatPlanQuota: chat.planQuota,
+      chatPlanRemaining: chat.planRemaining,
+      chatTopUpRemaining: chat.topUpRemaining,
+      chatTotalRemaining: chat.totalRemaining,
+
       pendingPlanId: sub.pendingPlanId || null,
       pendingPlanDisplayName,
       periodEndDate: sub.periodEndDate,

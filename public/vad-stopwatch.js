@@ -40,7 +40,7 @@
   var CFG = (window.VAD_STOPWATCH = window.VAD_STOPWATCH || {});
   var LS_KEY = "vadsw";
   var PERSIST = ["MIC", "NOISE_CUTOFF", "SPEAKING_RMS", "SILENCE_RMS", "SILENCE_HOLD_MS",
-    "TRANSCRIPT_STALL_MS", "REARM_MS", "OFFSET_Y", "NUDGE_PX", "debug"];
+    "MIN_SPEECH_MS", "TX_STOP_MS", "TRANSCRIPT_STALL_MS", "REARM_MS", "OFFSET_Y", "NUDGE_PX", "debug"];
 
   try {
     var saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
@@ -48,12 +48,14 @@
   } catch (e) { /* private mode etc. */ }
 
   CFG.MIC                 = CFG.MIC                 ?? "auto";  // "auto" | true | false
-  CFG.NOISE_CUTOFF        = CFG.NOISE_CUTOFF        ?? 0.018;   // auto: mic considered unusable above this ambient floor
+  CFG.NOISE_CUTOFF        = CFG.NOISE_CUTOFF        ?? 0.026;   // auto: mic considered unusable above this ambient floor
   CFG.SPEAKING_RMS        = CFG.SPEAKING_RMS        ?? 0.030;   // fixed gate, used only when MIC === true
   CFG.SILENCE_RMS         = CFG.SILENCE_RMS         ?? 0.008;   // (reserved)
-  CFG.SILENCE_HOLD_MS     = CFG.SILENCE_HOLD_MS     ?? 180;     // silence this long → "stopped talking"
-  CFG.TRANSCRIPT_STALL_MS = CFG.TRANSCRIPT_STALL_MS ?? 450;     // no new transcript this long → black→red
-  CFG.REARM_MS            = CFG.REARM_MS            ?? 260;      // once counting, need this much CONTINUOUS speech to reset (ignores blips)
+  CFG.SILENCE_HOLD_MS     = CFG.SILENCE_HOLD_MS     ?? 260;     // MIC: silence this long → "stopped talking"
+  CFG.MIN_SPEECH_MS       = CFG.MIN_SPEECH_MS       ?? 150;     // MIC: last speech run must have lasted this long to count as a real turn
+  CFG.TX_STOP_MS          = CFG.TX_STOP_MS          ?? 650;     // TRANSCRIPT: no new fragment this long → "stopped talking" (must clear mid-utterance gaps)
+  CFG.TRANSCRIPT_STALL_MS = CFG.TRANSCRIPT_STALL_MS ?? 450;     // black→red: transcript settled this long after counting started
+  CFG.REARM_MS            = CFG.REARM_MS            ?? 260;      // MIC: once counting, need this much CONTINUOUS speech to reset (ignores blips)
   CFG.OFFSET_Y            = CFG.OFFSET_Y            ?? 0.5;      // vertical drop = this × changeSubjectBtn height
   CFG.NUDGE_PX            = CFG.NUDGE_PX            ?? -7;
 
@@ -205,9 +207,19 @@
 
     if (state === "talking") {
       paint("0.00 s", BLACK);
-      var stopped = m
-        ? (!recentlyLoud && (now - lastLoudAt) >= CFG.SILENCE_HOLD_MS && lastLoudAt > 0)
-        : (haveTx && (now - lastUserTxAt) >= CFG.SILENCE_HOLD_MS);
+      var micSpokeEnough = (lastLoudAt - loudRunStart) >= CFG.MIN_SPEECH_MS;
+      var micQuiet = m && !recentlyLoud && lastLoudAt > 0 &&
+        (now - lastLoudAt) >= CFG.SILENCE_HOLD_MS && micSpokeEnough;
+      var txStopped = haveTx && (now - lastUserTxAt) >= CFG.TX_STOP_MS;
+
+      // When BOTH signals exist, they must agree — kills the mid-utterance
+      // false-start that made the clock run from "started talking". If the mic
+      // has been solidly quiet for a good while though, don't wait on a laggy
+      // transcript forever.
+      var stopped = (m && haveTx)
+                  ? (micQuiet && (txStopped || (now - lastLoudAt) > 2000))
+                  : m ? micQuiet
+                  : txStopped;
       if (stopped) {
         t0 = m ? (lastLoudAt || now) : (lastUserTxAt || now);
         state = "black";
@@ -217,10 +229,15 @@
     }
 
     if (state === "black" || state === "red") {
-      // Re-arm ("user started talking again") only from a SUSTAINED speech run,
-      // and only when the mic is trusted — transcript re-arm is unreliable
-      // (late fragments of the same utterance would false-trigger).
-      if (m && sustainedLoud) { state = "talking"; haveTx = false; lastUserTxAt = 0; paint("0.00 s", BLACK); return; }
+      // Resumed talking → back to 0.00.
+      //  • mic: a sustained fresh speech run (ignores blips)
+      //  • transcript: any fresh fragment — accepts that a late fragment of the
+      //    same utterance may bounce it; TX_STOP_MS then re-settles it. Far
+      //    better than being stuck counting from mid-speech.
+      var resumed = (m && sustainedLoud) ||
+        (!m && haveTx && (now - lastUserTxAt) < 200);
+      if (resumed) { state = "talking"; haveTx = false; lastUserTxAt = 0; paint("0.00 s", BLACK); return; }
+
       if (state === "black" && haveTx && (now - lastUserTxAt) >= CFG.TRANSCRIPT_STALL_MS) state = "red";
       paint(fmt(now - t0), state === "red" ? RED : BLACK);
       return;

@@ -27,6 +27,14 @@
     "Voice sub balance", "Voice top-up balance", "Text sub balance", "Text top-up balance",
   ];
 
+  // Short chip labels so the Type column stays narrow (full context is in Plan/note).
+  const TYPE_LABEL = {
+    grant: "grant",
+    topup: "top-up",
+    usage: "usage",
+    downgrade_scheduled: "downgrade",
+  };
+
   // ── formatting ───────────────────────────────────────────────
   const intFmt = new Intl.NumberFormat("en-US");
   const nf = (n) => {
@@ -163,10 +171,10 @@
     const cr = (v) => (v ? `<td class="lg-credit">${nf(v)}</td>` : `<td class="lg-muted">–</td>`);
     const db = (v) => (v ? `<td class="lg-debit">${nf(v)}</td>` : `<td class="lg-muted">–</td>`);
     return `<tr class="lg-row lg-row--${r.type}">
-      <td class="col-l">${esc(r.username)}</td>
-      <td class="col-l">${dtFmt(r.ts)}</td>
-      <td class="col-l"><span class="lg-chip lg-chip--${r.type}">${r.type.replace("_", " ")}</span></td>
-      <td class="col-l">${esc(r.planName || r.planId || "—")}${r.note ? ` <span class="lg-muted">· ${esc(r.note)}</span>` : ""}</td>
+      <td class="col-user" title="${esc(r.username)}">${esc(r.username)}</td>
+      <td class="col-dt">${dtFmt(r.ts)}</td>
+      <td class="col-type"><span class="lg-chip lg-chip--${r.type}">${TYPE_LABEL[r.type] || r.type}</span></td>
+      <td class="col-plan">${esc(r.planName || r.planId || "—")}${r.note ? ` <span class="lg-muted">· ${esc(r.note)}</span>` : ""}</td>
       ${paid}
       ${cr(r.voiceCredited)}${cr(r.textCredited)}
       ${db(r.voiceDebited)}${db(r.textDebited)}

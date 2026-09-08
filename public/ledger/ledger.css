@@ -52,9 +52,41 @@ table.ledger-table thead tr.row-groups th.grp-bal    { background: #eef2f6; }
 table.ledger-table th.col-l,
 table.ledger-table td.col-l { text-align: left; }
 
-/* Sticky first two columns — widen offset for the username column */
-table.ledger-table th:nth-child(2),
-table.ledger-table td:nth-child(2) { left: 90px; }
+/* ── First four columns: hard-set widths so the two frozen columns (User,
+   Date) and the scrolling ones (Type, Plan) can never bunch up over each
+   other during horizontal scroll. dashboard.css makes nth-child(1)/(2)
+   position:sticky; the `left` offsets below MUST equal the running width. ── */
+table.ledger-table th.col-user,
+table.ledger-table td.col-user {
+  width: 110px; min-width: 110px; max-width: 110px;
+  left: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+table.ledger-table th.col-dt,
+table.ledger-table td.col-dt {
+  width: 152px; min-width: 152px; max-width: 152px;
+  left: 110px;                       /* == col-user width */
+  text-align: center;
+}
+table.ledger-table th.col-type,
+table.ledger-table td.col-type {
+  width: 96px; min-width: 96px; max-width: 96px;
+  text-align: center;
+}
+table.ledger-table th.col-plan,
+table.ledger-table td.col-plan {
+  min-width: 180px;
+  text-align: left;
+}
+/* Frozen body cells must be OPAQUE, or the scrolling columns bleed through
+   them (dashboard.css only sets `background: inherit`, which is transparent
+   on our rows). */
+table.ledger-table tbody td.col-user,
+table.ledger-table tbody td.col-dt {
+  background: var(--color-bg);
+}
 
 /* ── Frozen header: both header rows stay put, body scrolls under them ── */
 .table-wrap {                       /* only the ledger page loads this file */

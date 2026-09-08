@@ -115,10 +115,18 @@
   }
 
   function fmt(ms) { return (Math.max(0, ms) / 1000).toFixed(2) + " s"; }
+
+  var baseText = "0.00 s", baseColor = BLACK;
+  function dbgTag() {
+    return " [" + state + (micUsable() ? "·mic" : "·txt") +
+      (brendaSpeaking ? "·B" : "") + (patched ? "" : "·NOHOOK") + "]";
+  }
   function paint(txt, color) {
     if (!el) return;
-    if (txt != null) el.textContent = txt;
-    if (color) el.style.color = color;
+    if (txt != null) baseText = txt;
+    if (color) baseColor = color;
+    el.textContent = CFG.debug ? baseText + dbgTag() : baseText;
+    el.style.color = baseColor;
   }
 
   // ── signals ───────────────────────────────────────────────────────────────
@@ -173,6 +181,7 @@
   // ── state machine (~40ms) ────────────────────────────────────────────────
   function step() {
     if (!el) return;
+    if (CFG.debug) paint();                 // refresh the on-screen debug tag every tick
     var now = performance.now();
     var m = micUsable();
 
@@ -219,14 +228,35 @@
   }
 
   // ── wiring ───────────────────────────────────────────────────────────────
-  function attach(app) {
-    var ag = app && app.agent;
-    if (!ag || ag.__vadswPatched) return !!ag;
-    var oA = ag.onAudioData, oS = ag.onStatusChange, oT = ag.onTranscript;
-    ag.onAudioData    = function (d)    { try { onMic(d); } catch (e) {}          return oA && oA.apply(this, arguments); };
-    ag.onStatusChange = function (nm)   { try { onStatus(nm); } catch (e) {}      return oS && oS.apply(this, arguments); };
-    ag.onTranscript   = function (role) { try { onTranscript(role); } catch (e) {} return oT && oT.apply(this, arguments); };
-    ag.__vadswPatched = true;
+  var patched = false;
+
+  function ensurePatched() {
+    // Instance-level callbacks (mic / transcript). Re-runs harmlessly; re-wraps
+    // if app.js reassigns them on a later connect.
+    var ag = window.__app && window.__app.agent;
+    if (ag && !ag.__vadswPatched) {
+      var oA = ag.onAudioData, oT = ag.onTranscript;
+      ag.onAudioData  = function (d)    { try { onMic(d); } catch (e) {}           return oA && oA.apply(this, arguments); };
+      ag.onTranscript = function (role) { try { onTranscript(role); } catch (e) {} return oT && oT.apply(this, arguments); };
+      ag.__vadswPatched = true;
+      patched = true;
+    }
+    return patched;
+  }
+
+  function patchPrototype() {
+    // Status is the STOP signal + the brendaSpeaking gate — patch it on the
+    // prototype so it's caught no matter how late the agent instance appears
+    // or how often app.js rewires the instance callback.
+    var VA = window.VoiceAgent;
+    if (!VA || !VA.prototype || VA.prototype.__vadswStatus) return false;
+    var orig = VA.prototype.updateStatus;
+    if (typeof orig !== "function") return false;
+    VA.prototype.updateStatus = function (s) {
+      try { onStatus(s); } catch (e) {}
+      return orig.apply(this, arguments);
+    };
+    VA.prototype.__vadswStatus = true;
     return true;
   }
 
@@ -238,12 +268,25 @@
     if (!inTalk && state !== "idle") { state = "idle"; haveTx = false; lastUserTxAt = 0; paint("0.00 s", BLACK); }
   }
 
+  // Console diagnostic — call window.VAD_STOPWATCH.status()
+  CFG.status = function () {
+    return {
+      patched: patched, protoPatched: !!(window.VoiceAgent && window.VoiceAgent.prototype.__vadswStatus),
+      state: state, mode: window.__app && window.__app.mode,
+      micUsable: micUsable(), MIC: CFG.MIC, noiseFloor: +noiseFloor.toFixed(4),
+      brendaSpeaking: brendaSpeaking, haveTx: haveTx,
+      lastLoudAgoMs: lastLoudAt ? Math.round(performance.now() - lastLoudAt) : null,
+      lastTxAgoMs: lastUserTxAt ? Math.round(performance.now() - lastUserTxAt) : null,
+    };
+  };
+
   function boot() {
+    try { if (/[?&]vadsw=debug\b/.test(location.search)) CFG.debug = true; } catch (e) {}
     make();
-    var tries = 0;
-    var iv = setInterval(function () {
-      if (attach(window.__app) || ++tries > 80) { clearInterval(iv); sync(); }
-    }, 250);
+    patchPrototype();
+    // keep trying forever (cheap) — Render cold starts can push app init well
+    // past 20 s on a slow connection
+    setInterval(function () { ensurePatched(); patchPrototype(); }, 400);
     setInterval(step, 40);
     setInterval(sync, 500);
     window.addEventListener("resize", place, { passive: true });

@@ -119,9 +119,12 @@
   function fmt(ms) { return (Math.max(0, ms) / 1000).toFixed(2) + " s"; }
 
   var baseText = "0.00 s", baseColor = BLACK;
+  var _rms = 0, _gate = 0;               // last mic frame — for the debug tag
+  function m3(x) { return Math.round(x * 1000); }
   function dbgTag() {
     return " [" + state + (micUsable() ? "·mic" : "·txt") +
-      (brendaSpeaking ? "·B" : "") + (patched ? "" : "·NOHOOK") + "]";
+      (brendaSpeaking ? "·B" : "") + (patched ? "" : "·NOHOOK") +
+      " r" + m3(_rms) + " g" + m3(_gate) + " f" + m3(noiseFloor) + "]";
   }
   function paint(txt, color) {
     if (!el) return;
@@ -132,24 +135,44 @@
   }
 
   // ── signals ───────────────────────────────────────────────────────────────
+  var speechEnv = 0.02;   // envelope of recent speech-level RMS — fast attack, slow release
+
   function onMic(float32) {
     if (!float32 || !float32.length || brendaSpeaking) return;
     var s = 0;
     for (var i = 0; i < float32.length; i++) { var v = float32[i]; s += v * v; }
     var rms = Math.sqrt(s / float32.length);
     var now = performance.now();
+    _rms = rms;
 
-    // Adaptive noise floor — asymmetric EMA, FROZEN while a measurement runs so
-    // the gate can't collapse mid-count. Hard-clamped low so a breath/click
-    // can't look like speech.
+    // Adapt floor + speech envelope only when NOT measuring, so the gate is
+    // stable for the whole count.
     if (state === "idle" || state === "talking") {
-      var k = rms > noiseFloor ? 0.0008 : 0.03;
+      var k = rms > noiseFloor ? 0.0008 : 0.03;          // creep up slow, drop fast
       noiseFloor += (rms - noiseFloor) * k;
-      if (noiseFloor < 0.005) noiseFloor = 0.005;
+      if (noiseFloor < 0.003) noiseFloor = 0.003;
       else if (noiseFloor > 0.06) noiseFloor = 0.06;
+
+      if (rms > noiseFloor * 2) {                         // learn the real speech level
+        speechEnv += (rms - speechEnv) * (rms > speechEnv ? 0.25 : 0.004);
+      }
+      if (speechEnv < noiseFloor + 0.006) speechEnv = noiseFloor + 0.006;
+      else if (speechEnv > 0.4) speechEnv = 0.4;
     }
 
-    var gate = (CFG.MIC === true) ? CFG.SPEAKING_RMS : (noiseFloor * 4 + 0.006);
+    // RELATIVE gate: a fraction of the way from the noise floor up to the
+    // learned speech level. Auto-scales to whatever this mic actually delivers
+    // (phone mics with heavy AGC can put speech RMS at ~0.012 — a fixed 0.026
+    // gate would never trip, so the clock would "start" the moment you began).
+    var gate;
+    if (CFG.MIC === true) gate = CFG.SPEAKING_RMS;
+    else {
+      var rel = noiseFloor + (speechEnv - noiseFloor) * 0.22;
+      var absMin = noiseFloor * 1.5 + 0.0015;
+      gate = Math.max(rel, absMin);
+    }
+    _gate = gate;
+
     if (rms >= gate) {
       if (now - lastLoudAt > 90) loudRunStart = now;   // fresh run after a gap
       lastLoudAt = now;
@@ -158,9 +181,10 @@
     if (CFG.debug && now - _dbgLast > 150) {
       _dbgLast = now;
       console.log("[vad-stopwatch]", state,
-        "| rms", rms.toFixed(4), "floor", noiseFloor.toFixed(4), "gate", gate.toFixed(4),
+        "| rms", rms.toFixed(4), "floor", noiseFloor.toFixed(4),
+        "env", speechEnv.toFixed(4), "gate", gate.toFixed(4),
         "| runMs", (lastLoudAt - loudRunStart).toFixed(0),
-        "| mic", micUsable() ? "on" : "off", "(" + CFG.MIC + ")");
+        "| mic", micUsable() ? "on" : "off");
     }
   }
 

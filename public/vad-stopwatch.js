@@ -4,16 +4,34 @@
  * Measures the gap between "user stopped talking" and "Brenda starts to answer",
  * to eyeball the effect of VAD tuning (GEMINI_VAD_SILENCE_DURATION_MS, etc.).
  *
- *   • while you speak            → shows 0.00 s (black), not counting
- *   • the moment you stop        → starts counting, BLACK
- *   • your transcript settles    → turns RED  (Gemini has closed the turn —
- *                                  best client-side proxy for "its VAD fired")
- *   • Brenda's first audio chunk → freezes, holding the final time in red
- *   • you start talking again    → back to 0.00 s
+ * STAGES (shown as the description line in debug mode; the timer colour mirrors it):
+ *   idle      — no turn in progress (between conversations / before you speak). "0.00 s".
+ *   talking   — you are speaking, or Gemini is still transcribing what you said. "0.00 s",
+ *               not counting.
+ *   waiting   — you have stopped; the clock is running, shown in BLACK. This span is
+ *               dominated by Gemini's server-side VAD still "listening" for more speech
+ *               (GEMINI_VAD_SILENCE_DURATION_MS) before it commits your turn. Lowering
+ *               that env var should shrink this stage.
+ *   replying  — your transcript has settled ⇒ Gemini has closed your turn and the model
+ *               is generating. Timer turns RED. This span ≈ model time-to-first-audio.
+ *   done      — Brenda's audio has started; timer stopped, holding the total
+ *               (waiting + replying) in RED until you talk again.
  *
- * "Stopped talking" is detected from the mic (precise) when the room is quiet
- * enough, and automatically from the speech-transcript stream instead when the
- * ambient noise floor is too high to trust the mic (fan / wind / traffic).
+ * DEBUG LINE (second line, `?vadsw=debug` or VAD_STOPWATCH.debug = true):
+ *   "<stage> · <mic|txt> [· Brenda speaking] [· NO-HOOK]   r<n> g<n> f<n>"
+ *     mic|txt        — which "stopped talking" signal is active. Auto-mode uses the mic
+ *                      (precise) while the room is quiet and switches to the speech-
+ *                      transcript stream when the noise floor is too high to trust it
+ *                      (fan / wind / traffic).
+ *     Brenda speaking — her audio is playing (detection is paused).
+ *     NO-HOOK         — the script failed to attach to the voice agent (should not appear).
+ *     r = rms   (×1000) — current mic loudness this frame (root-mean-square amplitude).
+ *     g = gate  (×1000) — adaptive speech/silence threshold: sits ~22% of the way from
+ *                         the noise floor up to the speech level learned from your voice.
+ *                         r ≥ g ⇒ "speaking";  r < g ⇒ "quiet".
+ *     f = floor (×1000) — learned background-noise level (mic RMS when you're not
+ *                         talking). g is derived from it; when f approaches NOISE_CUTOFF
+ *                         auto-mode drops from "mic" to "txt".
  *
  * Shows only while Talk mode is selected. Pure overlay (pointer-events:none,
  * no layout impact). Wraps the voice-agent callbacks at runtime; edits nothing
@@ -23,14 +41,17 @@
  * TO REMOVE  : delete that line and this file.
  *
  * Console knobs (all live; call .save() to keep them across reloads):
- *   window.VAD_STOPWATCH.MIC = "auto" | true | false   // start-signal source
- *   window.VAD_STOPWATCH.NOISE_CUTOFF = 0.018          // auto: mic off above this floor
- *   window.VAD_STOPWATCH.SILENCE_HOLD_MS = 180
- *   window.VAD_STOPWATCH.TRANSCRIPT_STALL_MS = 450
- *   window.VAD_STOPWATCH.REARM_MS = 260
- *   window.VAD_STOPWATCH.SPEAKING_RMS = 0.03           // used when MIC === true (fixed gate)
- *   window.VAD_STOPWATCH.OFFSET_Y = 0.5 ; .NUDGE_PX = -7
+ *   window.VAD_STOPWATCH.MIC = "auto" | true | false   // "stopped talking" signal source
+ *   window.VAD_STOPWATCH.NOISE_CUTOFF = 0.026          // auto: use txt (not mic) above this floor
+ *   window.VAD_STOPWATCH.SILENCE_HOLD_MS = 260         // MIC: silence this long ⇒ "stopped"
+ *   window.VAD_STOPWATCH.MIN_SPEECH_MS = 150           // MIC: last speech run must be ≥ this
+ *   window.VAD_STOPWATCH.TX_STOP_MS = 650              // TXT: no fragment this long ⇒ "stopped"
+ *   window.VAD_STOPWATCH.TRANSCRIPT_STALL_MS = 450     // waiting→replying: transcript quiet this long
+ *   window.VAD_STOPWATCH.REARM_MS = 260               // MIC: continuous speech needed to reset while counting
+ *   window.VAD_STOPWATCH.SPEAKING_RMS = 0.03           // fixed gate, only when MIC === true
+ *   window.VAD_STOPWATCH.OFFSET_Y = 0.5 ; .NUDGE_PX = -7   // on-screen position
  *   window.VAD_STOPWATCH.debug = true
+ *   window.VAD_STOPWATCH.status()  // dump internal state
  *   window.VAD_STOPWATCH.save()    // persist current knobs to localStorage
  *   window.VAD_STOPWATCH.reset()   // clear persisted knobs + reload
  * ──────────────────────────────────────────────────────────────────────────── */
@@ -90,6 +111,8 @@
     return noiseFloor < CFG.NOISE_CUTOFF;              // "auto"
   }
 
+  var elTime = null, elDbg = null;
+
   function make() {
     el = document.createElement("div");
     el.id = "vadStopwatch";
@@ -97,11 +120,19 @@
     el.style.cssText = [
       "position:fixed", "z-index:45", "pointer-events:none",
       "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
-      "font-weight:300", "font-size:13px", "line-height:1.1", "letter-spacing:.02em",
-      "color:" + BLACK, "background:none", "white-space:nowrap",
-      "transition:color .08s linear", "display:none",
+      "letter-spacing:.02em", "background:none", "display:none",
+      "max-width:60vw",
     ].join(";");
-    el.textContent = "0.00 s";
+
+    elTime = document.createElement("div");
+    elTime.style.cssText = "font-weight:300;font-size:13px;line-height:1.15;white-space:nowrap;color:" + BLACK + ";transition:color .08s linear";
+    elTime.textContent = "0.00 s";
+
+    elDbg = document.createElement("div");
+    elDbg.style.cssText = "font-weight:400;font-size:10px;line-height:1.25;color:#555;white-space:normal;display:none";
+
+    el.appendChild(elTime);
+    el.appendChild(elDbg);
     document.body.appendChild(el);
   }
 
@@ -119,19 +150,26 @@
   function fmt(ms) { return (Math.max(0, ms) / 1000).toFixed(2) + " s"; }
 
   var baseText = "0.00 s", baseColor = BLACK;
-  var _rms = 0, _gate = 0;               // last mic frame — for the debug tag
+  var _rms = 0, _gate = 0;               // last mic frame — for the debug line
+
+  // Operational stage names (not colour names).
+  var STAGE = { idle: "idle", talking: "talking", black: "waiting", red: "replying", frozen: "done" };
   function m3(x) { return Math.round(x * 1000); }
-  function dbgTag() {
-    return " [" + state + (micUsable() ? "·mic" : "·txt") +
-      (brendaSpeaking ? "·B" : "") + (patched ? "" : "·NOHOOK") +
-      " r" + m3(_rms) + " g" + m3(_gate) + " f" + m3(noiseFloor) + "]";
+  function dbgLine() {
+    return STAGE[state] + " · " + (micUsable() ? "mic" : "txt") +
+      (brendaSpeaking ? " · Brenda speaking" : "") +
+      (patched ? "" : " · NO-HOOK") +
+      "  r" + m3(_rms) + " g" + m3(_gate) + " f" + m3(noiseFloor);
   }
   function paint(txt, color) {
     if (!el) return;
     if (txt != null) baseText = txt;
     if (color) baseColor = color;
-    el.textContent = CFG.debug ? baseText + dbgTag() : baseText;
-    el.style.color = baseColor;
+    if (elTime) { elTime.textContent = baseText; elTime.style.color = baseColor; }
+    if (elDbg) {
+      elDbg.style.display = CFG.debug ? "block" : "none";
+      if (CFG.debug) elDbg.textContent = dbgLine();
+    }
   }
 
   // ── signals ───────────────────────────────────────────────────────────────

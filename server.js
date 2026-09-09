@@ -371,6 +371,28 @@ server.on("upgrade", async (req, socket, head) => {
       return;
     }
 
+    // R5 (Voice Prompt Ledger): open the Gemini Live upstream NOW so its
+    // TLS + WebSocket handshake runs CONCURRENTLY with the profile DB lookups
+    // below, instead of only starting after them. `setup` is still sent only
+    // once BOTH this socket is open AND the profile data is ready (it builds
+    // system_instruction) — see wss.on("connection"). Net warm-up becomes
+    // max(dbLookup, handshake) + setupRTT instead of dbLookup + handshake + setupRTT.
+    const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
+    const geminiWs = new WebSocket(geminiUrl);
+    const gwTiming = { createdAt: Date.now(), openAt: null, setupSent: false };
+    geminiWs.on("open", () => { gwTiming.openAt = Date.now(); });
+    const gwEarlyError = (e) => console.error("[voice-proxy] Gemini WS error during warm-up:", e?.message || e);
+    geminiWs.on("error", gwEarlyError);
+    // Safety net: if this pre-opened socket is never handed a `setup` (e.g. the
+    // client upgrade died mid-lookup), don't leak an idle connection to Google.
+    const gwAbort = setTimeout(() => {
+      if (!gwTiming.setupSent) {
+        console.warn("[voice-proxy] pre-opened Gemini WS unused after 15 s — terminating");
+        try { geminiWs.terminate(); } catch { /* already gone */ }
+      }
+    }, 15000);
+    gwAbort.unref?.();
+
     // Resolve gender, tasks, and RDS profile from session / DB (non-fatal)
     let gender = session.gender || null;
     let activeTasks = [];
@@ -429,6 +451,8 @@ server.on("upgrade", async (req, socket, head) => {
 
     if (voiceQuotaExhausted) {
       console.log(`[voice-proxy] blocked — voice quota exhausted userId=${userId}`);
+      clearTimeout(gwAbort);
+      try { geminiWs.terminate(); } catch { /* nothing to clean up */ }
       socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
       socket.destroy();
       return;
@@ -445,6 +469,10 @@ server.on("upgrade", async (req, socket, head) => {
       ws.planId = planId;
       ws.planDisplayName = planDisplayName;
       ws.savedLocation = savedLocation;
+      ws.geminiWs = geminiWs;          // R5: pre-opened upstream (handshake ran during the lookup)
+      ws._gwTiming = gwTiming;
+      ws._gwEarlyError = gwEarlyError;
+      clearTimeout(gwAbort);           // the connection handler owns the socket's lifecycle now
       ws.msProfileLookup = Date.now() - profileLookupStartAt;
       console.log(`📡 WS upgraded — locale: ${locale}, gender: ${gender || "unknown"}`);
       wss.emit("connection", ws, req);
@@ -486,8 +514,10 @@ wss.on("connection", (ws) => {
     + locationLine
     + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "");
 
-  const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
-  const geminiWs = new WebSocket(geminiUrl);
+  // R5: the upstream socket was created in the "upgrade" handler and its
+  // handshake ran alongside the profile DB lookup. It may already be OPEN.
+  const geminiWs = ws.geminiWs;
+  if (ws._gwEarlyError) { geminiWs.removeListener("error", ws._gwEarlyError); ws._gwEarlyError = null; }
 
   const messageBuffer = [];
   let isReady = false;
@@ -500,8 +530,8 @@ wss.on("connection", (ws) => {
   // See docs/voice-vad-tuning.md sibling: the [voice-vad] console logs below
   // for the qualitative picture, this for the quantitative one (queryable
   // via NRQL as VoiceSessionStart / VoiceTurnLatency events).
-  const geminiWsCreatedAt = Date.now();
-  let msGeminiWsOpen = null;
+  const geminiWsCreatedAt = ws._gwTiming?.createdAt || Date.now();
+  let msGeminiWsOpen = ws._gwTiming?.openAt ? (ws._gwTiming.openAt - geminiWsCreatedAt) : null;
   let sessionStartRecorded = false;
   let lastInputTranscriptionAt = null;
   let firstInputTranscriptionAt = null;
@@ -510,9 +540,12 @@ wss.on("connection", (ws) => {
   let relayMsMax = 0;
   let relayCount = 0;
 
-  geminiWs.on("open", () => {
-    msGeminiWsOpen = Date.now() - geminiWsCreatedAt;
-    console.log(`📡 Gemini WS open — sending setup. model: ${MODEL}, voice: ${VOICE}`);
+  function sendSetup() {
+    if (ws._gwTiming) ws._gwTiming.setupSent = true;
+    if (msGeminiWsOpen === null) {
+      msGeminiWsOpen = (ws._gwTiming?.openAt || Date.now()) - geminiWsCreatedAt;
+    }
+    console.log(`📡 Gemini WS ready — sending setup. model: ${MODEL}, voice: ${VOICE}`);
 
     const compressionTargetTokens = process.env.GEMINI_CONTEXT_COMPRESSION_TOKENS
       ? Number(process.env.GEMINI_CONTEXT_COMPRESSION_TOKENS)
@@ -544,7 +577,13 @@ wss.on("connection", (ws) => {
           : {}),
       }
     };
-    geminiWs.send(JSON.stringify(setupMessage));
+    try {
+      geminiWs.send(JSON.stringify(setupMessage));
+    } catch (e) {
+      console.error("[voice-proxy] failed to send setup:", e?.message || e);
+      if (ws.readyState === WebSocket.OPEN) ws.close();
+      return;
+    }
 
     // Do NOT flush the buffer or set isReady yet. Gemini must send setupComplete
     // before it is ready to accept client_content turns. Flushing immediately
@@ -557,7 +596,16 @@ wss.on("connection", (ws) => {
         while (messageBuffer.length > 0) geminiWs.send(messageBuffer.shift());
       }
     }, 6000);
-  });
+  }
+
+  if (geminiWs.readyState === WebSocket.OPEN) {
+    sendSetup();
+  } else if (geminiWs.readyState === WebSocket.CONNECTING) {
+    geminiWs.once("open", sendSetup);
+  } else {
+    console.error(`[voice-proxy] Gemini upstream not usable at connection time (readyState=${geminiWs.readyState}) — closing client`);
+    if (ws.readyState === WebSocket.OPEN) ws.close();
+  }
 
   ws.on("message", (data) => {
     const processed = processClientMessage(data, IS_GEMINI_31);

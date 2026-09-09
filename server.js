@@ -55,6 +55,7 @@ import { recordVoiceUsage } from "./lib/usage.js";
 import { resolvePlanForUsage, getEffectiveUsage } from "./lib/subscriptions.js";
 import { PLAN_ANONYMOUS } from "./lib/plans.js";
 import { getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem } from "./lib/rdsService.js";
+import { buildNowContext } from "./lib/promptContext.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -512,7 +513,12 @@ wss.on("connection", (ws) => {
   const systemText = buildSystemInstruction(locale, ws.userGender || null)
     + buildTaskSystemBlock(ws.activeTasks || [], locale)
     + locationLine
-    + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "");
+    + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "")
+    // Reference date/time so the model doesn't guess when a time/day question
+    // slips past the client-side deterministic interception. Sent once at
+    // session setup (a very long call could drift — genuine "exact time" asks
+    // still hit the deterministic path). Brenda must NOT volunteer it.
+    + buildNowContext(locale, savedLoc);
 
   // R5: the upstream socket was created in the "upgrade" handler and its
   // handshake ran alongside the profile DB lookup. It may already be OPEN.

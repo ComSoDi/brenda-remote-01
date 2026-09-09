@@ -14,6 +14,7 @@ import { randomUUID } from "crypto";
 import { recordChatUsage } from "../lib/usage.js";
 import { resolvePlanForUsage, getUsageSinceDate, computeStatus, getEffectiveUsage } from "../lib/subscriptions.js";
 import { ANONYMOUS_CHAT_QUOTA } from "../lib/plans.js";
+import { buildNowContext } from "../lib/promptContext.js";
 import {
   getRdsProfile, buildRdsSystemAddendum, detectRdsIntent, buildMemoryNarrative,
   extractRdsItems, addRdsItem, removeRdsItem, parseForgetTag,
@@ -269,7 +270,7 @@ function genderAddressLine(localeVariant, gender) {
   return "\nDirígete al usuario con lenguaje neutro e inclusivo, sin usar términos marcados por género. Evita adjetivos con forma masculina o femenina cuando sea posible.";
 }
 
-function brendaSystemPrompt(localeVariant = "en-US", gender = null) {
+function brendaSystemPrompt(localeVariant = "en-US", gender = null, nowContext = "") {
   const baseInstructions = `You are Brenda, a warm, curious, and knowledgeable AI companion. You love to talk about any subject — history, science, art, travel, cooking, literature, health, technology, current events, personal stories, and much more. You engage people like a caring and witty friend who is genuinely interested in ideas and in the person you are talking with.
 
 GENERAL CONVERSATION:
@@ -315,15 +316,15 @@ PERSONAL REMINDER SCHEDULE (task reminders the user entered themselves — this 
 - Always end with: "Please review your professional's instructions or indications."`;
 
   if (localeVariant === "es-ES") {
-    return baseInstructions + "\n\nResponde en español de España (castellano peninsular)." + genderAddressLine(localeVariant, gender);
+    return baseInstructions + "\n\nResponde en español de España (castellano peninsular)." + genderAddressLine(localeVariant, gender) + nowContext;
   }
   if (localeVariant === "es-419") {
-    return baseInstructions + "\n\nResponde en español latinoamericano neutro." + genderAddressLine(localeVariant, gender);
+    return baseInstructions + "\n\nResponde en español latinoamericano neutro." + genderAddressLine(localeVariant, gender) + nowContext;
   }
   if (localeVariant === "en-GB") {
-    return baseInstructions + "\n\nReply in British English.";
+    return baseInstructions + "\n\nReply in British English." + nowContext;
   }
-  return baseInstructions + "\n\nReply in American English.";
+  return baseInstructions + "\n\nReply in American English." + nowContext;
 }
 
 // ── Task query detection & formatting ────────────────────────────────
@@ -841,7 +842,7 @@ export default async function handler(req, res) {
       try { rdsProfile = await getRdsProfile(db, session.userId); } catch { /* non-fatal */ }
     }
 
-    const system = brendaSystemPrompt(localeVariant, userGender) +
+    const system = brendaSystemPrompt(localeVariant, userGender, buildNowContext(localeVariant, userPrefsDoc?.preferences?.location)) +
       (rdsProfile ? "\n\n" + buildRdsSystemAddendum(rdsProfile, localeVariant, rdsUsername) : "");
     const lastUserText = [...inputMessages].reverse().find((m) => m.role === "user")?.content || "";
 
@@ -1157,7 +1158,7 @@ export default async function handler(req, res) {
                 // We do this by returning the same formatting logic inline.
                 const autoParts = [autoData.location?.city, autoData.location?.state, autoData.location?.country].filter(Boolean);
                 const autoFormatR = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
-                  systemPrompt: brendaSystemPrompt(localeVariant, userGender),
+                  systemPrompt: brendaSystemPrompt(localeVariant, userGender, buildNowContext(localeVariant, userPrefsDoc?.preferences?.location)),
                   contents: [
                     ...toGeminiContents([...historyMsgs, ...inputMessages]),
                     {
@@ -1221,7 +1222,7 @@ export default async function handler(req, res) {
       // One Gemini call to format the weather data as natural language
       const locationParts = [wData.location?.city, wData.location?.state, wData.location?.country].filter(Boolean);
       const weatherFormatR = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
-        systemPrompt: brendaSystemPrompt(localeVariant, userGender),
+        systemPrompt: brendaSystemPrompt(localeVariant, userGender, buildNowContext(localeVariant, userPrefsDoc?.preferences?.location)),
         contents: [
           ...toGeminiContents([...historyMsgs, ...inputMessages]),
           {

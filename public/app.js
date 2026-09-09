@@ -3278,19 +3278,27 @@ class BrendaApp {
       const subject = this.pickSubject();
       const { statement, question } = await this.generateTopicStarter(subject);
 
-      if (isVoiceMode) {
-        const ok = await this.speakExactLine(statement);
-        if (!ok) await this.agent.speakText(statement);
+      // R2 (Voice Prompt Ledger): deliver the opener's statement + question as
+      // ONE spoken turn — a single SAY EXACTLY round-trip, no 600 ms inter-line
+      // wait — so there's no ambiguous "your turn?" gap for the user to answer
+      // into. Flip RDS_OPENER_SINGLE_TURN to false to restore the original
+      // two-turn behaviour exactly.
+      const RDS_OPENER_SINGLE_TURN = true;
+
+      if (isVoiceMode && RDS_OPENER_SINGLE_TURN) {
+        let s = String(statement || "").trim();
+        if (s && !/[.!?…]$/.test(s)) s += ".";
+        const line = [s, String(question || "").trim()].filter(Boolean).join(" ");
+        const ok = await this.speakExactLine(line);
+        if (!ok) await this.agent.speakText(line);
+      } else if (isVoiceMode) {
+        const ok1 = await this.speakExactLine(statement);
+        if (!ok1) await this.agent.speakText(statement);
+        await new Promise(r => setTimeout(r, 600));
+        const ok2 = await this.speakExactLine(question);
+        if (!ok2) await this.agent.speakText(question);
       } else {
         await this.emitAssistantLine({ text: statement, channel });
-      }
-
-      if (isVoiceMode) await new Promise(r => setTimeout(r, 600));
-
-      if (isVoiceMode) {
-        const ok = await this.speakExactLine(question);
-        if (!ok) await this.agent.speakText(question);
-      } else {
         await this.emitAssistantLine({ text: question, channel });
       }
     } catch (e) {

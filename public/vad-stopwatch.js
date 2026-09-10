@@ -123,19 +123,20 @@
       "position:fixed", "z-index:45", "pointer-events:none",
       "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
       "letter-spacing:.02em", "background:none", "display:none",
-      "max-width:min(92vw,540px)",
+      "white-space:nowrap",                 // one line: timer + debug side by side
+      "align-items:baseline", "gap:8px",
     ].join(";");
 
     elTime = document.createElement("div");
-    elTime.style.cssText = "font-weight:300;font-size:13px;line-height:1.15;white-space:nowrap;color:" + BLACK + ";transition:color .08s linear";
+    elTime.style.cssText = "flex:0 0 auto;font-weight:300;font-size:13px;line-height:1.15;white-space:nowrap;color:" + BLACK + ";transition:color .08s linear";
     elTime.textContent = "0.00 s";
 
     elDbg = document.createElement("div");
     // Dev-only: a faint background just on this line so it stays readable over
     // the waveform. The stopwatch itself (elTime) keeps no background.
-    elDbg.style.cssText = "font-weight:400;font-size:11px;line-height:1.3;color:#222;"
-      + "white-space:normal;display:none;background:rgba(255,255,255,.82);"
-      + "padding:1px 4px;border-radius:3px;margin-top:1px";
+    elDbg.style.cssText = "flex:0 1 auto;font-weight:400;font-size:11px;line-height:1.3;color:#222;"
+      + "white-space:nowrap;display:none;background:rgba(255,255,255,.82);"
+      + "padding:1px 4px;border-radius:3px";
 
     el.appendChild(elTime);
     el.appendChild(elDbg);
@@ -372,7 +373,7 @@
   function sync() {
     var app = window.__app;
     var inTalk = !!(app && app.mode === "talk");
-    if (el) el.style.display = inTalk ? "block" : "none";
+    if (el) el.style.display = inTalk ? "flex" : "none";
     if (inTalk) place();
     if (!inTalk && state !== "idle") { state = "idle"; haveTx = false; lastUserTxAt = 0; paint("0.00 s", BLACK); }
   }

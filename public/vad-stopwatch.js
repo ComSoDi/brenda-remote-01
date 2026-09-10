@@ -44,7 +44,8 @@
  *   window.VAD_STOPWATCH.MIC = "auto" | true | false   // "stopped talking" signal source
  *   window.VAD_STOPWATCH.NOISE_CUTOFF = 0.026          // auto: use txt (not mic) above this floor
  *   window.VAD_STOPWATCH.SILENCE_HOLD_MS = 260         // MIC: silence this long ⇒ "stopped"
- *   window.VAD_STOPWATCH.MIN_SPEECH_MS = 150           // MIC: last speech run must be ≥ this
+ *   window.VAD_STOPWATCH.MIN_SPEECH_MS = 120           // MIC: last speech run must be ≥ this
+ *   window.VAD_STOPWATCH.RUN_GAP_MS = 180              // MIC: silence longer than this ends a speech run
  *   window.VAD_STOPWATCH.TX_STOP_MS = 650              // TXT: no fragment this long ⇒ "stopped"
  *   window.VAD_STOPWATCH.TRANSCRIPT_STALL_MS = 450     // waiting→replying: transcript quiet this long
  *   window.VAD_STOPWATCH.REARM_MS = 260               // MIC: continuous speech needed to reset while counting
@@ -61,7 +62,7 @@
   var CFG = (window.VAD_STOPWATCH = window.VAD_STOPWATCH || {});
   var LS_KEY = "vadsw";
   var PERSIST = ["MIC", "NOISE_CUTOFF", "SPEAKING_RMS", "SILENCE_RMS", "SILENCE_HOLD_MS",
-    "MIN_SPEECH_MS", "TX_STOP_MS", "TRANSCRIPT_STALL_MS", "REARM_MS", "OFFSET_Y", "NUDGE_PX", "debug"];
+    "MIN_SPEECH_MS", "RUN_GAP_MS", "TX_STOP_MS", "TRANSCRIPT_STALL_MS", "REARM_MS", "OFFSET_Y", "NUDGE_PX", "debug"];
 
   try {
     var saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
@@ -73,7 +74,8 @@
   CFG.SPEAKING_RMS        = CFG.SPEAKING_RMS        ?? 0.030;   // fixed gate, used only when MIC === true
   CFG.SILENCE_RMS         = CFG.SILENCE_RMS         ?? 0.008;   // (reserved)
   CFG.SILENCE_HOLD_MS     = CFG.SILENCE_HOLD_MS     ?? 260;     // MIC: silence this long → "stopped talking"
-  CFG.MIN_SPEECH_MS       = CFG.MIN_SPEECH_MS       ?? 150;     // MIC: last speech run must have lasted this long to count as a real turn
+  CFG.MIN_SPEECH_MS       = CFG.MIN_SPEECH_MS       ?? 120;     // MIC: last speech run must have lasted this long to count as a real turn
+  CFG.RUN_GAP_MS          = CFG.RUN_GAP_MS          ?? 180;     // MIC: a silence longer than this ends the current speech run
   CFG.TX_STOP_MS          = CFG.TX_STOP_MS          ?? 650;     // TRANSCRIPT: no new fragment this long → "stopped talking" (must clear mid-utterance gaps)
   CFG.TRANSCRIPT_STALL_MS = CFG.TRANSCRIPT_STALL_MS ?? 450;     // black→red: transcript settled this long after counting started
   CFG.REARM_MS            = CFG.REARM_MS            ?? 260;      // MIC: once counting, need this much CONTINUOUS speech to reset (ignores blips)
@@ -156,10 +158,15 @@
   var STAGE = { idle: "idle", talking: "talking", black: "waiting", red: "replying", frozen: "done" };
   function m3(x) { return Math.round(x * 1000); }
   function dbgLine() {
+    var now = performance.now();
+    var runMs = lastLoudAt ? Math.round(lastLoudAt - loudRunStart) : 0;
+    var quietMs = lastLoudAt ? Math.round(now - lastLoudAt) : 0;
+    var txMs = lastUserTxAt ? Math.round(now - lastUserTxAt) : 0;
     return STAGE[state] + " · " + (micUsable() ? "mic" : "txt") +
       (brendaSpeaking ? " · Brenda speaking" : "") +
       (patched ? "" : " · NO-HOOK") +
-      "  r" + m3(_rms) + " g" + m3(_gate) + " f" + m3(noiseFloor);
+      "  r" + m3(_rms) + " g" + m3(_gate) + " f" + m3(noiseFloor) +
+      "  run" + runMs + " quiet" + quietMs + " tx" + txMs;
   }
   function paint(txt, color) {
     if (!el) return;
@@ -212,7 +219,7 @@
     _gate = gate;
 
     if (rms >= gate) {
-      if (now - lastLoudAt > 90) loudRunStart = now;   // fresh run after a gap
+      if (now - lastLoudAt > CFG.RUN_GAP_MS) loudRunStart = now;   // fresh run after a real gap (not inter-syllable dips)
       lastLoudAt = now;
     }
 
@@ -273,17 +280,30 @@
       var micQuiet = m && !recentlyLoud && lastLoudAt > 0 &&
         (now - lastLoudAt) >= CFG.SILENCE_HOLD_MS && micSpokeEnough;
       var txStopped = haveTx && (now - lastUserTxAt) >= CFG.TX_STOP_MS;
+      // Hard transcript stall + mic not currently loud: the user has clearly
+      // stopped even if the mic run never looked "clean" (choppy signal, high
+      // gate). Without this, a flaky mic could keep it stuck on 0.00 s for
+      // whole turns.
+      var txStalledHard = txStopped && !recentlyLoud && (now - lastUserTxAt) >= CFG.TX_STOP_MS * 2;
 
-      // When BOTH signals exist, they must agree — kills the mid-utterance
-      // false-start that made the clock run from "started talking". If the mic
-      // has been solidly quiet for a good while though, don't wait on a laggy
-      // transcript forever.
-      var stopped = (m && haveTx)
-                  ? (micQuiet && (txStopped || (now - lastLoudAt) > 2000))
-                  : m ? micQuiet
-                  : txStopped;
+      var stopped, anchorMic;
+      if (m && haveTx) {
+        // Prefer agreement (kills the mid-utterance false start); fall back to
+        // whichever signal is unambiguous on its own.
+        if (micQuiet && (txStopped || (now - lastLoudAt) > 2000)) { stopped = true; anchorMic = true; }
+        else if (txStalledHard) { stopped = true; anchorMic = false; }
+        else stopped = false;
+      } else if (m) {
+        // mic-only (no transcript this turn): normal quiet-detection, plus a
+        // 3 s hard-silence safety net for a choppy run that never looked clean.
+        stopped = micQuiet || (lastLoudAt > 0 && !recentlyLoud && (now - lastLoudAt) > 3000);
+        anchorMic = true;
+      } else {
+        stopped = txStopped; anchorMic = false;
+      }
+
       if (stopped) {
-        t0 = m ? (lastLoudAt || now) : (lastUserTxAt || now);
+        t0 = anchorMic ? (lastLoudAt || now) : (lastUserTxAt || now);
         state = "black";
         paint(fmt(now - t0), BLACK);
       }

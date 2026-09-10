@@ -50,7 +50,7 @@
  *   window.VAD_STOPWATCH.TRANSCRIPT_STALL_MS = 450     // waiting→replying: transcript quiet this long
  *   window.VAD_STOPWATCH.REARM_MS = 260               // MIC: continuous speech needed to reset while counting
  *   window.VAD_STOPWATCH.SPEAKING_RMS = 0.03           // fixed gate, only when MIC === true
- *   window.VAD_STOPWATCH.OFFSET_Y = 0.5 ; .NUDGE_PX = -7   // on-screen position
+ *   window.VAD_STOPWATCH.MARGIN_X = 10 ; .MARGIN_Y = 2     // on-screen position (from the waveform)
  *   window.VAD_STOPWATCH.debug = true
  *   window.VAD_STOPWATCH.status()  // dump internal state
  *   window.VAD_STOPWATCH.save()    // persist current knobs to localStorage
@@ -62,7 +62,7 @@
   var CFG = (window.VAD_STOPWATCH = window.VAD_STOPWATCH || {});
   var LS_KEY = "vadsw";
   var PERSIST = ["MIC", "NOISE_CUTOFF", "SPEAKING_RMS", "SILENCE_RMS", "SILENCE_HOLD_MS",
-    "MIN_SPEECH_MS", "RUN_GAP_MS", "TX_STOP_MS", "TRANSCRIPT_STALL_MS", "REARM_MS", "OFFSET_Y", "NUDGE_PX", "debug"];
+    "MIN_SPEECH_MS", "RUN_GAP_MS", "TX_STOP_MS", "TRANSCRIPT_STALL_MS", "REARM_MS", "MARGIN_X", "MARGIN_Y", "debug"];
 
   try {
     var saved = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
@@ -79,8 +79,8 @@
   CFG.TX_STOP_MS          = CFG.TX_STOP_MS          ?? 650;     // TRANSCRIPT: no new fragment this long → "stopped talking" (must clear mid-utterance gaps)
   CFG.TRANSCRIPT_STALL_MS = CFG.TRANSCRIPT_STALL_MS ?? 450;     // black→red: transcript settled this long after counting started
   CFG.REARM_MS            = CFG.REARM_MS            ?? 260;      // MIC: once counting, need this much CONTINUOUS speech to reset (ignores blips)
-  CFG.OFFSET_Y            = CFG.OFFSET_Y            ?? 0.5;      // vertical drop = this × changeSubjectBtn height
-  CFG.NUDGE_PX            = CFG.NUDGE_PX            ?? -7;
+  CFG.MARGIN_X           = CFG.MARGIN_X           ?? 10;        // px from the waveform's left edge
+  CFG.MARGIN_Y           = CFG.MARGIN_Y           ?? 2;         // px gap above the waveform
 
   CFG.save = function () {
     var keep = {};
@@ -94,7 +94,7 @@
   var BLACK = "#000";
   var LOUD_WINDOW_MS = 120;   // "still hearing speech" if a loud chunk landed within this
 
-  var el = null, anchorBtn = null, changeBtn = null;
+  var el = null;
 
   // state: idle | talking | black | red | frozen
   var state = "idle";
@@ -123,7 +123,7 @@
       "position:fixed", "z-index:45", "pointer-events:none",
       "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
       "letter-spacing:.02em", "background:none", "display:none",
-      "max-width:60vw",
+      "max-width:min(92vw,540px)",
     ].join(";");
 
     elTime = document.createElement("div");
@@ -131,7 +131,11 @@
     elTime.textContent = "0.00 s";
 
     elDbg = document.createElement("div");
-    elDbg.style.cssText = "font-weight:400;font-size:10px;line-height:1.25;color:#555;white-space:normal;display:none";
+    // Dev-only: a faint background just on this line so it stays readable over
+    // the waveform. The stopwatch itself (elTime) keeps no background.
+    elDbg.style.cssText = "font-weight:400;font-size:11px;line-height:1.3;color:#222;"
+      + "white-space:normal;display:none;background:rgba(255,255,255,.82);"
+      + "padding:1px 4px;border-radius:3px;margin-top:1px";
 
     el.appendChild(elTime);
     el.appendChild(elDbg);
@@ -140,13 +144,19 @@
 
   function place() {
     if (!el) return;
-    anchorBtn = anchorBtn || document.getElementById("taskBtn");
-    changeBtn = changeBtn || document.getElementById("changeSubjectBtn");
-    if (!anchorBtn) return;
-    var r = anchorBtn.getBoundingClientRect();
-    var ch = changeBtn ? changeBtn.getBoundingClientRect().height : r.height;
-    el.style.left = Math.round(r.left) + "px";
-    el.style.top = Math.round(r.bottom + ch * CFG.OFFSET_Y + CFG.NUDGE_PX) + "px";
+    // Sit in the (cramped) band between the header buttons and the waveform,
+    // left-aligned to the waveform with a small margin. Dev-only overlay — it
+    // isn't shown in production.
+    var anchor = document.getElementById("waveform")
+      || document.querySelector(".voice-visualizer")
+      || document.getElementById("panelTalk")
+      || document.getElementById("taskBtn");
+    if (!anchor) return;
+    var r = anchor.getBoundingClientRect();
+    el.style.left = Math.round(r.left + CFG.MARGIN_X) + "px";
+    // place the whole block just above the anchor's top edge
+    var h = el.offsetHeight || 26;
+    el.style.top = Math.round(r.top - h - CFG.MARGIN_Y) + "px";
   }
 
   function fmt(ms) { return (Math.max(0, ms) / 1000).toFixed(2) + " s"; }

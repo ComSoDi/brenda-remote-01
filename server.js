@@ -562,7 +562,9 @@ wss.on("connection", (ws) => {
       speech_config: {
         voice_config: { prebuilt_voice_config: { voice_name: VOICE } },
       },
-      ...(IS_GEMINI_31 ? { thinking_config: { thinking_level: "low" } } : {}),
+      // "minimal" is Gemini 3.x's own documented default for lowest latency
+      // (thinkingLevel replaced thinkingBudget) — matches R9's intent.
+      ...(IS_GEMINI_31 ? { thinking_config: { thinking_level: "minimal" } } : {}),
     };
 
     const setupMessage = {

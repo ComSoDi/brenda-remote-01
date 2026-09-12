@@ -4,6 +4,7 @@ globalThis.__newrelicLoaded = true; // lets lib/mongo.js know it's safe to recor
 // and requiring it there would start the agent's own timers and keep those scripts from exiting.
 import "dotenv/config";
 import express from "express";
+import compression from "compression";
 import { fileURLToPath } from "url";
 import { readFileSync } from "fs";
 import path from "path";
@@ -86,6 +87,13 @@ const SERVICE_WORKER_JS = readFileSync(path.join(STATIC_DIR, "service-worker.js"
 dns.setServers((process.env.DNS_SERVERS || "1.1.1.1, 8.8.8.8").split(/[,\s]+/).filter(Boolean));
 
 const app = express();
+// gzip/brotli every response — first, before any route/static handler, so the
+// ~310KB of uncompressed index.html + app.js + voiceAgent.js + config.js +
+// styles.css on initial page load actually goes over the wire compressed
+// (Express serves everything raw by default; nothing upstream on Render
+// compresses it for a plain web service). Binary assets (jpg/png) are already
+// compressed formats and gain little, but every text asset shrinks 70-80%.
+app.use(compression());
 app.use(express.json({ limit: "2mb" }));
 // index.html is regenerated per build (asset ?v= stamped with BUILD_ID) and must
 // never be reused from cache, or a client keeps loading stale asset references.

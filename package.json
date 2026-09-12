@@ -24,6 +24,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "bson": "^7.3.0",
+    "compression": "^1.8.2",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "mongodb": "^7.3.0",

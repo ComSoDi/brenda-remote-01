@@ -208,7 +208,12 @@ export default async function handler(req, res) {
           weatherLat = chosen.lat;
           weatherLon = chosen.lon;
           weatherCity = chosen.name;
-          weatherState = chosen.state || "";
+          // Keep whatever the user typed (their own language, e.g. "Comunidad
+          // de Madrid") rather than OpenWeather's always-English state name
+          // ("Community of Madrid") — chosen.state was only ever used above to
+          // narrow down candidates, not as the value we want to store/display.
+          // Only fall back to it when the user gave no state at all.
+          weatherState = weatherState || chosen.state || "";
           weatherCountry = chosen.country || "";
         } else {
           ensureFromSaved();

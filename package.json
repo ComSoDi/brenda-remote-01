@@ -18,6 +18,8 @@
     "migrate:topup-balance": "node --env-file=.env scripts/migrate-topup-balance.js",
     "migrate:backfill-ledger": "node --env-file=.env scripts/backfill-ledger.js",
     "seed:plans": "node --env-file=.env scripts/seed-plans.js",
+    "seed:canon-memory": "node --env-file=.env scripts/seed-canon-memory.js",
+    "seed:canon-memory-testdata": "node --env-file=.env scripts/seed-canon-memory-testdata.js",
     "backup:db": "node --env-file=.env scripts/backup-db.js",
     "restore:db": "node --env-file=.env scripts/restore-db.js"
   },

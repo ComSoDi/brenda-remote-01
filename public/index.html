@@ -11,7 +11,7 @@
   <!-- End Google Tag Manager -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Soy IA Brenda</title>
+  <title>Soy aiBrenda</title>
   <link rel="icon" type="image/x-icon" href="/images/brenda-avatar-32x32.png">
 
   <!-- Fonts for Auth Overlay -->
@@ -36,6 +36,17 @@
 
     gtag('config', 'G-WK6MTEQ51M');
   </script>
+
+  <!-- Moved up from the bottom of body + given defer (2026-09-21, load-order
+       fix): lets the browser start fetching all three in parallel the moment
+       it starts parsing, instead of discovering them one by one only after
+       parsing through the entire body. defer preserves execution order
+       (config.js -> voiceAgent.js -> app.js) and still waits until parsing
+       finishes before running, same as before -- app.js (type=module) was
+       already deferred by spec either way. -->
+  <script src="config.js?v=22-GAGA" defer></script>
+  <script src="voiceAgent.js?v=22-GAGA" defer></script>
+  <script type="module" src="app.js?v=22-GAGA"></script>
 </head>
 
 <body>
@@ -51,7 +62,7 @@
         <img src="images/brenda-avatar.png" alt="Brenda" class="avatar" id="brendaAvatar" data-ga-name="about_brenda_avatar_btn" />
         <div class="header-title-block">
           <div class="header-top">
-            <h1 data-ga-name="about_brenda_title_btn">IA Brenda</h1>
+            <h1 data-ga-name="about_brenda_title_btn">aiBrenda</h1>
             <div class="header-top-buttons">
               <button id="accountBtn" class="account-btn" type="button" data-ga-name="account_open_btn"></button>
               <button id="myInfoBtn" class="my-info-btn" type="button" data-ga-name="my_info_open_btn"></button>
@@ -818,9 +829,6 @@
 
   </div>
 
-  <script src="config.js?v=22-GAGA"></script>
-  <script src="voiceAgent.js?v=22-GAGA"></script>
-  <script type="module" src="app.js?v=22-GAGA"></script>
   <!-- TEMP voice-latency stopwatch — comment out or delete this line + public/vad-stopwatch.js to remove -->
   <script src="vad-stopwatch.js?v=vadsw1" defer></script>
 

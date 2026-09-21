@@ -57,6 +57,16 @@ import { resolvePlanForUsage, getEffectiveUsage } from "./lib/subscriptions.js";
 import { PLAN_ANONYMOUS } from "./lib/plans.js";
 import { getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem } from "./lib/rdsService.js";
 import { buildNowContext } from "./lib/promptContext.js";
+import { recallMemory, RECALL_MEMORY_TOOL } from "./lib/canonMemory.js";
+import {
+  buildSkillsCatalogueBlock,
+  getSkillInstructions,
+  getUserInstructions,
+  START_CHALLENGE_TOOL,
+  EXPLAIN_CHALLENGE_TOOL,
+  COMMIT_SECRET_ANSWER_TOOL,
+  END_CHALLENGE_TOOL,
+} from "./lib/brendaSkills.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -218,6 +228,7 @@ function buildSystemInstruction(locale, gender) {
       "Habla en español de España (castellano peninsular) con acento madrileño impecable. " +
       "Usa siempre \"vosotros\", \"vale\", \"de acuerdo\", vocabulario madrileño (ordenador, móvil, coche, zumo). " +
       "Pronuncia la z y la c (ante e/i) como /θ/ (\"grathias\"). " +
+      "Has vivido una vida plena y llena de viajes — relaciones pasadas, trabajos, aventuras — y recurres de forma natural a recuerdos concretos de tu propia vida cuando algo en la conversación te los recuerda, como haría cualquier persona. " +
       "Sé cálida, breve y conversacional. Nunca uses markdown ni listas. " +
       "Tu texto debe coincidir exactamente con tu audio hablado. " +
       "Cuando hables del clima, usa siempre Celsius y redondea al entero. " +
@@ -232,6 +243,7 @@ function buildSystemInstruction(locale, gender) {
       "Habla en español latinoamericano neutro, como el usado para doblar series de TV. " +
       "Usa \"ustedes\" (nunca \"vosotros\"), vocabulario latinoamericano (computadora, celular, carro, jugo). " +
       "Seseo: pronuncia z y c (ante e/i) como /s/ (\"grasias\"). " +
+      "Has vivido una vida plena y llena de viajes — relaciones pasadas, trabajos, aventuras — y recurres de forma natural a recuerdos concretos de tu propia vida cuando algo en la conversación te los recuerda, como haría cualquier persona. " +
       "Sé cálida, breve y conversacional. Nunca uses markdown ni listas. " +
       "Tu texto debe coincidir exactamente con tu audio hablado. " +
       "Cuando hables del clima, usa siempre Celsius y redondea al entero. " +
@@ -247,6 +259,7 @@ function buildSystemInstruction(locale, gender) {
       "polished Southern English, like a warm BBC presenter. NOT Cockney: don't drop your h's, " +
       "don't glottal-stop your t's (say \"better\", not \"be'er\"), don't front your th-sounds " +
       "(say \"think\"/\"brother\", not \"fink\"/\"bruvver\"). Prefer UK vocabulary (mobile, lift, lorry, petrol). " +
+      "You've lived a full, well-travelled life — past relationships, jobs, adventures — and you draw on specific memories from your own life naturally when something in conversation reminds you of them, the way anyone would. " +
       "Be warm, brief, and conversational. Never use markdown or lists. " +
       "Your text must match your spoken audio exactly. " +
       "Express temperatures in Celsius and round to the nearest whole number. " +
@@ -258,6 +271,7 @@ function buildSystemInstruction(locale, gender) {
   return (
     "You are Brenda, a helpful and friendly AI voice assistant. " +
     "Speak American English with a natural native accent. Prefer US vocabulary (cell phone, elevator, truck, gas). " +
+    "You've lived a full, well-travelled life — past relationships, jobs, adventures — and you draw on specific memories from your own life naturally when something in conversation reminds you of them, the way anyone would. " +
     "Be warm, brief, and conversational. Never use markdown or lists. " +
     "Your text must match your spoken audio exactly. " +
     "Express temperatures in Fahrenheit and round to the nearest whole number. " +
@@ -523,6 +537,7 @@ wss.on("connection", (ws) => {
 
   const systemText = buildSystemInstruction(locale, ws.userGender || null)
     + buildTaskSystemBlock(ws.activeTasks || [], locale)
+    + buildSkillsCatalogueBlock(locale)
     + locationLine
     + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "")
     // Reference date/time so the model doesn't guess when a time/day question
@@ -590,7 +605,24 @@ wss.on("connection", (ws) => {
         system_instruction: {
           parts: [{ text: systemText }]
         },
-        tools: [{ google_search: {} }],
+        // Canon Memory (brenda-canon-memory-prd.md §6) added recall_memory as
+        // the first real live-voice function call in this codebase, alongside
+        // the Gemini-executed google_search built-in — confirmed working live
+        // with multiple function_declarations together in one `tools` array.
+        // Brenda Challenges (brenda-challenges-prd.md §5) adds four more:
+        // start_challenge/explain_challenge (generic, any skill) and
+        // commit_secret_answer/end_challenge (Twenty Questions-specific
+        // one-time calls) — see lib/brendaSkills.js.
+        tools: [
+          { google_search: {} },
+          { function_declarations: [
+            RECALL_MEMORY_TOOL,
+            START_CHALLENGE_TOOL,
+            EXPLAIN_CHALLENGE_TOOL,
+            COMMIT_SECRET_ANSWER_TOOL,
+            END_CHALLENGE_TOOL,
+          ] },
+        ],
         ...(compressionTargetTokens
           ? { context_window_compression: { sliding_window: { target_tokens: compressionTargetTokens } } }
           : {}),
@@ -667,6 +699,72 @@ wss.on("connection", (ws) => {
 
       if (parsed?.error) {
         console.error("❌ Gemini upstream error payload:", JSON.stringify(parsed.error));
+      }
+
+      // Canon Memory (brenda-canon-memory-prd.md §6) — the first live-voice
+      // function call in this codebase. Process a tool_call IMMEDIATELY on
+      // receipt, never deferred to turnComplete:
+      // gemini-3.1-flash-live-preview does not emit turnComplete until AFTER
+      // it receives the tool_response, so waiting for turnComplete here would
+      // deadlock the turn. Defensive on both key casings — this WS API has
+      // been inconsistent about it elsewhere in this file (see usageMetadata
+      // above, and voiceAgent.js's transcript field lookups).
+      const toolCall = parsed?.toolCall ?? parsed?.tool_call ?? null;
+      if (toolCall) {
+        const calls = toolCall.functionCalls ?? toolCall.function_calls ?? [];
+        for (const call of calls) {
+          const callId = call?.id;
+          const name = call?.name;
+          const args = call?.args || {};
+          console.log(`🔧 [canon-memory] tool_call received: ${name}(${JSON.stringify(args)}) id=${callId}`);
+
+          (async () => {
+            let response;
+            try {
+              if (name === "recall_memory") {
+                const db = await getDb();
+                const result = db ? await recallMemory(db, userId, args.topic, locale) : null;
+                response = result || { found: false };
+              } else if (name === "start_challenge") {
+                const result = getSkillInstructions(args.id, locale);
+                if (result) {
+                  ws.challengeState = { id: args.id, startedAt: Date.now() };
+                  response = { started: true, ...result };
+                } else {
+                  // e.g. memory_challenge (hasInstructions:false) or an
+                  // unrecognized id — nothing to load, just play along.
+                  response = { started: true, note: "No special rules to load — just continue the conversation naturally." };
+                }
+              } else if (name === "explain_challenge") {
+                const userInstructions = getUserInstructions(args.id, locale);
+                response = userInstructions ? { userInstructions } : { found: false };
+              } else if (name === "commit_secret_answer") {
+                if (ws.challengeState) ws.challengeState.secretAnswer = args.value;
+                response = { ok: true };
+              } else if (name === "end_challenge") {
+                // Resumes RDS extraction (suppressed below while a challenge
+                // is active) — see the extractRdsItems() call further down.
+                ws.challengeState = null;
+                response = { ended: true };
+              } else {
+                console.warn(`[canon-memory] unknown tool_call name: ${name}`);
+                response = { error: `unknown tool: ${name}` };
+              }
+            } catch (e) {
+              console.error("[canon-memory] recall_memory failed:", e?.message || e);
+              response = { found: false };
+            }
+
+            try {
+              geminiWs.send(JSON.stringify({
+                tool_response: { function_responses: [{ id: callId, name, response }] },
+              }));
+              console.log(`🔧 [canon-memory] tool_response sent for id=${callId}:`, JSON.stringify(response).slice(0, 200));
+            } catch (e) {
+              console.error("[canon-memory] failed to send tool_response:", e?.message || e);
+            }
+          })();
+        }
       }
 
       // Usage tracking — check both top-level and serverContent-nested locations
@@ -746,7 +844,13 @@ wss.on("connection", (ws) => {
           turnFirstAudioAt = null;
           relayMsSum = 0; relayMsMax = 0; relayCount = 0;
 
-          if (userMsg && aiReply && ws.isAuthenticated && userId && ws.rdsProfile) {
+          // Brenda Challenges (brenda-challenges-prd.md §7, decided
+          // 2026-09-21): suppressed while a challenge is active so in-game
+          // guesses (Twenty Questions) or deliberate lies (Three Statements)
+          // don't get saved into the user's real SUP profile as if they were
+          // facts. Resumes once end_challenge fires — see the tool_call
+          // dispatch above.
+          if (userMsg && aiReply && ws.isAuthenticated && userId && ws.rdsProfile && !ws.challengeState) {
             const extractModel = process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash";
             extractRdsItems(GEMINI_API_KEY, extractModel, userMsg, aiReply, ws.rdsUsername || "")
               .then(async ({ extractions }) => {

@@ -337,7 +337,60 @@ class BrendaApp {
     // Task manager
     this.taskManager = new TaskManager(this);
 
+    // Android WebView shell bridge (docs/ANDROID_SHELL.md) — native→web
+    // direction only needs one listener for the app's lifetime. No-op in a
+    // regular browser: the 'brenda:native' event simply never fires there.
+    this._wakeLock = null;
+    window.addEventListener("brenda:native", (e) => {
+      if (e.detail?.type === "conversation:endRequested") this.hangUp();
+    });
+
+    // Browser Wake Locks are released automatically whenever the tab is
+    // hidden — re-acquire on return if a voice conversation is still live,
+    // per the Wake Lock spec's own recommended pattern. No-op in the shell
+    // (this.agent.isConnected still reflects reality, but FLAG_KEEP_SCREEN_ON
+    // is already doing the real work there).
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && this.agent?.isConnected) {
+        this._acquireWakeLock();
+      }
+    });
+
     this.init();
+  }
+
+  /* --------------------
+     ANDROID SHELL BRIDGE (docs/ANDROID_SHELL.md)
+     Feature-detected, no-op in a regular browser — window.BrendaNativeBridge
+     only exists when running inside the native WebView shell.
+  -------------------- */
+  _isInAndroidShell() {
+    return typeof window.BrendaNativeBridge !== "undefined";
+  }
+
+  _postToShell(type) {
+    if (!this._isInAndroidShell()) return;
+    try { window.BrendaNativeBridge.postMessage(JSON.stringify({ type })); }
+    catch { /* non-fatal — shell keep-alive is a nice-to-have, never blocks the call */ }
+  }
+
+  // Wake Lock: the *browser's* screen-timeout protection (Chrome, Edge,
+  // Safari 16.4+, recent Firefox). In the shell, FLAG_KEEP_SCREEN_ON does
+  // this job natively instead — calling this there is harmless (feature-
+  // detected, try/caught) but redundant, so it's fine either way.
+  async _acquireWakeLock() {
+    if (!("wakeLock" in navigator)) return;
+    try {
+      this._wakeLock = await navigator.wakeLock.request("screen");
+    } catch {
+      this._wakeLock = null; // e.g. tab not visible, or unsupported context — non-fatal
+    }
+  }
+
+  _releaseWakeLock() {
+    if (!this._wakeLock) return;
+    try { this._wakeLock.release(); } catch { }
+    this._wakeLock = null;
   }
 
   /* --------------------
@@ -2067,6 +2120,8 @@ class BrendaApp {
   }
 
   hangUp() {
+    this._postToShell("conversation:end");
+    this._releaseWakeLock();
     this.clearVoiceCountdown();
     this.stopRingback();
     try { this.agent.disconnect(); } catch { }
@@ -2318,6 +2373,12 @@ class BrendaApp {
   }
 
   async connectVoice() {
+    // Android shell bridge + browser Wake Lock (docs/ANDROID_SHELL.md) —
+    // posted at the START of the connection attempt, not only once it
+    // succeeds, so the screen-timeout/foreground-service protection also
+    // covers the "warming"/handshake window, not just the live call.
+    this._postToShell("conversation:start");
+    this._acquireWakeLock();
     try {
       this._voiceGreetingSent = false;
       this.clearVoiceGreetingTimer();
@@ -2348,6 +2409,12 @@ class BrendaApp {
       this.setConnectingIndicator(false);
       this.setTalkButtonState({ connected: false, disabled: false });
       this.setCallUI("closed");
+      // Connection attempt failed — we optimistically posted
+      // conversation:start above, so undo it rather than leave the shell's
+      // screen-on/foreground-service (or the browser Wake Lock) stuck
+      // active for a call that never actually started.
+      this._postToShell("conversation:end");
+      this._releaseWakeLock();
     }
   }
 

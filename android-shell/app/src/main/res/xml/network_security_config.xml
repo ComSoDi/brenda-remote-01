@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Base config, used as-is by the release build (and by debug too, UNLESS
+  overridden — see src/debug/res/xml/network_security_config.xml, which
+  Gradle merges over this same path for debug builds only).
+
+  Release must never allow cleartext, full stop.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

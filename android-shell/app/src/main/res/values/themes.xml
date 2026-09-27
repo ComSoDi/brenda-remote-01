@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.BrendaShell" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/splash_background</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+    </style>
+
+    <!-- AndroidX SplashScreen API (Part B) — set as MainActivity's launch
+         theme in the manifest; installSplashScreen() in onCreate() swaps to
+         Theme.BrendaShell once the WebView is ready to draw. -->
+    <style name="Theme.BrendaShell.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.BrendaShell</item>
+    </style>
+</resources>

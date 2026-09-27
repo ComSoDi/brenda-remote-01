@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spanish (all regions) — keep key set identical to values/strings.xml.
+     Follows the PHONE's language, not Brenda's in-app locale. -->
+<resources>
+    <!-- app_name is not translatable — inherited from values/strings.xml -->
+
+    <!-- Microphone permission -->
+    <string name="mic_rationale_title">Acceso al micrófono</string>
+    <string name="mic_rationale_message">Brenda necesita tu micrófono para escucharte cuando hablas con ella.</string>
+    <string name="mic_denied_title">Se necesita permiso del micrófono</string>
+    <string name="mic_denied_message">Para hablar con Brenda hace falta acceso al micrófono. Puedes activarlo en Ajustes.</string>
+    <string name="open_settings">Abrir Ajustes</string>
+
+    <!-- Offline screen -->
+    <string name="offline_title">Sin conexión</string>
+    <string name="offline_message">Brenda necesita conexión a internet. Revisa tu conexión y vuelve a intentarlo.</string>
+    <string name="retry">Reintentar</string>
+
+    <!-- Foreground service notification (Part C, Layer 2) -->
+    <string name="notif_channel_name">Conversación de voz</string>
+    <string name="notif_channel_description">Se muestra mientras hablas con Brenda, para que la conversación continúe aunque se apague la pantalla.</string>
+    <string name="notif_title">Brenda te está escuchando</string>
+    <string name="notif_text">Toca para volver a tu conversación.</string>
+    <string name="notif_action_end">Terminar conversación</string>
+</resources>

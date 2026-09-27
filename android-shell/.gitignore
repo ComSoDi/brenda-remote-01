@@ -1,0 +1,19 @@
+# android-shell/.gitignore — standard Android project ignores, plus the
+# signing secrets (rule #3 in the task spec: never commit keystores or
+# keystore.properties).
+
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuildOutput
+.cxx
+local.properties
+
+# Signing secrets — never commit
+keystore.properties
+*.keystore
+*.jks

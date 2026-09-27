@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Neutral splash background — swap for Brenda's actual brand color
+         from public/styles.css if you want brand-exact match; kept generic
+         here since I didn't want to guess at a hex value from app.js/CSS
+         without you confirming which one is "the" brand color. -->
+    <color name="splash_background">#FFFFFF</color>
+    <color name="notification_icon_tint">#5B4B8A</color>
+</resources>

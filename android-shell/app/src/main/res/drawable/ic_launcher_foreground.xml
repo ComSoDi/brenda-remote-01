@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher foreground: the same artwork the PWA/TWA used
+     (public/images_play/icon-512-maskable.png, copied to drawable-nodpi).
+     Adaptive icons show only the centre 72dp of this 108dp layer (~67%),
+     tighter than the PWA maskable safe zone (80%), so the image is inset to
+     90dp (8.33% per side) — the visible area then matches the PWA crop and
+     "Brenda" isn't clipped. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/ic_launcher_brenda"
+    android:inset="8.33%" />

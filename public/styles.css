@@ -2505,7 +2505,10 @@ body {
   background-image: url('images/brenda-background.jpg');
   background-size: cover;
   background-position: center;
-  transform: translateX(calc(-100% - 4px));
+  /* -24px parks the panel beyond its own box-shadow (4px 0 18px): at -4px
+     the 12 hidden panels' stacked shadows bled into view as a dark strip
+     along the left edge. */
+  transform: translateX(calc(-100% - 24px));
   transition: transform 0.25s ease-in;
   overflow: hidden;
   display: flex;
@@ -2730,3 +2733,91 @@ body {
   .sidenav-title-col { width: 100px; }
 }
 .headline-heat-bar-fill--cool { background: #888780; }
+
+/* =========================================================
+   PHONE HEADER (≤499px) — compact 3-row header, tuned for a
+   360×800 baseline (common mid-range Android). Desktop untouched.
+   Row 1: avatar · title · account · My info · ?
+   Row 2: Subjects · Sections · Tasks   (equal widths)
+   Row 3: Headlines · Change Topic      (equal widths)
+   Keeps ≥20px bold labels + existing high-contrast colours for
+   senior readability. Selectors are prefixed with .header /
+   .header-actions to outrank task-styles.css (loaded later).
+========================================================= */
+@media (max-width: 499px) {
+  /* Android shell: the page draws edge-to-edge (background image fills the
+     whole screen, under the status + navigation bars); the shell sets
+     --shell-safe-top/-bottom to the bar heights so the UI stays readable.
+     In a normal browser the vars are unset → env() → 0, i.e. unchanged. */
+  .container {
+    padding-top: calc(12px + var(--shell-safe-top, env(safe-area-inset-top, 0px))) !important;
+    padding-bottom: calc(10px + var(--shell-safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
+  }
+
+  .header {
+    padding-bottom: 8px;
+  }
+
+  .header-left {
+    column-gap: 8px;
+  }
+
+  .header .avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .header h1 {
+    font-size: 21px;
+  }
+
+  .header .account-btn,
+  .header .my-info-btn,
+  .header .help-btn {
+    height: 42px;
+  }
+
+  .header .account-btn {
+    font-size: 18px;
+    padding: 4px 6px;
+    max-width: 30vw;
+  }
+
+  .header .my-info-btn {
+    width: auto;
+    font-size: 20px;
+    padding: 4px 10px;
+  }
+
+  .header .help-btn {
+    width: 42px;
+    min-width: 42px;
+    font-size: 26px;
+  }
+
+  .header-actions {
+    column-gap: 6px;
+  }
+
+  .header-actions > button,
+  .header-actions .task-btn {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    margin-left: 0;
+    height: 42px;
+    font-size: 20px;
+    padding: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* AI disclaimer: wrap instead of truncating ("…can make mist…"), and
+     darker than the desktop #999 — it must be fully readable. */
+  .ai-disclaimer,
+  .call-disclaimer {
+    white-space: normal;
+    color: #444;
+  }
+}

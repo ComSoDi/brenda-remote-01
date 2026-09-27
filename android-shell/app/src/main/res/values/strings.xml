@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">aiBrenda</string>
+
+    <!-- Microphone permission -->
+    <string name="mic_rationale_title">Microphone access</string>
+    <string name="mic_rationale_message">Brenda needs your microphone to hear you when you talk to her.</string>
+    <string name="mic_denied_title">Microphone permission needed</string>
+    <string name="mic_denied_message">Talking to Brenda needs microphone access. You can grant it in Settings.</string>
+    <string name="open_settings">Open Settings</string>
+
+    <!-- Offline screen -->
+    <string name="offline_title">You\'re offline</string>
+    <string name="offline_message">Brenda needs an internet connection. Check your connection and try again.</string>
+    <string name="retry">Retry</string>
+
+    <!-- Foreground service notification (Part C, Layer 2) -->
+    <string name="notif_channel_name">Voice conversation</string>
+    <string name="notif_channel_description">Shown while you\'re talking with Brenda, so the conversation keeps going even if the screen turns off.</string>
+    <string name="notif_title">Brenda is listening</string>
+    <string name="notif_text">Tap to return to your conversation.</string>
+    <string name="notif_action_end">End conversation</string>
+</resources>

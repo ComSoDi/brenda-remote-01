@@ -1,8 +1,8 @@
-# iaBrenda Project
+# aiBrenda Project
 
 ## Overview
 
-**Soy IA Brenda** is a multilingual AI chat and voice assistant deployed on **Render**. The AI persona is named "Brenda". It supports text chat (via Gemini) and real-time voice (via Gemini Live). The frontend is vanilla JS with no framework.
+**Soy aiBrenda** is a multilingual AI chat and voice assistant deployed on **Render**. The AI persona is named "Brenda". It supports text chat (via Gemini) and real-time voice (via Gemini Live). The frontend is vanilla JS with no framework.
 
 ---
 
@@ -99,7 +99,7 @@ voice-proxy/                 Standalone Node service (own package.json), deploye
                             1 minute) — this does NOT run under local `npm run dev`.
 
 public/                     Static frontend (served as SPA)
-  index.html                Main app shell ("Soy IA Brenda")
+  index.html                Main app shell ("Soy aiBrenda")
   app.js                    Core application logic
   taskManager.js            Task-reminder panel UI manager (renamed from medicationManager.js)
   task-styles.css           Task-reminder panel styles (renamed from med-styles.css)
@@ -367,7 +367,7 @@ Claude's learned context: build quirks, debugging patterns, session decisions, s
 **Layer 3 — Engram** (`D:\UsuariosD\enfor\.engram`)
 Cross-agent persistent knowledge. Survives DeepFreeze reboots.
 Source of truth for: accepted code contracts, architectural decisions, inter-agent handoff notes.
-Project name used for this app's entries: `iabrenda`.
+Project name used for this app's entries: `iabrenda` (legacy key — kept after the aiBrenda rename so existing memories stay reachable).
 
 ### What goes in Engram vs auto-memory:
 | Engram | Auto-memory |

@@ -248,11 +248,9 @@ export default {
  
     sideNavTalkText5: "I take some seconds to answer. In the mean time you'll see an animated yellow signal saying 'Connecting'. When a green square with 'Speaking with aiBrenda' and the round red hang-up circle appears, we can talk!",
 
-    sideNavTalkText6: "Speak clearly in a quiet place and I'll understand you  perfectly.",
+    sideNavTalkText6: "Speak clearly in a quiet place and I'll understand you perfectly.",
 
-    sideNavTalkText6: "If you tap the yellow 'I Start' button while we're talking, I'll change subjects with one of your favourite topics.",
-
-    sideNavTalkText7: "And when you want to hang up, just tap the red circle.",
+    sideNavTalkText7: "If you tap the yellow 'I Start' button while we're talking, I'll change subjects with one of your favourite topics.",
 
     sideNavTalkText8: "To hang up, just tap the red circle or the red 'Hang Up' button below.",
 

@@ -40,8 +40,9 @@ dist/
 build/
 .vercel
 
-# Local Claude instructions (machine-specific)
+# Local Claude instructions / permissions (machine-specific)
 CLAUDE.local.md
+.claude/settings.local.json
 
 # Voice proxy local deps
 voice-proxy/node_modules/

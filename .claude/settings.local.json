@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(\"C:/Users/enfor/AppData/Local/Programs/engram/engram.exe\" help:*)"
-    ]
-  }
-}

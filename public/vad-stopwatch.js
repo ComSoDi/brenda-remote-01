@@ -80,7 +80,7 @@
   CFG.TRANSCRIPT_STALL_MS = CFG.TRANSCRIPT_STALL_MS ?? 450;     // black→red: transcript settled this long after counting started
   CFG.REARM_MS            = CFG.REARM_MS            ?? 260;      // MIC: once counting, need this much CONTINUOUS speech to reset (ignores blips)
   CFG.MARGIN_X           = CFG.MARGIN_X           ?? 10;        // px from the waveform's left edge
-  CFG.MARGIN_Y           = CFG.MARGIN_Y           ?? 2;         // px gap above the waveform
+  CFG.MARGIN_Y           = CFG.MARGIN_Y           ?? 4;         // px gap above the waveform
 
   CFG.save = function () {
     var keep = {};

@@ -1,5 +1,5 @@
 export default {
-    callTitle: "Hablando con IA Brenda",
+    callTitle: "Hablando con aiBrenda",
     voiceMode: "Hablar",
     textMode: "Escribir",
     connect: "Hablar",
@@ -17,11 +17,11 @@ export default {
     talkRequiresAccount: "Abre una cuenta Gratis para poder Hablar",
     voiceQuotaExhausted: "Has agotado tu tiempo de voz de este periodo. Por favor amplia tu plan para seguir conversando.",
     youLabel: "Tu",
-    assistantLabel: "IA Brenda",
+    assistantLabel: "aiBrenda",
 
     accountBtnAnonymous: "Anónimo",
 
-    authGreeting: "¡Hola! Soy IA Brenda",
+    authGreeting: "¡Hola! Soy aiBrenda",
     authExplain: "Crea tu cuenta para que nuestras conversaciones sean privadas y memorables",
     authNickLabel: "Usuario",
     authNickHelp: "Solo letras, numeros y guiones bajos (4-20 caracteres)",
@@ -41,16 +41,16 @@ export default {
     authGenderOther: "Otro",
     authErrorNoGender: "Por favor selecciona un género.",
 
-    consentTitle: "¡Bienvenido a IA Brenda!",
+    consentTitle: "¡Bienvenido a aiBrenda!",
     consentSubtitle: "Lee esto con atención y pulsa «Acepto» para continuar",
     consentContent: `
       <p><strong>Brenda es una IA, no una persona.</strong> Sus respuestas las genera una inteligencia artificial, no un ser humano. Es estupenda para charlar y darte información general, pero nunca sustituye el consejo de un profesional.</p>
       <p>Piensa en Brenda como una vecina simpática con la que te encanta charlar. No te fíes de ella para temas médicos, legales, financieros o psicológicos: siempre te recomendará que consultes a un profesional certificado.</p>
       <p>Por favor, no le compartas datos personales identificativos, contraseñas, información financiera, historial médico ni otros datos sensibles.</p>
-      <p><strong>Tu voz.</strong> En el modo HABLAR, tu micrófono capta tu voz en tiempo real. El audio se envía directamente a un servicio externo de IA para procesarlo y nunca lo almacenamos nosotros.</p>
+      <p><strong>Tu voz.</strong> En el modo HABLAR, tu micrófono capta tu voz en tiempo real. El audio se envía directamente a Google/Gemini, el servicio de procesamiento de IA que seleccionamos para procesarlo, y nunca lo almacenamos nosotros.</p>
       <p>El micrófono se desconecta automáticamente tras un rato de silencio. Si ocurre y quieres seguir hablando, simplemente vuelve a pulsar HABLAR.</p>
       <p><strong>Tus conversaciones.</strong> Brenda guarda tus mensajes más recientes para que puedas retomar donde lo dejaste. El audio de voz nunca se graba: solo se guarda la transcripción de texto para dar continuidad a la sesión.</p>
-      <p>Al pulsar «Acepto» confirmas que has leído y aceptas los Términos de Uso y la Política de Privacidad de IA Brenda.</p>
+      <p>Al pulsar «Acepto» confirmas que has leído y aceptas los Términos de Uso y la Política de Privacidad de aiBrenda.</p>
     `,
     consentAgree: "Acepto",
     consentDecline: "No acepto",
@@ -62,7 +62,7 @@ export default {
       <p class="disclosure-note">La primera vez que pulses HABLAR, tu dispositivo te pedirá permiso para usar el micrófono. Te recomendamos elegir «Permitir siempre» para que quede listo para futuras llamadas.</p>
       <p>Para colgar, simplemente pulsa el icono rojo de teléfono o el botón rojo de Colgar.</p>
       <p>Como en una llamada telefónica, Brenda tarda unos segundos en «contestar» y saludarte.</p>
-      <p>Tu voz se envía en tiempo real a un servicio externo de IA: nunca la grabamos ni la almacenamos nosotros.</p>
+      <p>Tu voz se envía en tiempo real a Google/Gemini, el servicio de procesamiento de IA que seleccionamos para procesarla: nunca la grabamos ni la almacenamos nosotros.</p>
       <p>Lo que dices y lo que responde Brenda se transcribe a texto y se guarda, así que aparece en tu ventana de chat.</p>
       <p><strong>Por favor, no compartas información personal sensible, ni por voz ni por chat.</strong></p>
       <p>El micrófono se desconecta automáticamente tras un rato de silencio. Si ocurre y quieres seguir hablando, simplemente vuelve a pulsar HABLAR.</p>
@@ -71,14 +71,14 @@ export default {
 
     privacyTitle: "Política de Privacidad de Datos",
     privacyContent: `
-      <p>La aplicación <strong>IABrenda.com</strong> está en período de prueba y solo disponible a usuarios selectos que colaboran en las pruebas preliminares propias de la etapa de desarrollo.</p>
+      <p>La aplicación <strong>aiBrenda.co</strong> está en período de prueba y solo disponible a usuarios selectos que colaboran en las pruebas preliminares propias de la etapa de desarrollo.</p>
       <p>Durante este periodo de prueba no podemos garantizar la privacidad de los datos que se usarán para descubrir posibles fallas, requerimientos imprevistos y caracteristicas a incorporar antes de su futuro lanzamiento.</p>
-      <p>Tampoco somos responsables de la privacidad de los datos de aquellos que usen <strong>IABrenda.com</strong> sin nuestro consentimiento.</p>
+      <p>Tampoco somos responsables de la privacidad de los datos de aquellos que usen <strong>aiBrenda.co</strong> sin nuestro consentimiento.</p>
       <p>El sistema de registro usado durante el período de prueba (Apodo + PIN) es <strong>MUY básico</strong> y no garantiza ni remotamente la privacidad de los datos.</p>
       <p>Por favor <strong>NUNCA COMPARTAS</strong> datos personales como dirección, emails, cuenta bancaria, estado de salud, consultas legales o fiscales, etc. en esta plataforma.</p>
       <p>Cuando se acabe el período de prueba incorporaremos sistemas de protección más robustos (p.ej. OAuth).</p>
       <p class="content-subheading">Datos de Voz y Conversación</p>
-      <p><strong>Entrada de voz:</strong> Cuando usas el modo HABLAR, tu micrófono capta tu voz y la envía en tiempo real a nuestro servicio de procesamiento de IA. El audio se procesa al instante y nunca es grabado, almacenado ni conservado por IA Brenda ni por sus servidores.</p>
+      <p><strong>Entrada de voz:</strong> Cuando usas el modo HABLAR, tu micrófono capta tu voz y la envía en tiempo real a Gemini/Google, el servicio externo de IA que seleccionamos para procesarla. El audio se procesa al instante y nunca es grabado, almacenado ni conservado por aiBrenda ni por sus servidores.</p>
       <p><strong>Transcripciones:</strong> Las conversaciones de voz se transcriben a texto en tiempo real. Estas transcripciones, junto con tus mensajes de chat de texto, se guardan para mostrar tus aproximadamente últimas 20 interacciones. Esto te permite revisar tus conversaciones recientes dentro de la app. El historial de conversación está asociado exclusivamente a tu cuenta y se almacena de forma segura.</p>
       <p><strong>Lo que no almacenamos:</strong> Archivos de audio en bruto, grabaciones de voz ni ningún dato biométrico de voz.</p>
       <p><strong>Eliminación de datos:</strong> Puedes solicitar la eliminación de tu cuenta y de todos los datos de conversación asociados en cualquier momento escribiéndonos a soporte@comerciosocialdigital.com. Procesaremos tu solicitud en un plazo de 30 días.</p>
@@ -125,8 +125,8 @@ export default {
     myInfoSaveError: "No puedo guardar la ubicación ahora mismo.",
 
     // Help
-    helpTitle: "IA Brenda Help",
-    helpGreeting: "Hola! Soy IA Brenda",
+    helpTitle: "aiBrenda Help",
+    helpGreeting: "Hola! Soy aiBrenda",
     helpExplain: "Crea tu cuenta para que nuestras conversaciones sean privadas y memorables",
 
     // SideNav Help
@@ -235,7 +235,7 @@ export default {
 
     sideNavTalkText4: "Selecciona el primer 'Permitir' y no aparecerá más.",
 
-    sideNavTalkText5: "Me toma unos segundos atender. Mientras verás una señal amarilla animada que dice \"Conectando\". Cuando veas un cuadro verde con  \"Hablando con IA Brenda\" y un círculo redondo rojo de colgar, ¡podemos hablar!",
+    sideNavTalkText5: "Me toma unos segundos atender. Mientras verás una señal amarilla animada que dice \"Conectando\". Cuando veas un cuadro verde con  \"Hablando con aiBrenda\" y un círculo redondo rojo de colgar, ¡podemos hablar!",
 
     sideNavTalkText6: "Hábla con claridad en un lugar con poco ruido y entenderé perfectamente lo que digas o preguntes.",
 
@@ -253,10 +253,10 @@ export default {
     sideNavWriteText7: "Si pulsas el botón amarillo \"Inicia\" mientras escribimos, iniciaré la conversación con uno de tus temas favoritos.",
 
     // I am Brenda Overlay
-    brendaTitle: "IA Brenda",
+    brendaTitle: "aiBrenda",
     brendaSubtitle: "Tu compañera amistosa. Disponible para conversar siempre que quieras",
     brendaContent: `
-      <p><strong>IA Brenda.com</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche, estés donde estés.</p>
+      <p><strong>aiBrenda.co</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche, estés donde estés.</p>
       <p>Considérame una buena amiga, una vecina cercana, una compañera del trabajo. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu dí­a, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
       <p>También puedo ayudarte con las preguntas típicas del día a día, como por ejemplo:</p>
       <ul>
@@ -381,7 +381,7 @@ export default {
     "tier.superior": "Superior",
     "tier.advanced": "Avanzado",
 
-    "sub.tryFreeTitle": "¡Prueba IA Brenda Gratis!",
+    "sub.tryFreeTitle": "¡Prueba aiBrenda Gratis!",
     "sub.tryFreeBody": "Por tiempo limitado, solo por abrir una cuenta, obtienes <strong>40 minutos de conversación y 100 minutos de interacciones durante un mes sin costo!</strong><br>Puedes cancelar en cualquier momento.",
     "sub.header": "Planes de Suscripción",
     "sub.topUpName": "Recarga",
@@ -415,6 +415,6 @@ export default {
     "notes.changeAnytime": "Estas ofertas fueron preparadas especialmente para ti. Puedes cambiar a otro plan cuando quieras. Si cambias de plan a mitad del período, los Brendys no consumidos se añadirán a tu nuevo plan. El descuento aplica una vez por plan.",
     "notes.brendyEquiv": "1 Brendy = 1 Token de IA",
     "notes.restrictions": "Pueden existir restricciones relacionadas con la edad del usuario, idiomas disponibles y requisitos del sistema, entre otros.",
-    "notes.termsAccept": "Al suscribirte aceptas los términos y condiciones generales de IA Brenda, así como los del plan que selecciones.",
+    "notes.termsAccept": "Al suscribirte aceptas los términos y condiciones generales de aiBrenda, así como los del plan que selecciones.",
     "notes.privacyLink": "Por favor revisa nuestras políticas de Privacidad y Protección de Datos aquí.",
 };

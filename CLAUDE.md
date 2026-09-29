@@ -201,6 +201,11 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
   attempts the account **hard-locks** (`preferences.lockedAt` set) — every further attempt, even
   the correct PIN, is rejected (HTTP 423) until manually cleared in MongoDB. No auto-expiry;
   persists indefinitely across sessions/devices.
+- **Forgotten PIN / unlock:** there is no self-service reset (no email/phone to verify
+  ownership). Admin sets a new PIN with `npm run admin:reset-pin -- <Nick> <newPin>`
+  (`scripts/reset-pin.js`): shows the account, asks to retype the Nick, sets `pinHash`, clears
+  `failedPinAttempts`/`lockedAt`, stamps `preferences.pinResetAt`, and refuses Inactive
+  (deleted) accounts.
 - Correct PIN resets `failedPinAttempts` to 0.
 - This replaced a prior bug where wrong-PIN-on-existing-Nick silently forked a new `_1`/`_2`
   duplicate account instead of erroring.

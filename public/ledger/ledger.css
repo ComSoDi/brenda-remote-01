@@ -58,7 +58,7 @@ table.ledger-table td.col-l { text-align: left; }
    position:sticky; the `left` offsets below MUST equal the running width. ── */
 table.ledger-table th.col-user,
 table.ledger-table td.col-user {
-  width: 110px; min-width: 110px; max-width: 110px;
+  width: 80px; min-width: 80px; max-width: 80px;
   left: 0;
   text-align: left;
   overflow: hidden;
@@ -66,18 +66,20 @@ table.ledger-table td.col-user {
 }
 table.ledger-table th.col-dt,
 table.ledger-table td.col-dt {
-  width: 152px; min-width: 152px; max-width: 152px;
-  left: 110px;                       /* == col-user width */
+  width: 120px; min-width: 120px; max-width: 120px;
+  left: 80px;                        /* == col-user width */
   text-align: center;
 }
 table.ledger-table th.col-type,
 table.ledger-table td.col-type {
-  width: 96px; min-width: 96px; max-width: 96px;
+  width: 66px; min-width: 66px; max-width: 66px;
   text-align: center;
 }
 table.ledger-table th.col-plan,
 table.ledger-table td.col-plan {
-  min-width: 180px;
+  width: 40ch; min-width: 40ch; max-width: 40ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: left;
 }
 /* Frozen body cells must be OPAQUE, or the scrolling columns bleed through

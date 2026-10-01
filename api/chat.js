@@ -755,7 +755,10 @@ export default async function handler(req, res) {
     // can be A/B tested via env var alone -- no code change/deploy needed per
     // experiment. Tagged on the transaction below so runs at different limits
     // are directly comparable in New Relic regardless of which gitSha was live.
-    const CHAT_HISTORY_LIMIT = Number(process.env.CHAT_HISTORY_LIMIT) || 50;
+    // Default lowered 50 → 20 (2026-09-30): the whole history is re-sent and
+    // re-billed with every message. A rolling summary of older turns is the
+    // planned follow-up.
+    const CHAT_HISTORY_LIMIT = Number(process.env.CHAT_HISTORY_LIMIT) || 20;
 
     const body = await readJson(req);
     /*

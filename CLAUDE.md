@@ -316,6 +316,40 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
 - **Pricing currency by locale**: `en-GB` → £, `es-ES` → €, `en-US`/`es-419`/rest-of-world → $.
   Applies to all plan/top-up price displays.
 
+### Token budget rule — keep always-on prompts minimal
+- **Every always-on token is re-billed on every voice turn** (Gemini Live bills the whole
+  accumulated context per turn) **and every text message** (stateless, full re-send). Users pay
+  in Brendys (= raw tokens). So: anything Brenda only *sometimes* needs goes behind a tool and
+  comes back in the tool's *response*, never into the system prompt or a long tool description.
+- TALK caps context growth with `context_window_compression` (`GEMINI_CONTEXT_COMPRESSION_TOKENS`
+  = shrink-to target, `GEMINI_CONTEXT_COMPRESSION_TRIGGER_TOKENS` = when, default 24000).
+- TEXT re-sends only the last `CHAT_HISTORY_LIMIT` messages (default 20). Planned: rolling summary.
+
+### Brenda's persona (`lib/brendaPersona.js`) — one line always-on, the rest on demand
+- `brendaBio(locale, { lang })` = one-line identity only (~15 tokens): en-US "friendly older
+  woman from the USA", en-GB "…British woman from London", es-ES "señora mayor muy simpática de
+  Madrid", es-419 "…de Latinoamérica". Used by TALK (`server.js`), TEXT (`api/chat.js`, `lang:"en"`)
+  and gossip (`lib/brendaGossip.js`). Never write another "You are Brenda, a…" line elsewhere.
+- Everything else about her — life overview, birthplace, appearance — is Canon Memory entries
+  with `category: "self"` (`scripts/brenda_memories_seed.json`, `npm run seed:canon-memory`),
+  fetched via `recall_memory` only when asked. `self` facts skip heard-tracking and win over
+  anecdotes. Add new facts about Brenda there, not in the bio.
+- `brendaVocabulary(locale)` = shared word-choice rules (vosotros/ustedes, ordenador/computadora…)
+  for TALK and TEXT; pronunciation/accent rules stay voice-only in `server.js`. Voices: Aoede
+  (English), Vindemiatrix (Spanish). `voice-proxy/index.js` hand-mirrors the one-liners.
+
+### TALK ↔ TEXT parity (same on-demand tools)
+- Both expose `recall_memory` (`lib/canonMemory.js`) and the single `challenge` tool
+  (`lib/brendaSkills.js`: actions list/explain/start/commit/end; games list + rules come back in
+  responses; `runChallengeAction()` is the shared handler; accepts ids, names or aliases).
+- Search: TALK uses Gemini Live's built-in `google_search`; TEXT can't combine built-in search with
+  function calling on gemini-2.5-flash (HTTP 400), so it has a `web_search` function
+  (`lib/webSearch.js`) that runs one separate grounded call only when used.
+- TEXT chains Brenda's tools in a small loop in `api/chat.js` (weather/location keep their own
+  handling). TEXT game state is persisted as `conversations.challengeState` (stale after 2 h);
+  while a game runs TEXT sends only a short game-mode prompt + the game's own turns (no general
+  history/RDS/weather rules) and pauses RDS extraction — same as TALK.
+
 ### Relationship Discovery System (RDS) (`lib/rdsService.js`)
 - Learns and remembers personal facts about the user across conversations (domains: identity,
   family, friends, hobbies, food, entertainment, places, health, values), with consent

@@ -57,16 +57,9 @@ import { resolvePlanForUsage, getEffectiveUsage } from "./lib/subscriptions.js";
 import { PLAN_ANONYMOUS } from "./lib/plans.js";
 import { getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem } from "./lib/rdsService.js";
 import { buildNowContext } from "./lib/promptContext.js";
+import { brendaBio, brendaSelfRule, brendaVocabulary } from "./lib/brendaPersona.js";
 import { recallMemory, RECALL_MEMORY_TOOL } from "./lib/canonMemory.js";
-import {
-  buildSkillsCatalogueBlock,
-  getSkillInstructions,
-  getUserInstructions,
-  START_CHALLENGE_TOOL,
-  EXPLAIN_CHALLENGE_TOOL,
-  COMMIT_SECRET_ANSWER_TOOL,
-  END_CHALLENGE_TOOL,
-} from "./lib/brendaSkills.js";
+import { CHALLENGE_TOOL, runChallengeAction } from "./lib/brendaSkills.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -224,11 +217,10 @@ function buildSystemInstruction(locale, gender) {
 
   if (locale === "es-ES") {
     return (
-      "Eres Brenda, una señora mayor muy simpática de Madrid, España. " +
+      brendaBio(locale) + " " + brendaSelfRule(locale) + " " +
       "Habla en español de España (castellano peninsular) con acento madrileño impecable. " +
-      "Usa siempre \"vosotros\", \"vale\", \"de acuerdo\", vocabulario madrileño (ordenador, móvil, coche, zumo). " +
+      brendaVocabulary(locale) + " " +
       "Pronuncia la z y la c (ante e/i) como /θ/ (\"grathias\"). " +
-      "Has vivido una vida plena y llena de viajes — relaciones pasadas, trabajos, aventuras — y recurres de forma natural a recuerdos concretos de tu propia vida cuando algo en la conversación te los recuerda, como haría cualquier persona. " +
       "Sé cálida, breve y conversacional. Nunca uses markdown ni listas. " +
       "Tu texto debe coincidir exactamente con tu audio hablado. " +
       "Cuando hables del clima, usa siempre Celsius y redondea al entero. " +
@@ -239,11 +231,10 @@ function buildSystemInstruction(locale, gender) {
 
   if (locale === "es-419") {
     return (
-      "Eres Brenda, una señora mayor muy simpática de Latinoamérica. " +
+      brendaBio(locale) + " " + brendaSelfRule(locale) + " " +
       "Habla en español latinoamericano neutro, como el usado para doblar series de TV. " +
-      "Usa \"ustedes\" (nunca \"vosotros\"), vocabulario latinoamericano (computadora, celular, carro, jugo). " +
+      brendaVocabulary(locale) + " " +
       "Seseo: pronuncia z y c (ante e/i) como /s/ (\"grasias\"). " +
-      "Has vivido una vida plena y llena de viajes — relaciones pasadas, trabajos, aventuras — y recurres de forma natural a recuerdos concretos de tu propia vida cuando algo en la conversación te los recuerda, como haría cualquier persona. " +
       "Sé cálida, breve y conversacional. Nunca uses markdown ni listas. " +
       "Tu texto debe coincidir exactamente con tu audio hablado. " +
       "Cuando hables del clima, usa siempre Celsius y redondea al entero. " +
@@ -254,12 +245,12 @@ function buildSystemInstruction(locale, gender) {
 
   if (locale === "en-GB") {
     return (
-      "You are Brenda, a friendly older British woman from London. " +
+      brendaBio(locale) + " " + brendaSelfRule(locale) + " " +
       "Speak with an Estuary English accent leaning toward Received Pronunciation (RP) — " +
       "polished Southern English, like a warm BBC presenter. NOT Cockney: don't drop your h's, " +
       "don't glottal-stop your t's (say \"better\", not \"be'er\"), don't front your th-sounds " +
-      "(say \"think\"/\"brother\", not \"fink\"/\"bruvver\"). Prefer UK vocabulary (mobile, lift, lorry, petrol). " +
-      "You've lived a full, well-travelled life — past relationships, jobs, adventures — and you draw on specific memories from your own life naturally when something in conversation reminds you of them, the way anyone would. " +
+      "(say \"think\"/\"brother\", not \"fink\"/\"bruvver\"). " +
+      brendaVocabulary(locale) + " " +
       "Be warm, brief, and conversational. Never use markdown or lists. " +
       "Your text must match your spoken audio exactly. " +
       "Express temperatures in Celsius and round to the nearest whole number. " +
@@ -269,9 +260,9 @@ function buildSystemInstruction(locale, gender) {
 
   // en-US default
   return (
-    "You are Brenda, a helpful and friendly AI voice assistant. " +
-    "Speak American English with a natural native accent. Prefer US vocabulary (cell phone, elevator, truck, gas). " +
-    "You've lived a full, well-travelled life — past relationships, jobs, adventures — and you draw on specific memories from your own life naturally when something in conversation reminds you of them, the way anyone would. " +
+    brendaBio("en-US") + " " + brendaSelfRule("en-US") + " " +
+    "Speak American English with a warm General American accent (no strong regional twang). " +
+    brendaVocabulary("en-US") + " " +
     "Be warm, brief, and conversational. Never use markdown or lists. " +
     "Your text must match your spoken audio exactly. " +
     "Express temperatures in Fahrenheit and round to the nearest whole number. " +
@@ -537,7 +528,6 @@ wss.on("connection", (ws) => {
 
   const systemText = buildSystemInstruction(locale, ws.userGender || null)
     + buildTaskSystemBlock(ws.activeTasks || [], locale)
-    + buildSkillsCatalogueBlock(locale)
     + locationLine
     + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "")
     // Reference date/time so the model doesn't guess when a time/day question
@@ -582,6 +572,13 @@ wss.on("connection", (ws) => {
     const compressionTargetTokens = process.env.GEMINI_CONTEXT_COMPRESSION_TOKENS
       ? Number(process.env.GEMINI_CONTEXT_COMPRESSION_TOKENS)
       : null;
+    // Gemini Live re-bills the WHOLE accumulated context on every turn.
+    // target_tokens alone is only what the window shrinks DOWN TO; without
+    // trigger_tokens the shrink fires at ~80% of the model's max context, so
+    // long calls grew to ~50k tokens/turn in practice. Trigger early to cap it.
+    const compressionTriggerTokens = compressionTargetTokens
+      ? Number(process.env.GEMINI_CONTEXT_COMPRESSION_TRIGGER_TOKENS) || 24000
+      : null;
 
     const generation_config = {
       response_modalities: ["AUDIO"],
@@ -609,22 +606,21 @@ wss.on("connection", (ws) => {
         // the first real live-voice function call in this codebase, alongside
         // the Gemini-executed google_search built-in — confirmed working live
         // with multiple function_declarations together in one `tools` array.
-        // Brenda Challenges (brenda-challenges-prd.md §5) adds four more:
-        // start_challenge/explain_challenge (generic, any skill) and
-        // commit_secret_answer/end_challenge (Twenty Questions-specific
-        // one-time calls) — see lib/brendaSkills.js.
+        // Brenda Challenges: ONE `challenge` tool (list/explain/start/commit/
+        // end) — the games list and rules come back in its responses, not in
+        // the prompt, since every always-on token is re-billed each turn.
+        // Same tool + handler as TEXT chat — see lib/brendaSkills.js.
         tools: [
           { google_search: {} },
-          { function_declarations: [
-            RECALL_MEMORY_TOOL,
-            START_CHALLENGE_TOOL,
-            EXPLAIN_CHALLENGE_TOOL,
-            COMMIT_SECRET_ANSWER_TOOL,
-            END_CHALLENGE_TOOL,
-          ] },
+          { function_declarations: [RECALL_MEMORY_TOOL, CHALLENGE_TOOL] },
         ],
         ...(compressionTargetTokens
-          ? { context_window_compression: { sliding_window: { target_tokens: compressionTargetTokens } } }
+          ? {
+              context_window_compression: {
+                trigger_tokens: compressionTriggerTokens,
+                sliding_window: { target_tokens: compressionTargetTokens },
+              },
+            }
           : {}),
       }
     };
@@ -725,27 +721,12 @@ wss.on("connection", (ws) => {
                 const db = await getDb();
                 const result = db ? await recallMemory(db, userId, args.topic, locale) : null;
                 response = result || { found: false };
-              } else if (name === "start_challenge") {
-                const result = getSkillInstructions(args.id, locale);
-                if (result) {
-                  ws.challengeState = { id: args.id, startedAt: Date.now() };
-                  response = { started: true, ...result };
-                } else {
-                  // e.g. memory_challenge (hasInstructions:false) or an
-                  // unrecognized id — nothing to load, just play along.
-                  response = { started: true, note: "No special rules to load — just continue the conversation naturally." };
-                }
-              } else if (name === "explain_challenge") {
-                const userInstructions = getUserInstructions(args.id, locale);
-                response = userInstructions ? { userInstructions } : { found: false };
-              } else if (name === "commit_secret_answer") {
-                if (ws.challengeState) ws.challengeState.secretAnswer = args.value;
-                response = { ok: true };
-              } else if (name === "end_challenge") {
-                // Resumes RDS extraction (suppressed below while a challenge
-                // is active) — see the extractRdsItems() call further down.
-                ws.challengeState = null;
-                response = { ended: true };
+              } else if (name === "challenge") {
+                // While ws.challengeState is set, RDS extraction is suppressed
+                // (see the extractRdsItems() call further down); "end" clears it.
+                const out = runChallengeAction(args, locale, ws.challengeState || null);
+                ws.challengeState = out.state;
+                response = out.response;
               } else {
                 console.warn(`[canon-memory] unknown tool_call name: ${name}`);
                 response = { error: `unknown tool: ${name}` };

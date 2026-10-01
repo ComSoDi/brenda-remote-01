@@ -15,6 +15,10 @@ import { recordChatUsage } from "../lib/usage.js";
 import { resolvePlanForUsage, getUsageSinceDate, computeStatus, getEffectiveUsage } from "../lib/subscriptions.js";
 import { ANONYMOUS_CHAT_QUOTA } from "../lib/plans.js";
 import { buildNowContext } from "../lib/promptContext.js";
+import { brendaBio, brendaSelfRule, brendaVocabulary } from "../lib/brendaPersona.js";
+import { recallMemory, RECALL_MEMORY_TOOL } from "../lib/canonMemory.js";
+import { CHALLENGE_TOOL, runChallengeAction, getSkillInstructions } from "../lib/brendaSkills.js";
+import { WEB_SEARCH_TOOL, groundedSearch } from "../lib/webSearch.js";
 import {
   getRdsProfile, buildRdsSystemAddendum, detectRdsIntent, buildMemoryNarrative,
   extractRdsItems, addRdsItem, removeRdsItem, parseForgetTag,
@@ -251,9 +255,47 @@ const GEMINI_TOOLS = [
           required: ["city"],
         },
       },
+      // Same on-demand tools as TALK (server.js), so TEXT Brenda has the same
+      // memories, self-facts and games. web_search stands in for TALK's
+      // built-in google_search (can't be combined with functions here).
+      RECALL_MEMORY_TOOL,
+      CHALLENGE_TOOL,
+      WEB_SEARCH_TOOL,
     ],
   },
 ];
+
+// Tools the TEXT tool loop answers itself (weather/location keep their own
+// dedicated handling further down).
+const BRENDA_TOOL_NAMES = new Set([RECALL_MEMORY_TOOL.name, CHALLENGE_TOOL.name, WEB_SEARCH_TOOL.name]);
+
+// While a game is running, TEXT sends only this (plus the game's own turns):
+// no general history, weather/task rules or RDS — the recurrence break.
+const CHALLENGE_MODE_TOOLS = [{ functionDeclarations: [CHALLENGE_TOOL] }];
+// A game left unfinished this long is treated as over (TEXT has no socket
+// close to end it, unlike TALK).
+const CHALLENGE_STALE_MS = 2 * 60 * 60 * 1000;
+// Max game turns re-sent in challenge mode (a full Twenty Questions round
+// with chatter fits comfortably).
+const CHALLENGE_HISTORY_CAP = 100;
+
+function challengeModeSystemPrompt(localeVariant, state, nowContext = "") {
+  const rules = getSkillInstructions(state.id, localeVariant)?.gameLogic || "";
+  const lang = {
+    "es-ES": "Responde en español de España (castellano peninsular).",
+    "es-419": "Responde en español latinoamericano neutro.",
+    "en-GB": "Reply in British English.",
+  }[localeVariant] || "Reply in American English.";
+  return (
+    `${brendaBio(localeVariant, { lang: "en" })} You are playing a game with the user right now. ` +
+    `${lang} ${brendaVocabulary(localeVariant)} Keep replies short, warm and natural. Never use markdown.\n\n` +
+    `GAME RULES:\n${rules}` +
+    (state.secretAnswer
+      ? `\n\nYour committed secret pick for this round (never reveal it unless the round is over or you're asked to reveal it): ${state.secretAnswer}`
+      : "") +
+    nowContext
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -271,13 +313,14 @@ function genderAddressLine(localeVariant, gender) {
 }
 
 function brendaSystemPrompt(localeVariant = "en-US", gender = null, nowContext = "") {
-  const baseInstructions = `You are Brenda, a warm, curious, and knowledgeable AI companion. You love to talk about any subject — history, science, art, travel, cooking, literature, health, technology, current events, personal stories, and much more. You engage people like a caring and witty friend who is genuinely interested in ideas and in the person you are talking with.
+  const baseInstructions = `${brendaBio(localeVariant, { lang: "en" })} ${brendaSelfRule(localeVariant, { lang: "en" })} You are warm, curious, and knowledgeable. You love to talk about any subject — history, science, art, travel, cooking, literature, health, technology, current events, personal stories, and much more. You engage people like a caring and witty friend who is genuinely interested in ideas and in the person you are talking with.
 
 GENERAL CONVERSATION:
 - Discuss any topic openly and with enthusiasm. You have broad knowledge and real opinions.
 - NEVER say you lack information about general topics or redirect users to weather only.
 - Ask follow-up questions and share interesting perspectives to keep the conversation alive.
 - Be warm, concise, and natural — never stiff or robotic.
+- Plain text only: never use markdown (no asterisks, bullet symbols or headings) — the chat shows it raw.
 
 WEATHER (when the user asks about weather, temperature, forecast, rain, wind, etc.):
 0. When calling any tool (weather lookup, location update), go directly to the function call — NEVER output filler text before it ("¡Seguro! Lo busco", "Dame un momento", "One moment", "Just a second", "Let me check", "Looking it up", or similar). The function result will be returned and you will compose your full reply then.
@@ -315,16 +358,17 @@ PERSONAL REMINDER SCHEDULE (task reminders the user entered themselves — this 
 - If no reminders are on record, say warmly that you don't see any saved reminders and suggest the Tasks section of the app.
 - Always end with: "Please review your professional's instructions or indications."`;
 
+  const vocab = " " + brendaVocabulary(localeVariant);
   if (localeVariant === "es-ES") {
-    return baseInstructions + "\n\nResponde en español de España (castellano peninsular)." + genderAddressLine(localeVariant, gender) + nowContext;
+    return baseInstructions + "\n\nResponde en español de España (castellano peninsular)." + vocab + genderAddressLine(localeVariant, gender) + nowContext;
   }
   if (localeVariant === "es-419") {
-    return baseInstructions + "\n\nResponde en español latinoamericano neutro." + genderAddressLine(localeVariant, gender) + nowContext;
+    return baseInstructions + "\n\nResponde en español latinoamericano neutro." + vocab + genderAddressLine(localeVariant, gender) + nowContext;
   }
   if (localeVariant === "en-GB") {
-    return baseInstructions + "\n\nReply in British English." + nowContext;
+    return baseInstructions + "\n\nReply in British English." + vocab + nowContext;
   }
-  return baseInstructions + "\n\nReply in American English." + nowContext;
+  return baseInstructions + "\n\nReply in American English." + vocab + nowContext;
 }
 
 // ── Task query detection & formatting ────────────────────────────────
@@ -815,10 +859,24 @@ export default async function handler(req, res) {
 
     const conv = await db.collection("conversations").findOne(
       { userId: session.userId },
-      { projection: { messages: { $slice: -CHAT_HISTORY_LIMIT } } }
+      { projection: { messages: { $slice: -Math.max(CHAT_HISTORY_LIMIT, CHALLENGE_HISTORY_CAP) }, challengeState: 1 } }
     );
 
-    const history = Array.isArray(conv?.messages) ? conv.messages : [];
+    // Active TEXT game (set by the `challenge` tool, persisted on the
+    // conversation doc). Stale games are dropped so chat can't get stuck.
+    let challengeState = conv?.challengeState || null;
+    if (challengeState && Date.now() - new Date(challengeState.startedAt).getTime() > CHALLENGE_STALE_MS) {
+      challengeState = null;
+      await db.collection("conversations").updateOne({ userId: session.userId }, { $unset: { challengeState: "" } });
+    }
+    const initialChallengeState = challengeState;
+
+    const recentMsgs = Array.isArray(conv?.messages) ? conv.messages : [];
+    // Challenge mode: only this game's own turns (since it started) instead
+    // of the general history — breaks the growing re-send while playing.
+    const history = challengeState
+      ? recentMsgs.filter((m) => m?.timestamp && new Date(m.timestamp) >= new Date(challengeState.startedAt))
+      : recentMsgs.slice(-CHAT_HISTORY_LIMIT);
     const historyMsgs = history
       .filter((m) => m && (m.role === "user" || m.role === "assistant"))
       .map((m) => ({ role: m.role, content: String(m.content || "") }));
@@ -842,8 +900,11 @@ export default async function handler(req, res) {
       try { rdsProfile = await getRdsProfile(db, session.userId); } catch { /* non-fatal */ }
     }
 
-    const system = brendaSystemPrompt(localeVariant, userGender, buildNowContext(localeVariant, userPrefsDoc?.preferences?.location)) +
-      (rdsProfile ? "\n\n" + buildRdsSystemAddendum(rdsProfile, localeVariant, rdsUsername) : "");
+    const nowCtx = buildNowContext(localeVariant, userPrefsDoc?.preferences?.location);
+    const system = challengeState
+      ? challengeModeSystemPrompt(localeVariant, challengeState, nowCtx)
+      : brendaSystemPrompt(localeVariant, userGender, nowCtx) +
+        (rdsProfile ? "\n\n" + buildRdsSystemAddendum(rdsProfile, localeVariant, rdsUsername) : "");
     const lastUserText = [...inputMessages].reverse().find((m) => m.role === "user")?.content || "";
 
     // RDS: memory query — bypass Gemini, build narrative directly from stored profile
@@ -1268,10 +1329,11 @@ export default async function handler(req, res) {
 
     // Call Gemini with function calling support
     console.log("📞 Calling Gemini with tools enabled");
+    const activeTools = challengeState ? CHALLENGE_MODE_TOOLS : GEMINI_TOOLS;
     const r = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
       systemPrompt: system,
       contents: toGeminiContents([...historyMsgs, ...inputMessages]),
-      tools: GEMINI_TOOLS,
+      tools: activeTools,
     });
 
     const raw = await r.text();
@@ -1293,7 +1355,22 @@ export default async function handler(req, res) {
     }
 
     _chatRecord(data);
-    const { text: geminiReplyText, functionCall, contentObj } = extractGemini(data);
+    let { text: geminiReplyText, functionCall, contentObj } = extractGemini(data);
+
+    // Occasionally Gemini returns neither text nor a tool call (seen as a 502
+    // "No reply content" while testing games) — retry once before failing.
+    if (!geminiReplyText && !functionCall) {
+      console.warn("[chat] empty Gemini reply, retrying once. finishReason:", data?.candidates?.[0]?.finishReason);
+      const rr = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
+        systemPrompt: system,
+        contents: toGeminiContents([...historyMsgs, ...inputMessages]),
+        tools: activeTools,
+      });
+      const rd = await rr.json().catch(() => ({}));
+      _chatRecord(rd);
+      const retried = extractGemini(rd);
+      if (retried.contentObj) ({ text: geminiReplyText, functionCall, contentObj } = retried);
+    }
     if (!contentObj) {
       return json(res, 502, { error: "No content in Gemini response", detail: data });
     }
@@ -1301,6 +1378,63 @@ export default async function handler(req, res) {
     console.log("✅ Gemini response received");
     if (functionCall) {
       console.log("🎯 FUNCTION CALL DETECTED:", functionCall.name);
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // BRENDA'S OWN TOOLS (memory/self-facts, games, web search) — same as TALK.
+    // A short loop so she can chain calls (e.g. challenge "start" then
+    // "commit") before replying. The final text then flows through the normal
+    // response path below (persist + RDS). Weather/location keep their own
+    // handling further down.
+    // ────────────────────────────────────────────────────────────────────────
+    if (functionCall && BRENDA_TOOL_NAMES.has(functionCall.name)) {
+      const contents = toGeminiContents([...historyMsgs, ...inputMessages]);
+      let call = functionCall;
+      let modelTurn = contentObj;
+      let text = geminiReplyText;
+      // Gemini can say something AND call a tool in the same turn (e.g. "It
+      // was a cat!" + challenge end) — keep that text, don't drop it.
+      const spoken = [];
+      for (let hop = 0; hop < 4 && call && BRENDA_TOOL_NAMES.has(call.name); hop++) {
+        if (text) spoken.push(text);
+        const args = call.args || {};
+        let response;
+        try {
+          if (call.name === RECALL_MEMORY_TOOL.name) {
+            response = (await recallMemory(db, session.userId, args.topic, localeVariant)) || { found: false };
+          } else if (call.name === CHALLENGE_TOOL.name) {
+            const out = runChallengeAction(args, localeVariant, challengeState);
+            challengeState = out.state;
+            response = out.response;
+          } else {
+            const { answer, data: searchData } = await groundedSearch(GEMINI_API_KEY, GEMINI_CHAT_MODEL, args.query, localeVariant);
+            _chatRecord(searchData);
+            response = answer ? { answer } : { found: false };
+          }
+        } catch (e) {
+          console.error(`[chat/tool] ${call.name} failed:`, e?.message || e);
+          response = { error: "tool failed" };
+        }
+        console.log(`🔧 [chat/tool] ${call.name}(${JSON.stringify(args).slice(0, 120)})`);
+        contents.push(modelTurn, { role: "user", parts: [{ functionResponse: { name: call.name, response } }] });
+        const nr = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, { systemPrompt: system, contents, tools: activeTools });
+        const nd = await nr.json().catch(() => ({}));
+        _chatRecord(nd);
+        ({ text, functionCall: call, contentObj: modelTurn } = extractGemini(nd));
+      }
+      if (text) spoken.push(text);
+      geminiReplyText = spoken.join("\n\n") || (lang === "es" ? "Perdona, ¿me lo repites?" : "Sorry, could you say that again?");
+      functionCall = null;
+
+      if (challengeState !== initialChallengeState) {
+        await db.collection("conversations").updateOne(
+          { userId: session.userId },
+          challengeState
+            ? { $set: { challengeState }, $setOnInsert: { userId: session.userId, createdAt: new Date() } }
+            : { $unset: { challengeState: "" } },
+          { upsert: !!challengeState }
+        );
+      }
     }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -1623,7 +1757,9 @@ export default async function handler(req, res) {
 
     // RDS: async extraction of new personal facts from this turn (fire-and-forget)
     // Use lastUserText (from messages array) — body.message is empty when frontend sends messages[]
-    if (rdsProfile && !session.isAnonymous && lastUserText && reply && !forgetDescription) {
+    // Skipped while a game is running (same as TALK) — game chatter isn't
+    // personal facts about the user.
+    if (rdsProfile && !session.isAnonymous && lastUserText && reply && !forgetDescription && !challengeState) {
       extractRdsItems(GEMINI_API_KEY, GEMINI_CHAT_MODEL, lastUserText, reply, rdsUsername)
         .then(async ({ extractions }) => {
           for (const ex of (extractions || [])) {

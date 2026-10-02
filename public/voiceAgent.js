@@ -647,7 +647,7 @@
       }
       if (this.backend === "openai") {
         const payload = isInstruction
-          ? `[INTERNAL_INSTRUCTION: Spontaneously greet the user in a natural, adult-appropriate way. Suggestion: "${text}"]`
+          ? `[INTERNAL_INSTRUCTION: Spontaneously greet the user in a natural, adult-appropriate way. Keep this SHORT opening greeting to one or two short sentences. Suggestion: "${text}"]`
           : text;
         return this.sendOpenAIUserText(payload);
       }
@@ -657,7 +657,7 @@
 
       // If it's a greeting or auto-triggered line, wrap it so Gemini doesn't think the USER said it.
       const payload = isInstruction
-        ? `[INTERNAL_INSTRUCTION: Spontaneously greet the user in a natural, adult-appropriate way. Suggestion: "${text}"]`
+        ? `[INTERNAL_INSTRUCTION: Spontaneously greet the user in a natural, adult-appropriate way. Keep this SHORT opening greeting to one or two short sentences. Suggestion: "${text}"]`
         : text;
 
       console.log("Sending text to Gemini:", payload);

@@ -4,6 +4,7 @@ import { t, preloadLocale } from "./i18n/index.js";
 import { SideNavManager } from "./sideNavManager.js";
 import { renderTranscript, wireAutoScroll } from "./transcriptRenderer.js";
 import { getConversationContent } from "./conversationContent.js";
+import { tiempoMeansWeather } from "./weatherWords.js";
 import { TaskManager } from "./taskManager.js";
 import { initAnalytics } from "./analytics.js";
 
@@ -2719,9 +2720,9 @@ class BrendaApp {
     }
   }
 
-  // "tiempo" is ambiguous in Spanish (weather vs. time/duration, e.g. "¿cuánto
-  // tiempo tardo en llegar?"). Keep this list in sync with the equivalent
-  // TIEMPO_AS_TIME_PATTERNS / tiempoLooksLikeWeather() in api/chat.js.
+  // "tiempo" is ambiguous in Spanish (weather vs. time). It counts as weather
+  // only inside a recognised weather phrase — allowlist shared with the server
+  // in ./weatherWords.js ("tengo poco tiempo" = time, "¿qué tiempo hace?" = weather).
   _tiempoLooksLikeWeather(raw) {
     if (!raw.includes("tiempo")) return true;
     const otherWeatherWords = [
@@ -2729,19 +2730,7 @@ class BrendaApp {
       "temperatura", "humedad", "viento", "nieve", "tormenta", "soleado", "nublado"
     ];
     if (otherWeatherWords.some((k) => raw.includes(k))) return true;
-    const timeNotWeatherPatterns = [
-      /\bcu[aá]nto(?:s)?\s+tiempo\b/,
-      /\btiempo\b.{0,25}\b(tard[oa]s?|tardan|tardamos|toma(?:s|n|mos)?|llev[oa]s?|llevan|llevamos|dura(?:s|n)?|falta(?:s|n)?|qued[ao]n?)\b/,
-      /\b(tard[oa]s?|tardan|tardamos|toma(?:s|n|mos)?|llev[oa]s?|llevan|llevamos|dura(?:s|n)?|falta(?:s|n)?|qued[ao]n?)\b.{0,25}\btiempo\b/,
-      /\btiempo\s+libre\b/,
-      /\bal\s+mismo\s+tiempo\b/,
-      /\bhace\s+tiempo\b/,
-      /\btiempo\s+real\b/,
-      /\b(?:gan|perd|pierd)\w*\s+(?:el\s+|su\s+|mi\s+|tu\s+|tanto\s+|mucho\s+)?tiempo\b/,
-      /\btiempo\s+de\s+espera\b/,
-      /\btiempo\s+r[eé]cord\b/,
-    ];
-    return !timeNotWeatherPatterns.some((re) => re.test(raw));
+    return tiempoMeansWeather(raw);
   }
 
   isWeatherQuery(text) {

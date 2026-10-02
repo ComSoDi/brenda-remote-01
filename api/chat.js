@@ -19,6 +19,8 @@ import { brendaBio, brendaSelfRule, brendaVocabulary } from "../lib/brendaPerson
 import { recallMemory, RECALL_MEMORY_TOOL } from "../lib/canonMemory.js";
 import { CHALLENGE_TOOL, runChallengeAction, getSkillInstructions } from "../lib/brendaSkills.js";
 import { WEB_SEARCH_TOOL, groundedSearch } from "../lib/webSearch.js";
+import { weatherNudge, mentionsWeather, markWeatherNudge } from "../lib/weatherNudge.js";
+import { tiempoMeansWeather } from "../public/weatherWords.js";
 import {
   getRdsProfile, buildRdsSystemAddendum, detectRdsIntent, buildMemoryNarrative,
   extractRdsItems, addRdsItem, removeRdsItem, parseForgetTag,
@@ -335,7 +337,7 @@ WEATHER (when the user asks about weather, temperature, forecast, rain, wind, et
 5. Temperature: use Celsius and round to the nearest whole number.
 6. When the user asks about weather for a city DIFFERENT from their saved location, fetch for that city but do NOT save it as their default.
 7. After weather info, add a short friendly follow-up to keep the conversation going.
-8. Do NOT volunteer weather information unprompted more than once per conversation. If weather has already come up, only return to it when the user asks.
+8. Whether you may bring up the weather ON YOUR OWN is set by the WEATHER line further below.
 
 If a tool response includes code "missing_location", ask the user for the city (and country/state if needed).
 If a tool response includes code "multiple_locations" with a candidates list, ask the user to pick one by name.
@@ -478,25 +480,6 @@ function buildTaskReplyParts(tasks, locale) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-// "tiempo" is ambiguous in Spanish — it means both "weather" and "time/duration"
-// ("¿cuánto tiempo tardo en llegar?" = travel duration, not weather). These
-// patterns catch the "time" sense so isWeatherQuery() doesn't misfire on it.
-const TIEMPO_AS_TIME_PATTERNS = [
-  // "cuánto/cuantos tiempo" — the classic "how long" phrasing
-  /\bcu[aá]nto(?:s)?\s+tiempo\b/,
-  // duration/travel verbs near "tiempo", either order
-  /\btiempo\b.{0,25}\b(tard[oa]s?|tardan|tardamos|toma(?:s|n|mos)?|llev[oa]s?|llevan|llevamos|dura(?:s|n)?|falta(?:s|n)?|qued[ao]n?)\b/,
-  /\b(tard[oa]s?|tardan|tardamos|toma(?:s|n|mos)?|llev[oa]s?|llevan|llevamos|dura(?:s|n)?|falta(?:s|n)?|qued[ao]n?)\b.{0,25}\btiempo\b/,
-  // fixed idioms where "tiempo" clearly isn't weather
-  /\btiempo\s+libre\b/,
-  /\bal\s+mismo\s+tiempo\b/,
-  /\bhace\s+tiempo\b/,
-  /\btiempo\s+real\b/,
-  /\b(?:gan|perd|pierd)\w*\s+(?:el\s+|su\s+|mi\s+|tu\s+|tanto\s+|mucho\s+)?tiempo\b/,
-  /\btiempo\s+de\s+espera\b/,
-  /\btiempo\s+r[eé]cord\b/,
-];
-
 // Other Spanish weather keywords that are never ambiguous — if any of these is
 // present, "tiempo" elsewhere in the message can't override a real weather signal.
 const UNAMBIGUOUS_ES_WEATHER_KEYWORDS = [
@@ -504,12 +487,14 @@ const UNAMBIGUOUS_ES_WEATHER_KEYWORDS = [
   "temperatura", "humedad", "viento", "nieve", "tormenta", "soleado", "nublado"
 ];
 
-// True unless "tiempo" is the only weather-ish word in the message AND it's
-// clearly being used in its "time/duration" sense (see TIEMPO_AS_TIME_PATTERNS).
+// True unless "tiempo" is the only weather-ish word in the message and it is
+// NOT inside a recognised weather phrase (allowlist in public/weatherWords.js,
+// shared with the browser — "tengo poco tiempo" is time, "¿qué tiempo hace?"
+// is weather).
 function tiempoLooksLikeWeather(raw) {
   if (!raw.includes("tiempo")) return true;
   if (UNAMBIGUOUS_ES_WEATHER_KEYWORDS.some((k) => raw.includes(k))) return true;
-  return !TIEMPO_AS_TIME_PATTERNS.some((re) => re.test(raw));
+  return tiempoMeansWeather(raw);
 }
 
 function isWeatherQuery(text, localeVariant = "en-US") {
@@ -896,8 +881,17 @@ export default async function handler(req, res) {
     // Load user preferences (gender + location) once — used for system prompt and weather
     const userPrefsDoc = await db.collection("users").findOne(
       { userId: session.userId },
-      { projection: { "preferences.gender": 1, "preferences.location": 1 } }
+      { projection: { "preferences.gender": 1, "preferences.location": 1, "preferences.weatherNudges": 1 } }
     );
+    // When Brenda may volunteer weather (lib/weatherNudge.js) — no network.
+    const weatherPlan = weatherNudge(db, session.isAnonymous ? null : session.userId, localeVariant, userPrefsDoc?.preferences);
+    // Uses today's window up once her reply actually talks weather (fire-and-forget).
+    const noteWeatherMention = (replyText) => {
+      if (weatherPlan.kind && mentionsWeather(replyText)) {
+        markWeatherNudge(db, session.userId, weatherPlan.kind, weatherPlan.localDate)
+          .catch((e) => console.error("[weatherNudge] mark failed:", e?.message || e));
+      }
+    };
     const userGender = userPrefsDoc?.preferences?.gender || null;
 
     // Load RDS profile (non-fatal — companion memory layer)
@@ -911,6 +905,7 @@ export default async function handler(req, res) {
     const system = challengeState
       ? challengeModeSystemPrompt(localeVariant, challengeState, nowCtx)
       : brendaSystemPrompt(localeVariant, userGender, nowCtx) +
+        "\n\n" + weatherPlan.line +
         (rdsProfile ? "\n\n" + buildRdsSystemAddendum(rdsProfile, localeVariant, rdsUsername) : "");
     const lastUserText = [...inputMessages].reverse().find((m) => m.role === "user")?.content || "";
 
@@ -1331,6 +1326,7 @@ export default async function handler(req, res) {
         { upsert: true }
       );
 
+      noteWeatherMention(weatherReply); // asked-for weather also uses up today's window
       return json(res, 200, { reply: weatherReply, meta: { weather: { status: "complete" } } });
     }
 
@@ -1510,6 +1506,7 @@ export default async function handler(req, res) {
           { upsert: true }
         );
 
+        noteWeatherMention(reply);
         return json(res, 200, meta ? { reply, meta } : { reply });
       };
 
@@ -1782,6 +1779,7 @@ export default async function handler(req, res) {
         .catch(e => console.error("[rds/extract]", e.message));
     }
 
+    noteWeatherMention(reply);
     return json(res, 200, { reply });
   } catch (err) {
     console.error("Chat error:", err);

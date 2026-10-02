@@ -355,6 +355,17 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
   changed since `lastConsolidatedAt`; Mongo lock doc `jobs/rds-consolidation`.
 - `consolidationExempt: true` profiles (comparison copies `Mariaorg`, `Rickorg`) are never touched.
 
+### Spontaneous weather (`lib/weatherNudge.js`, TALK + TEXT)
+- Asked-for weather is unchanged. On her own, Brenda never brings up weather EXCEPT once per local
+  day 06:00–12:59 (today's weather) and once 16:00–20:59 (tomorrow's forecast), user's local time.
+- Needs a saved location; its time zone is fetched once from OpenWeather in the background and
+  stored as `users.preferences.location.timezone` (never delays a reply). No location → never.
+- Spanish "tiempo" = weather only inside a weather phrase (allowlist in `public/weatherWords.js`,
+  shared by browser `public/app.js`, `api/chat.js` and `lib/weatherNudge.js`; uses Unicode word
+  boundaries because JS `\b` breaks on accents like "hará"). Add new phrasings there, not elsewhere.
+- A window is used up when her reply mentions weather (incl. when the user asked):
+  `users.preferences.weatherNudges.{morning,evening} = "YYYY-MM-DD"` (local date).
+
 ### TALK ↔ TEXT parity (same on-demand tools)
 - Both expose `recall_memory` (`lib/canonMemory.js`) and the single `challenge` tool
   (`lib/brendaSkills.js`: actions list/explain/start/commit/end; games list + rules come back in

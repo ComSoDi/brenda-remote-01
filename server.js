@@ -53,6 +53,7 @@ import { getSession } from "./lib/auth.js";
 import { requestContext } from "./lib/requestContext.js";
 import { getDb } from "./lib/mongo.js";
 import { maybeRunDailyConsolidation, CONSOLIDATION_UTC } from "./lib/rdsConsolidate.js";
+import { weatherNudge, mentionsWeather, markWeatherNudge } from "./lib/weatherNudge.js";
 import { recordVoiceUsage } from "./lib/usage.js";
 import { resolvePlanForUsage, getEffectiveUsage } from "./lib/subscriptions.js";
 import { PLAN_ANONYMOUS } from "./lib/plans.js";
@@ -445,6 +446,7 @@ server.on("upgrade", async (req, socket, head) => {
     let planId = PLAN_ANONYMOUS;
     let planDisplayName = "Anonymous";
     let savedLocation = null;
+    let weatherPlan = null; // lib/weatherNudge.js — set inside the lookup below
     let voiceQuotaExhausted = false;
     const profileLookupStartAt = Date.now();
     await requestContext.run({ userId }, async () => {
@@ -458,7 +460,7 @@ server.on("upgrade", async (req, socket, head) => {
       const [userDoc, tasks, profile, planInfo, voiceStatus] = await Promise.all([
         db.collection("users").findOne(
           { userId },
-          { projection: { "preferences.gender": 1, "preferences.location": 1 } }
+          { projection: { "preferences.gender": 1, "preferences.location": 1, "preferences.weatherNudges": 1 } }
         ).catch(e => { console.error("[voice-proxy] users lookup failed:", e.message); return null; }),
         db.collection("tasks").find({ userId, active: true }).sort({ name: 1 }).toArray()
           .catch(e => { console.error("[voice-proxy] tasks lookup failed:", e.message); return []; }),
@@ -477,6 +479,9 @@ server.on("upgrade", async (req, socket, head) => {
       activeTasks = tasks || [];
       rdsProfile = profile || null;
       savedLocation = userDoc?.preferences?.location || null;
+      // When Brenda may volunteer weather this call — pure computation, no
+      // network; the one-time timezone fetch runs in the background.
+      weatherPlan = weatherNudge(db, userId, locale, userDoc?.preferences, new Date(), { channel: "voice" });
       if (planInfo) {
         planId = planInfo.planId;
         planDisplayName = planInfo.planDisplayName;
@@ -511,6 +516,8 @@ server.on("upgrade", async (req, socket, head) => {
       ws.planId = planId;
       ws.planDisplayName = planDisplayName;
       ws.savedLocation = savedLocation;
+      // Lookup failed → the safe default ("never volunteer weather").
+      ws.weatherNudge = weatherPlan || weatherNudge(null, null, locale, null);
       ws.geminiWs = geminiWs;          // R5: pre-opened upstream (handshake ran during the lookup)
       ws._gwTiming = gwTiming;
       ws._gwEarlyError = gwEarlyError;
@@ -554,6 +561,7 @@ wss.on("connection", (ws) => {
   const systemText = buildSystemInstruction(locale, ws.userGender || null)
     + buildTaskSystemBlock(ws.activeTasks || [], locale)
     + locationLine
+    + "\n\n" + ws.weatherNudge.line
     + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "")
     // Reference date/time so the model doesn't guess when a time/day question
     // slips past the client-side deterministic interception. Sent once at
@@ -867,6 +875,15 @@ wss.on("connection", (ws) => {
           // don't get saved into the user's real SUP profile as if they were
           // facts. Resumes once end_challenge fires — see the tool_call
           // dispatch above.
+          // Record a spontaneous (or asked-for) weather mention so the daily
+          // window isn't used again today — see lib/weatherNudge.js.
+          if (aiReply && ws.weatherNudge?.kind && userId && mentionsWeather(aiReply)) {
+            const { kind, localDate } = ws.weatherNudge;
+            ws.weatherNudge = { ...ws.weatherNudge, kind: null };
+            getDb().then((db) => db && markWeatherNudge(db, userId, kind, localDate))
+              .catch((e) => console.error("[weatherNudge] mark failed:", e?.message || e));
+          }
+
           if (userMsg && aiReply && ws.isAuthenticated && userId && ws.rdsProfile && !ws.challengeState) {
             const extractModel = process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash";
             extractRdsItems(GEMINI_API_KEY, extractModel, userMsg, aiReply, ws.rdsUsername || "")

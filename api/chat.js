@@ -22,6 +22,7 @@ import { WEB_SEARCH_TOOL, groundedSearch } from "../lib/webSearch.js";
 import {
   getRdsProfile, buildRdsSystemAddendum, detectRdsIntent, buildMemoryNarrative,
   extractRdsItems, addRdsItem, removeRdsItem, parseForgetTag,
+  RDS_PROMPT_MODE, RECALL_USER_FACTS_TOOL, searchUserFacts,
 } from "../lib/rdsService.js";
 
 // Expanded time keywords — catches common natural language patterns in both languages
@@ -261,13 +262,16 @@ const GEMINI_TOOLS = [
       RECALL_MEMORY_TOOL,
       CHALLENGE_TOOL,
       WEB_SEARCH_TOOL,
+      // On-demand facts about the user — "core" mode only (rollback: env
+      // RDS_PROMPT_MODE=full puts every fact back in the prompt instead).
+      ...(RDS_PROMPT_MODE === "core" ? [RECALL_USER_FACTS_TOOL] : []),
     ],
   },
 ];
 
 // Tools the TEXT tool loop answers itself (weather/location keep their own
 // dedicated handling further down).
-const BRENDA_TOOL_NAMES = new Set([RECALL_MEMORY_TOOL.name, CHALLENGE_TOOL.name, WEB_SEARCH_TOOL.name]);
+const BRENDA_TOOL_NAMES = new Set([RECALL_MEMORY_TOOL.name, CHALLENGE_TOOL.name, WEB_SEARCH_TOOL.name, RECALL_USER_FACTS_TOOL.name]);
 
 // While a game is running, TEXT sends only this (plus the game's own turns):
 // no general history, weather/task rules or RDS — the recurrence break.
@@ -1403,7 +1407,10 @@ export default async function handler(req, res) {
         const args = call.args || {};
         let response;
         try {
-          if (call.name === RECALL_MEMORY_TOOL.name) {
+          if (call.name === RECALL_USER_FACTS_TOOL.name) {
+            // rdsProfile was loaded for this request already — no extra DB hop.
+            response = searchUserFacts(rdsProfile, args.topic);
+          } else if (call.name === RECALL_MEMORY_TOOL.name) {
             response = (await recallMemory(db, session.userId, args.topic, localeVariant)) || { found: false };
           } else if (call.name === CHALLENGE_TOOL.name) {
             const out = runChallengeAction(args, localeVariant, challengeState);

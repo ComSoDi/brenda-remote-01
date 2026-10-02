@@ -52,10 +52,14 @@ import rdsTopicStarterHandler from "./api/rds/topic-starter.js";
 import { getSession } from "./lib/auth.js";
 import { requestContext } from "./lib/requestContext.js";
 import { getDb } from "./lib/mongo.js";
+import { maybeRunDailyConsolidation, CONSOLIDATION_UTC } from "./lib/rdsConsolidate.js";
 import { recordVoiceUsage } from "./lib/usage.js";
 import { resolvePlanForUsage, getEffectiveUsage } from "./lib/subscriptions.js";
 import { PLAN_ANONYMOUS } from "./lib/plans.js";
-import { getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem } from "./lib/rdsService.js";
+import {
+  getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem,
+  RDS_PROMPT_MODE, RECALL_USER_FACTS_TOOL, searchUserFacts,
+} from "./lib/rdsService.js";
 import { buildNowContext } from "./lib/promptContext.js";
 import { brendaBio, brendaSelfRule, brendaVocabulary } from "./lib/brendaPersona.js";
 import { recallMemory, RECALL_MEMORY_TOOL } from "./lib/canonMemory.js";
@@ -196,6 +200,27 @@ app.get("*", (_req, res) => {
 });
 
 const server = app.listen(PORT, () => console.log(`🚀 Brenda 01 listening on port ${PORT}`));
+
+// Daily RDS consolidation (lib/rdsConsolidate.js) — checks every 10 min, runs
+// once per UTC day after CONSOLIDATION_UTC (lib/rdsConsolidate.js, default 05:30,
+// env RDS_CONSOLIDATION_UTC). OFF unless RDS_CONSOLIDATION_ENABLED=true — it
+// rewrites users' stored facts, so it's switched on deliberately (Render env)
+// once the one-time clean-up has been reviewed. Never set it in a local .env:
+// local and production share one database.
+const RDS_CONSOLIDATION_ON = process.env.RDS_CONSOLIDATION_ENABLED === "true";
+if (RDS_CONSOLIDATION_ON && process.env.GEMINI_API_KEY) {
+  const tick = async () => {
+    try {
+      const db = await getDb();
+      if (db) await maybeRunDailyConsolidation(db, process.env.GEMINI_API_KEY, process.env.RDS_CONSOLIDATE_MODEL || process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash");
+    } catch (e) {
+      console.error("[rds-consolidation] tick failed:", e?.message || e);
+    }
+  };
+  setInterval(tick, 10 * 60 * 1000).unref();
+  setTimeout(tick, 60 * 1000).unref(); // catch-up shortly after a (re)start
+  console.log(`[rds-consolidation] daily job enabled (${CONSOLIDATION_UTC} UTC)`);
+}
 
 // ── System instruction builder (mirrors api/chat.js logic) ─────────────────
 
@@ -612,7 +637,13 @@ wss.on("connection", (ws) => {
         // Same tool + handler as TEXT chat — see lib/brendaSkills.js.
         tools: [
           { google_search: {} },
-          { function_declarations: [RECALL_MEMORY_TOOL, CHALLENGE_TOOL] },
+          { function_declarations: [
+            RECALL_MEMORY_TOOL,
+            CHALLENGE_TOOL,
+            // On-demand facts about the user — only in "core" mode (in "full"
+            // mode every fact is already in the prompt). See RDS_PROMPT_MODE.
+            ...(RDS_PROMPT_MODE === "core" ? [RECALL_USER_FACTS_TOOL] : []),
+          ] },
         ],
         ...(compressionTargetTokens
           ? {
@@ -721,6 +752,11 @@ wss.on("connection", (ws) => {
                 const db = await getDb();
                 const result = db ? await recallMemory(db, userId, args.topic, locale) : null;
                 response = result || { found: false };
+              } else if (name === "recall_user_facts") {
+                // Fresh read so facts learned earlier in this call are found.
+                const db = await getDb();
+                const profile = db ? await getRdsProfile(db, userId) : null;
+                response = searchUserFacts(profile, args.topic);
               } else if (name === "challenge") {
                 // While ws.challengeState is set, RDS extraction is suppressed
                 // (see the extractRdsItems() call further down); "end" clears it.

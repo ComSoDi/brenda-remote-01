@@ -338,6 +338,23 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
   for TALK and TEXT; pronunciation/accent rules stay voice-only in `server.js`. Voices: Aoede
   (English), Vindemiatrix (Spanish). `voice-proxy/index.js` hand-mirrors the one-liners.
 
+### RDS (facts about the user) — growth control & on-demand recall
+- **Rollback switch `RDS_PROMPT_MODE`** (Render env, no deploy): `core` (default) = only ~15 key
+  facts (`RDS_CORE_FACTS`; newest identity/family/health first) in every prompt + `recall_user_facts`
+  tool (in-memory search, no extra AI call) for the rest; `full` = every fact in every prompt
+  (pre-2026-10-02 behaviour). Maria's profile: ~7,970 → ~970 tokens/message in core mode.
+- Save-time guard: `isNearDuplicateFact()` in `addRdsItem`; extractor skips passing moments and
+  dated events (those belong in reminders, not facts). `addRdsItem` stamps `lastFactAddedAt`.
+- Consolidation (`lib/rdsConsolidate.js`): per-topic Gemini merge, caps `RDS_CAP_PER_DOMAIN` (25) /
+  `RDS_CAP_LIFE_STORIES` (15), never drops names/relationships/health/named likes, any failure
+  leaves that topic untouched. Manual: `npm run rds:consolidate -- [--apply] <Nick…>|--all` (dry
+  run default; reports in `backups/rds-consolidation/`, gitignored — they contain PII). Run
+  `npm run backup:db` before `--apply`.
+- Daily job in `server.js`: OFF unless `RDS_CONSOLIDATION_ENABLED=true` (Render only — never in a
+  local `.env`, same DB). Runs once/day after `RDS_CONSOLIDATION_UTC` (default 05:30) on profiles
+  changed since `lastConsolidatedAt`; Mongo lock doc `jobs/rds-consolidation`.
+- `consolidationExempt: true` profiles (comparison copies `Mariaorg`, `Rickorg`) are never touched.
+
 ### TALK ↔ TEXT parity (same on-demand tools)
 - Both expose `recall_memory` (`lib/canonMemory.js`) and the single `challenge` tool
   (`lib/brendaSkills.js`: actions list/explain/start/commit/end; games list + rules come back in

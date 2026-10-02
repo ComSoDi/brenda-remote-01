@@ -21,6 +21,7 @@
     "seed:canon-memory": "node --env-file=.env scripts/seed-canon-memory.js",
     "seed:canon-memory-testdata": "node --env-file=.env scripts/seed-canon-memory-testdata.js",
     "admin:reset-pin": "node --env-file=.env scripts/reset-pin.js",
+    "rds:consolidate": "node --env-file=.env scripts/consolidate-rds.js",
     "backup:db": "node --env-file=.env scripts/backup-db.js",
     "restore:db": "node --env-file=.env scripts/restore-db.js"
   },

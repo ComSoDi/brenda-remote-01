@@ -42,6 +42,8 @@ export default {
     authPrivacy: "Personal Privacy Policy",
     authErrorBadNick: "Nickname must be 4-20 characters: letters, numbers, underscores only.",
     authErrorBadPin: "PIN must be exactly 4 digits.",
+    authErrorWrongPin: "Wrong PIN, or that Nickname is already taken. Please try again.",
+    authErrorLocked: "This account is locked after 3 wrong PINs. To recover it, please email support@aibrenda.co",
     authGenderLabel: "Gender",
     authGenderDefault: "Select...",
     authGenderWoman: "I am a woman",

@@ -844,7 +844,9 @@ class BrendaApp {
       await this.completeLogin(me);
     } catch (e) {
       console.error(e);
-      if (this.elements.authError) this.elements.authError.textContent = e?.message || String(e);
+      // The server's text is English-only; known codes get the app-language text.
+      const localized = { account_locked: "authErrorLocked", wrong_pin: "authErrorWrongPin" }[e?.code];
+      if (this.elements.authError) this.elements.authError.textContent = localized ? t(v, localized) : (e?.message || String(e));
     } finally {
       this.setAuthBusy(false);
     }
@@ -1112,13 +1114,18 @@ class BrendaApp {
       // Try JSON error — parsing happens in its own try so a thrown Error
       // here isn't immediately caught by the same block's catch.
       let message = text || `HTTP ${res.status}`;
+      let code = null;
       try {
         const j = JSON.parse(text);
         message = j.error || j.message || message;
+        code = j.code || null; // machine-readable, so callers can show a translated text
       } catch {
         // Not JSON — keep the raw text/status fallback.
       }
-      throw new Error(message);
+      const err = new Error(message);
+      err.status = res.status;
+      err.code = code;
+      throw err;
     }
     if (!text) return null;
     try {
@@ -3773,7 +3780,7 @@ class BrendaApp {
       "and how they think and feel today. That sort of thing.\n\n" +
       "Very important: I am not Social Media. Our conversations are totally discreet. " +
       "I won't share them with anybody else. Nonetheless, it's better to be extra careful on the Internet. " +
-      "Please do not uncover any risky or private information such as banking details, accounts, legal or medical matters, etc. " +
+      "Please do not disclose any risky or private information such as banking details, accounts, legal or medical matters, etc. " +
       "I promise I'll do my best to keep everything in the vault but one never knows what can happen. " +
       "Don't be afraid, but don't be at risk.\n\n" +
       "For that reason, keep in mind that I remember what we talk about, conversation to conversation, " +

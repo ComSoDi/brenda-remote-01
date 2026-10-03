@@ -36,6 +36,8 @@ export default {
     authPrivacy: "Política de privacidad personal",
     authErrorBadNick: "El Usuario debe tener 4-20 caracteres: solo letras, números y guiones bajos.",
     authErrorBadPin: "El PIN debe tener exactamente 4 dígitos.",
+    authErrorWrongPin: "PIN incorrecto, o ese Usuario ya está ocupado. Por favor, inténtalo de nuevo.",
+    authErrorLocked: "Esta cuenta está bloqueada tras 3 PIN incorrectos. Para recuperarla, escríbenos a soporte@aibrenda.co",
     authGenderLabel: "Género",
     authGenderDefault: "Selecciona...",
     authGenderWoman: "Soy mujer",

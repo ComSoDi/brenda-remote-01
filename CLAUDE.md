@@ -85,7 +85,8 @@ lib/                        Shared utilities (bundled locally; NOT available to 
                              running counter on users.usage
   plans.js                  Subscription tier constants/seed data — quota tracked as "Brendys"
                              (1 Brendy = 1 raw Gemini token; the word "tokens" never reaches
-                             user-facing i18n strings)
+                             user-facing i18n strings — sole deliberate exception: the
+                             `notes.brendyEquiv` disclosure line, see Subscriptions below)
   rdsService.js             Relationship Discovery System — state management + chat integration
   brendaGossip.js           Single Gemini call (w/ Google Search grounding) for headline reactions
 
@@ -312,7 +313,12 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
     `npm run migrate:topup-balance` (idempotent). Mirror any change to this logic by hand in
     `voice-proxy/index.js` (see [[project_deployment]] — can't import `lib/`).
 - Quota is tracked internally as raw Gemini token counts ("Brendys"); never expose the word
-  "tokens" in user-facing i18n strings.
+  "tokens" in user-facing i18n strings. **Sole deliberate exception:** `notes.brendyEquiv`
+  ("1 Brendy = 1 AI Token" / "1 Brendy = 1 Token de IA") — a full-disclosure line in the plan
+  notes so critics can see exactly what a Brendy is. Keep it, in all 4 locales; don't add others.
+- **Support emails** (user-facing): Spanish → `soporte@aibrenda.co`, English/default →
+  `support@aibrenda.co`, general → `info@aibrenda.co` (replaced the old
+  @comerciosocialdigital.com addresses everywhere, 2026-10-03).
 - **Pricing currency by locale**: `en-GB` → £, `es-ES` → €, `en-US`/`es-419`/rest-of-world → $.
   Applies to all plan/top-up price displays.
 

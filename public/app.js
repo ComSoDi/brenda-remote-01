@@ -3753,9 +3753,9 @@ class BrendaApp {
         "Antes de que empecemos a charlar, me gustaría contarte un poco sobre mí: me encantan las buenas conversaciones, " +
         "escuchar las historias de la gente y compartir esos pequeños detalles que dicen quién es uno — la familia, la comida favorita, " +
         "la música y los recuerdos, los lugares donde se ha vivido, las cosas que se hacían de joven y cómo se piensa y se siente hoy. Ese tipo de cosas.\n\n" +
-        "Algo importante: yo no soy una Red Social. Nuestras conversaciones son totalmente privadas. " +
-        "No las compartiré conscientemente con nadie más. Dicho esto, es mejor ser precavida en Internet. " +
-        "Por favor, no compartas datos delicados como información bancaria, cuentas, asuntos legales o médicos, etc. " +
+        "Algo importante: yo no soy una Red Social. Nuestras conversaciones son totalmente discretas. " +
+        "No se comparten con otros usuarios. Dicho esto, es mejor ser precavida en Internet. " +
+        "Por favor, no develes datos delicados como información bancaria, cuentas, asuntos legales o médicos, etc. " +
         "Haré todo lo posible por guardar todo con discreción, pero en Internet nunca se sabe del todo. No tengas miedo, pero no te expongas.\n\n" +
         "Por eso mismo, ten en cuenta que recuerdo lo que hablamos de una conversación a otra, para que nuestra relación crezca cada vez que charlamos. " +
         "Si alguna vez recuerdo algo mal, o hay algo que prefieres que no guarde, dímelo. " +
@@ -3771,9 +3771,9 @@ class BrendaApp {
       "I enjoy good conversations, hearing people's stories, and sharing the small details that tell you who someone is. " +
       "Family, favorite foods, music and memories, the places people have lived, the things they got up to when they were young " +
       "and how they think and feel today. That sort of thing.\n\n" +
-      "Very important: I am not Social Media. Our conversations are totally private. " +
-      "I won't knowingly share them with anybody else. Nonetheless, it's better to be extra careful on the Internet. " +
-      "Please do not share any risky or private information such as banking details, accounts, legal or medical matters, etc. " +
+      "Very important: I am not Social Media. Our conversations are totally discreet. " +
+      "I won't share them with anybody else. Nonetheless, it's better to be extra careful on the Internet. " +
+      "Please do not uncover any risky or private information such as banking details, accounts, legal or medical matters, etc. " +
       "I promise I'll do my best to keep everything in the vault but one never knows what can happen. " +
       "Don't be afraid, but don't be at risk.\n\n" +
       "For that reason, keep in mind that I remember what we talk about, conversation to conversation, " +

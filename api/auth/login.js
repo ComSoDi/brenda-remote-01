@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       // never silently spawn a duplicate account (see login decision tree).
       const failedAttempts = user.preferences?.failedPinAttempts || 0;
       if (failedAttempts >= MAX_PIN_ATTEMPTS) {
-        return json(res, 423, { error: "To recover your account, please email support@comerciosocialdigital.com" });
+        return json(res, 423, { error: "To recover your account, please email support@aibrenda.co" });
       }
 
       const ok = await bcrypt.compare(pin, user.pinHash || "");
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
         await users.updateOne({ _id: user._id }, { $set: updateFields });
 
         if (newCount >= MAX_PIN_ATTEMPTS) {
-          return json(res, 423, { error: "To recover your account, please email support@comerciosocialdigital.com" });
+          return json(res, 423, { error: "To recover your account, please email support@aibrenda.co" });
         }
         return json(res, 401, { error: "Wrong PIN or Nick is taken. Please try again." });
       }

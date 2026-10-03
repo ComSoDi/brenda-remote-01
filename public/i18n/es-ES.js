@@ -1,8 +1,8 @@
 export default {
     callTitle: "Hablando con aiBrenda",
-    voiceMode: "Hablar",
-    textMode: "Escribir",
-    connect: "Hablar",
+    voiceMode: "HABLAR",
+    textMode: "ESCRIBIR",
+    connect: "HABLAR",
     disconnect: "Colgar",
     connecting: "Conectando",
     warming: "Iniciando...",
@@ -11,31 +11,31 @@ export default {
     hintTalk: "Toca para hablar",
     hintText: "Toca para escribir",
     aiDisclaimer: "Recuerda: Brenda es una IA y puede equivocarse",
-    placeholder: "La conversacion aparecera aqui.",
+    placeholder: "La conversación aparecerá aquí.",
     send: "Enviar",
-    textInputPlaceholder: "Escribe aqui.",
+    textInputPlaceholder: "Escribe aquí.",
     talkRequiresAccount: "Abre una cuenta Gratis para poder Hablar",
-    voiceQuotaExhausted: "Has agotado tu tiempo de voz de este periodo. Por favor amplia tu plan para seguir conversando.",
+    voiceQuotaExhausted: "Has agotado tu tiempo de voz de este periodo. Por favor, amplía tu plan para seguir conversando.",
     youLabel: "Tu",
     assistantLabel: "aiBrenda",
 
     accountBtnAnonymous: "Anónimo",
 
     authGreeting: "¡Hola! Soy aiBrenda",
-    authExplain: "Crea tu cuenta para que nuestras conversaciones sean privadas y memorables",
+    authExplain: "Crea tu cuenta para que nuestras conversaciones sean memorables y discretas",
     authNickLabel: "Usuario",
-    authNickHelp: "Solo letras, numeros y guiones bajos (4-20 caracteres)",
+    authNickHelp: "Solo letras, números y guiones bajos (4-20 caracteres)",
     authPinLabel: "PIN",
     pinShow: "Mostrar PIN",
     pinHide: "Ocultar PIN",
-    authPinHelp01: "Crea PIN de 4 numeros.",
-    authPinHelp02: "Apunta Usuario y PIN en sitio seguro",
+    authPinHelp01: "Crea un PIN de 4 números.",
+    authPinHelp02: "Apunta Usuario y PIN en un sitio seguro",
     authContinue: "Continuar",
     authLoading: "Espera...",
-    authAnonLink: "O haz clic aqui para chatear sin cuenta (anónimo)",
-    authPrivacy: "Politica de privacidad personal",
-    authErrorBadNick: "El Usuario debe tener 4-20 caracteres: solo letras, numeros y guiones bajos.",
-    authErrorBadPin: "El PIN debe tener exactamente 4 digitos.",
+    authAnonLink: "O haz clic aquí para chatear sin cuenta (anónimo)",
+    authPrivacy: "Política de privacidad personal",
+    authErrorBadNick: "El Usuario debe tener 4-20 caracteres: solo letras, números y guiones bajos.",
+    authErrorBadPin: "El PIN debe tener exactamente 4 dígitos.",
     authGenderLabel: "Género",
     authGenderDefault: "Selecciona...",
     authGenderWoman: "Soy mujer",
@@ -49,9 +49,9 @@ export default {
       <p><strong>Brenda es una IA, no una persona real.</strong> Sus respuestas las genera una inteligencia artificial, no un ser humano. Es estupenda para charlar y darte información general, pero nunca sustituye el consejo de un profesional.</p>
       <p>Piensa en Brenda como una vecina simpática con la que te encanta charlar. No te fíes de ella para temas médicos, legales, financieros o psicológicos: siempre te recomendará que consultes a un profesional certificado.</p>
       <p>Por favor, no le compartas datos personales identificativos, contraseñas, información financiera, historial médico ni otros datos sensibles.</p>
-      <p><strong>Tu voz.</strong> En el modo HABLAR, tu micrófono capta tu voz en tiempo real. El audio se envía directamente a Google/Gemini, el servicio de procesamiento de IA que seleccionamos para procesarlo y nunca lo almacenamos nosotros.</p>
+      <p><strong>Tu voz.</strong> En el modo HABLAR, tu micrófono capta tu voz en tiempo real. El audio se envía directamente a Google/Gemini, el servicio de procesamiento de IA que seleccionamos para procesarlo, y nunca lo almacenamos nosotros.</p>
       <p>El micrófono se desconecta automáticamente tras un rato de silencio. Si ocurre y quieres seguir hablando, simplemente vuelve a pulsar HABLAR.</p>
-      <p><strong>Tus conversaciones.</strong> Brenda guarda tus mensajes más recientes para que puedas retomar donde lo dejaste. El audio de voz nunca se graba: solo se guarda la transcripción de texto para dar continuidad a la sesión.</p>
+      <p><strong>Tus conversaciones.</strong> Brenda guarda tus mensajes más recientes para que puedas retomar donde lo dejaste. El audio de voz nunca se graba: solo se conserva la transcripción de texto para aprender tus gustos y dar continuidad a la sesión.</p>
       <p>Al pulsar «Acepto» confirmas que has leído y aceptas los Términos de Uso y la Política de Privacidad de aiBrenda.</p>
     `,
     consentAgree: "Acepto",
@@ -60,30 +60,30 @@ export default {
     talkTitle: "¡Hablemos!",
     talkSubtitle: "Unas cosas rápidas antes de tu primera llamada",
     talkContent: `
-      <p>Para tener conversaciones de voz con Brenda, pulsa el botón HABLAR para activar el micrófono.</p>
-      <p class="disclosure-note">La primera vez que pulses HABLAR, tu dispositivo te pedirá permiso para usar el micrófono. Te recomendamos elegir «Permitir siempre» para que quede listo para futuras llamadas.</p>
+      <p>Para tener conversaciones de voz con Brenda, pulsa el botón HABLAR que activa el micrófono.</p>
+      <p class="disclosure-note">La primera vez que pulses HABLAR, tu dispositivo te pedirá permiso para usar el micrófono. Te recomendamos elegir la primera opción «Permitir siempre» para que quede activado en llamadas futuras.</p>
       <p>Para colgar, simplemente pulsa el icono rojo de teléfono o el botón rojo de Colgar.</p>
       <p>Como en una llamada telefónica, Brenda tarda unos segundos en «contestar» y saludarte.</p>
-      <p>Tu voz se envía en tiempo real Google/Gemini, el servicio de procesamiento de IA que seleccionamos para procesarla: nunca la grabamos ni la almacenamos nosotros.</p>
-      <p>Lo que dices y lo que responde Brenda se transcribe a texto y se guarda, así que aparece en tu ventana de chat.</p>
+      <p>Tu voz se envía en tiempo real a Google/Gemini, el servicio de procesamiento de IA que seleccionamos para procesarla: nunca la grabamos ni la almacenamos nosotros.</p>
+      <p>Lo que dices y lo que responde Brenda se transcribe a texto y se guarda para conocerte mejor y que aparezca en tu ventana de chat.</p>
       <p><strong>Por favor, no compartas información personal sensible, ni por voz ni por chat.</strong></p>
-      <p>El micrófono se desconecta automáticamente tras un rato de silencio. Si ocurre y quieres seguir hablando, simplemente vuelve a pulsar HABLAR.</p>
+      <p>El micrófono se desconecta automáticamente tras un rato de silencio. Si eso ocurre y quieres seguir hablando, simplemente vuelve a pulsar HABLAR.</p>
     `,
     talkGotIt: "Entendido. Hablemos",
 
     privacyTitle: "Política de Privacidad de Datos",
     privacyContent: `
-      <p>La aplicación <strong>aiBrenda.co</strong> está en período de prueba y solo disponible a usuarios selectos que colaboran en las pruebas preliminares propias de la etapa de desarrollo.</p>
-      <p>Durante este periodo de prueba no podemos garantizar la privacidad de los datos que se usarán para descubrir posibles fallas, requerimientos imprevistos y caracteristicas a incorporar antes de su futuro lanzamiento.</p>
-      <p>Tampoco somos responsables de la privacidad de los datos de aquellos que usen <strong>aiBrenda.co</strong> sin nuestro consentimiento.</p>
-      <p>El sistema de registro usado durante el período de prueba (Apodo + PIN) es <strong>MUY básico</strong> y no garantiza ni remotamente la privacidad de los datos.</p>
-      <p>Por favor <strong>NUNCA COMPARTAS</strong> datos personales como dirección, emails, cuenta bancaria, estado de salud, consultas legales o fiscales, etc. en esta plataforma.</p>
+      <p>La aplicación <strong>aiBrenda.co</strong> está en período de prueba y solo está disponible para usuarios selectos que colaboran en las pruebas preliminares propias de la etapa de desarrollo.</p>
+      <p>Durante este periodo podremos acceder a los datos de los usuarios para desvelar posibles fallas, requerimientos imprevistos y características a incorporar antes de su futuro lanzamiento.</p>
+      <p>En ningún caso podemos ser responsables de la privacidad de los datos de aquellos que usen <strong>aiBrenda.co</strong> sin nuestro consentimiento.</p>
+      <p>Otro aspecto propio del período de prueba es que usamos un método de registro basado en Apodo + PIN que es <strong>MUY básico</strong> y no puede garantizar en profundidad la privacidad de los datos de los usuarios.</p>
+      <p>Por tanto, <strong>NUNCA COMPARTAS</strong> datos personales como dirección, emails, cuenta bancaria, estado de salud, consultas legales o fiscales, etc. en esta plataforma.</p>
       <p>Cuando se acabe el período de prueba incorporaremos sistemas de protección más robustos (p.ej. OAuth).</p>
       <p class="content-subheading">Datos de Voz y Conversación</p>
       <p><strong>Entrada de voz:</strong> Cuando usas el modo HABLAR, tu micrófono capta tu voz y la envía en tiempo real a Gemini/Google, el servicio externo de IA que seleccionamos para procesarla. El audio se procesa al instante y nunca es grabado, almacenado ni conservado por aiBrenda ni por sus servidores.</p>
-      <p><strong>Transcripciones:</strong> Las conversaciones de voz se transcriben a texto en tiempo real. Estas transcripciones, junto con tus mensajes de chat de texto, se guardan para mostrar tus aproximadamente últimas 20 interacciones. Esto te permite revisar tus conversaciones recientes dentro de la app. El historial de conversación está asociado exclusivamente a tu cuenta y se almacena de forma segura.</p>
+      <p><strong>Transcripciones:</strong> Las conversaciones de voz se transcriben a texto en tiempo real. Estas transcripciones, junto con tus mensajes de chat de texto, se guardan para mostrar tus aproximadamente últimas 20 interacciones. Esto te permite revisar tus conversaciones recientes dentro de la app y le sirve a Brenda para conocerte mejor. El historial de conversación está asociado exclusivamente a tu cuenta y se almacena de forma segura.</p>
       <p><strong>Lo que no almacenamos:</strong> Archivos de audio en bruto, grabaciones de voz ni ningún dato biométrico de voz.</p>
-      <p><strong>Eliminación de datos:</strong> Puedes solicitar la eliminación de tu cuenta y de todos los datos de conversación asociados en cualquier momento escribiéndonos a soporte@comerciosocialdigital.com. Procesaremos tu solicitud en un plazo de 30 días.</p>
+      <p><strong>Eliminación de datos:</strong> Puedes solicitar la eliminación de tu cuenta y de todos los datos de conversación asociados en cualquier momento escribiéndonos a soporte@aibrenda.co. Procesaremos tu solicitud en un plazo de 30 días.</p>
     `,
     privacyUnderstood: "Entendido",
 
@@ -92,7 +92,7 @@ export default {
     deleteAccountSubtitle: "¿Estás seguro? Esta operación no se puede deshacer",
     deleteAccountContent: `
       <p>Sentimos que te vayas y lamentamos no poder ofrecerte reembolsos si lo haces. Quizás lo mejor sea eliminar tu cuenta y tus datos justo antes de tu próximo ciclo de facturación, para que aproveches por completo los Brendys que te queden.</p>
-      <p>En cualquier caso, te agradeceríamos muchísimo que nos escribieras a <a href="mailto:support@comerciosocialdigital.com">support@comerciosocialdigital.com</a> contándonos los motivos por los que decidiste dejar de usar Brenda.</p>
+      <p>En cualquier caso, te agradeceríamos muchísimo que nos escribieras a <a href="mailto:soporte@aibrenda.co">soporte@aibrenda.co</a> contándonos los motivos por los que decidiste dejar de usar Brenda.</p>
       <p>Queremos mejorar cada día.</p>
     `,
     deleteAccountConfirm: "Por favor, cierra mi cuenta y elimina mis datos",
@@ -129,7 +129,7 @@ export default {
     // Help
     helpTitle: "aiBrenda Help",
     helpGreeting: "Hola! Soy aiBrenda",
-    helpExplain: "Crea tu cuenta para que nuestras conversaciones sean privadas y memorables",
+    helpExplain: "Crea tu cuenta para que nuestras conversaciones sean memorables y discretas",
 
     // SideNav Help
     sideNavCloseLabel: "Cierra:",
@@ -137,7 +137,7 @@ export default {
     sideNavPillHelp: "?",
     sideNavLabelHelp: "Esta ventana de Ayuda",
     sideNavPillMyInfo: "Mi info",
-    sideNavLabelMyInfo: "Donde vives, qué eres",
+    sideNavLabelMyInfo: "Dónde vives, qué eres",
     sideNavPillMyInfo2: "Mi info 2",
     sideNavLabelMyInfo2: "Consumo & Añadir tiempo",
     sideNavLabelAccount: "Cuenta seleccionada",
@@ -152,9 +152,9 @@ export default {
     sideNavLabelNews: "Categorías que debo buscar",
     sideNavPillLatest: "Titulares",
     sideNavLabelLatest: "Las noticias más actuales",
-    sideNavPillTalk: "Hablar",
+    sideNavPillTalk: "HABLAR",
     sideNavLabelTalk: "Te oigo y me oyes",
-    sideNavPillWrite: "Escribir",
+    sideNavPillWrite: "ESCRIBIR",
     sideNavLabelWrite: "Me escribes y te escribo",
     sideNavTomasTitleText: "Tu plan de tareas",
     sideNavTomasText1: "Te ayudo a recordar las tareas que tienes planificadas",
@@ -163,14 +163,14 @@ export default {
     sideNavTomasText3: 'En "Cantidad" pon cuántas unidades de cada tarea. Por ejemplo: Si la tarea es Comprar pan, pon "2 barras"',
     sideNavTomasText4: "Indica si la tarea es diaria, ciertos días de la semana o cada tantos días.",
     sideNavTomasText5: 'Pon indicaciones ("Antes del desayuno") si las hubiese y las horas a las que piensas hacerla. Pueden ser varias horas distintas.',
-    sideNavTomasText6: "Si es una tarea de tiempo limitado (por ejemplo, Pintar la pared) marca la casilla y escoge la fecha final.",
+    sideNavTomasText6: "Si es una tarea con final previsto (por ejemplo, 'Pintar la pared') marca la casilla y escoge la fecha final.",
     sideNavTomasText7: "Compara cuidadosamente todos los datos. Si está todo bien, pulsa",
     sideNavSaveBtn: "Guardar",
-    sideNavMiInfoTitleText: "Donde vives, qué eres",
-    sideNavMiInfoText1: "Para darte la información del clima más acertada necesito saber donde vives.",
-    sideNavMiInfoText2: "¿Por qué te lo pido? Hay ciudades con el mismo nombre. Por ejemplo, en todo el mundo ¡hay más de 9 ciudades y unas 25 poblaciones llamadas \"Valencia\"!",
-    sideNavMiInfoText3: "Si preguntas \"Brenda, ¿crees que lloverá mañana?\" sin más, yo buscaré la ciudad o población que guardaste.",
-    sideNavMiInfoText4: "Si en cambio pides \"¿Qué temperatura hará mañana en Málaga?\" diré la de Málaga.",
+    sideNavMiInfoTitleText: "Dónde vives. Cuál es tu género",
+    sideNavMiInfoText1: "Para darte la información más acertada del clima necesito saber dónde vives.",
+    sideNavMiInfoText2: "¿Por qué te lo pido en detalle? Muchas poblaciones comparten el mismo nombre. Por ejemplo, ¡hay más de 9 ciudades y unas 25 poblaciones llamadas \"Valencia\"!",
+    sideNavMiInfoText3: "Si preguntas \"Brenda, ¿crees que lloverá mañana?\" sin más, yo buscaré la ciudad o población que guardaste aquí.",
+    sideNavMiInfoText4: "Si en cambio pides \"¿Qué temperatura hará mañana en X?\" diré la de esa otra ciudad.",
     sideNavMiInfoText5: "Luego pregunto el género para dirigirme correctamente a ti: (\"¡Hola maja!\" o \"¡Claro, guapo!\")",
     sideNavMiInfoText6: "Cuando hayas indicado (o cambiado) esta información, pulsa el botón verde de guardar para recordarlo.",
     sideNavMiInfo02TitleText: "Más Tiempo para hablar o chatear",
@@ -183,26 +183,26 @@ export default {
     sideNavAnonTitleText: "Si me usas sin cuenta",
     sideNavAnonText1: "Veo que clicaste \"haz clic aquí para chatear sin cuenta (anónimo)\" cuando abriste Brenda",
     sideNavAnonText2: "Tus conversaciones conmigo serán anónimas pero públicas (otros las pueden ver y participar)",
-    sideNavAnonText3: "Para que sean privadas te recomiendo que te hagas una cuenta.",
-    sideNavAnonText4: "Podré conocerte mejor cada día. Además mantenemos nuestras conversaciones, guardo tus preferencias y lo que quieras que yo recuerde",
+    sideNavAnonText3: "Para que sean discretas entre Brenda y tú, te recomiendo que te hagas una cuenta.",
+    sideNavAnonText4: "Con una cuenta podré conocerte mejor cada día, guardar tus preferencias y lo que quieras que yo recuerde",
     sideNavAnonText5: "Clica en el botón \"Anónimo\" que está arriba a la derecha y se abrirá la ventana en la que pones un apodo y un PIN de cuatro números.",
-    sideNavAnonText6: "En adelante aparecerá el apodo que escogiste en el mismo lugar",
-    sideNavAnonText7: "NOTA IMPORTANTE: Esta app está en etapa de desarrollo. Para facilitar el uso entre nuestros colaboradores el proceso de identificación y seguridad es el más básico (y menos seguro) que hay.",
-    sideNavAnonText8: "Por favor, NO COMPARTAS NADA PERSONAL. Mejor usar un apodo en vez de tu nombre real. No me digas tu dirección, teléfono, datos bancarios, etc.)",
+    sideNavAnonText6: "En adelante aparecerá el apodo que escogiste en ese mismo lugar",
+    sideNavAnonText7: "NOTA IMPORTANTE: Esta app está en etapa de desarrollo ('Beta'). Para facilitar el uso entre nuestros colaboradores, el proceso de identificación y seguridad es el más básico (y menos seguro) que hay.",
+    sideNavAnonText8: "Por favor, NO COMPARTAS NADA PERSONAL. Mejor usa un apodo en vez de tu nombre real. No me digas tu dirección, teléfono, datos bancarios, etc.",
     sideNavCuentaTitleText: "Cuenta seleccionada",
     sideNavCuentaText1: "¡Enhorabuena! Veo que te hiciste una cuenta conmigo.",
     sideNavCuentaText2: "¡Estás en un espacio protegido!",
     sideNavCuentaText3: "Nadie se puede entrometer en nuestra conversación ni saber de tus cosas como sucede en las Redes Sociales y WhatsApp.",
-    sideNavCuentaText4: "Tus conversaciones conmigo son privadas y persistentes. Es decir, cuando retomas la app podemos seguir conversando donde lo dejamos.",
+    sideNavCuentaText4: "Tus conversaciones conmigo son discretas (solo entre tú y yo) y persistentes (cuando retomas la app seguimos conversando donde lo dejamos).",
     sideNavCuentaText5: "Además, guardo tus preferencias en una zona privada solo para ti.",
     sideNavCuentaText6: "Es importante que recuerdes o apuntes el apodo y PIN secreto que usaste.",
     sideNavInitTitleText: "Brenda inicia la conversación",
-    sideNavInitText1: "¿No se te ocurre que preguntarme?",
+    sideNavInitText1: "¿No se te ocurre qué preguntarme?",
     sideNavInitText2: "No te preocupes. Pulsa el botón azul claro \"Cambia tema\" y yo saco tema de conversación",
     sideNavInitText3: "No hace falta que preguntes, simplemente sígueme la corriente y conversamos amenamente.",
-    sideNavInitText4: "Si quieres cambiar de tema, dime lo que tengas en mente y pasamos a ello.",
-    sideNavInitText5: "O pulsa el botón azul claro de nuevo y saco otro tema.",
-    sideNavInitText6: "¿De qué temas te gusta hablar más? Dímelo en el botón \"Temas\".",
+    sideNavInitText4: "Si en cualquier momento quieres cambiar de tema, dime lo que tengas en mente y pasamos a ello.",
+    sideNavInitText5: "O pulsa el botón azul claro de 'Cambia tema' y saco otro de tu lista.",
+    sideNavInitText6: "Dime tus temas favoritos de conversación en el botón \"Temas\".",
 
     // SideNav — Panel Mis temas
     sideNavMisTemasText1: "Este botón es la otra parte de la forma que tenemos para que yo inicie la conversación.",
@@ -225,31 +225,31 @@ export default {
     sideNavNewsText3: "Yo puedo buscar los titulares más candentes de todas las secciones o solo de las que más te interesan.",
     sideNavNewsText4: "Antes de pulsar el botón \"Titulares\" pulsa \"Secciones\" y escoge entre",
     sideNavNewsText5: "Actualidad, Cotilleo, Deporte, Política, TV y entretenimiento",
-    sideNavNewsText6: "¡Puedes marcar uno, varios o todos. Cómo tú quieras!",
+    sideNavNewsText6: "¡Puedes marcar uno, varios o todos! ¡Como tú quieras!",
 
     // SideNav — Panel Hablar
     sideNavTalkTitleText: "Te oigo y me oyes",
     sideNavTalkText1: "¡Este es el botón que más usarás!",
 
-    sideNavTalkText2: "Pulsa \"Hablar\" cuando quieras que hablemos como por teléfono.",
+    sideNavTalkText2: "Pulsa \"HABLAR\" cuando quieras que hablemos como por teléfono.",
 
     sideNavTalkText3: "La primera vez que llames el dispositivo te pedirá permiso para usar tu micrófono.",
 
     sideNavTalkText4: "Selecciona el primer 'Permitir' y no aparecerá más.",
 
-    sideNavTalkText5: "Me toma unos segundos atender. Mientras verás una señal amarilla animada que dice \"Conectando\". Cuando veas un cuadro verde con  \"Hablando con aiBrenda\" y un círculo redondo rojo de colgar, ¡podemos hablar!",
+    sideNavTalkText5: "Me toma unos segundos atender. Mientras tanto, verás una señal amarilla animada que dice \"Conectando\". Cuando veas un cuadro verde con  \"Hablando con aiBrenda\" y un círculo redondo rojo de colgar, ¡podemos hablar!",
 
     sideNavTalkText6: "Habla con claridad en un lugar con poco ruido y entenderé perfectamente lo que digas o preguntes.",
 
     sideNavTalkText7: "Si pulsas el botón azul claro \"Cambia tema\" mientras hablamos, cambiaré de tópico con uno de tus temas favoritos.",
 
-    sideNavTalkText8: "Para colgar, solo pulsa en círculo rojo o el botón rojo que dice 'Colgar'.",
+    sideNavTalkText8: "Para colgar, solo pulsa el círculo rojo o el botón rojo que dice 'Colgar'.",
 
     // SideNav — Panel Escribir
     sideNavWriteText1: "¡A veces es mejor escribir y leer!",
-    sideNavWriteText2: "Pulsa \"Escribir\" cuando quieras que nos comuniquemos por texto.",
+    sideNavWriteText2: "Pulsa \"ESCRIBIR\" cuando quieras que nos comuniquemos por texto.",
     sideNavWriteText3: "Sería como lo haces por WhatsApp, Telegram y las Redes Sociales.",
-    sideNavWriteText4: "Escribes en la ventanilla inferior que dice \"Escribe aquí\" y pulsa \"Enviar\".",
+    sideNavWriteText4: "Escribe en la ventanilla inferior que dice \"Escribe aquí\" y pulsa \"Enviar\".",
     sideNavWriteText5: "Lo que escribes aparece arriba en los bloques verdes.",
     sideNavWriteText6: "Verás lo que yo te contesto en los bloques blancos.",
     sideNavWriteText7: "Si pulsas el botón azul claro \"Cambia tema\" mientras escribimos, iniciaré la conversación con uno de tus temas favoritos.",
@@ -258,8 +258,8 @@ export default {
     brendaTitle: "aiBrenda",
     brendaSubtitle: "Tu compañera amistosa. Disponible para conversar siempre que quieras",
     brendaContent: `
-      <p><strong>aiBrenda.co</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de dí­a o de noche, estés donde estés.</p>
-      <p>Considérame una buena amiga, una vecina cercana, una compañera del trabajo. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu dí­a, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
+      <p><strong>aiBrenda.co</strong> es una aplicación amigable con quien puedes hablar en cualquier momento, de día o de noche, estés donde estés.</p>
+      <p>Considérame una buena amiga, una vecina cercana, una compañera del trabajo. Escucho lo que dices, respondo a tus preguntas y te contesto con amabilidad y cariño. Puedes contarme cómo fue tu día, compartir tus pensamientos o simplemente disfrutar de una conversación agradable.</p>
       <p>También puedo ayudarte con las preguntas típicas del día a día, como por ejemplo:</p>
       <ul>
         <li>¿Lloverá mañana?</li>
@@ -269,7 +269,7 @@ export default {
         <li>y mucho más...</li>
       </ul>
       <p>Con el tiempo, nos iremos conociendo mejor y nuestras conversaciones serán más personales y cercanas.</p>
-      <p>Estoy aquí­ para darte más que información. Fui creada para ofrecerte compañía, apoyo emocional y conversación amistosa siempre que lo desees.</p>
+      <p>Estoy aquí para darte más que información. Fui creada para ofrecerte compañía, apoyo emocional y conversación amistosa siempre que lo desees.</p>
       <p>Conmigo, siempre estás acompañada.</p>
       <p>Un abrazo. Brenda</p>
 
@@ -332,7 +332,7 @@ export default {
     taskFooterDisclaimer: "Este plan de tareas ha sido introducido por el usuario y es solo de referencia personal. No es un documento formal. Consulta siempre un profesional cualificado.",
     taskReminderStandard: "Por cierto, {name} — ¿no es hora de tu tarea? ¡Solo un recordatorio amistoso! Sigue siempre la documentación oficial para estar al día.",
     taskReminderStandardAnon: "Por cierto — ¿no es hora de una tarea? ¡Solo un recordatorio amistoso! Sigue siempre la documentación oficial para estar al día.",
-    taskReminderLimited: "¡Hola, {name}! Solo quería avisarte — puede que tengas una tarea programada ahora. Recuerda seguir la documetación oficial para cumplir con tus tareas.",
+    taskReminderLimited: "¡Hola, {name}! Solo quería avisarte — puede que tengas una tarea programada ahora. Recuerda seguir la documentación oficial para cumplir con tus tareas.",
     taskReminderLimitedAnon: "Solo quería avisarte — puede que tengas una tarea programada ahora. Recuerda seguir la documentación oficial para completar tus tareas.",
     taskReminderCourseEnding: "{name}, que sepas que tu tarea actual parece que termina mañana. Si tienes alguna duda, merece la pena consultar los documentos.",
     taskReminderCourseEndingAnon: "Que sepas que tu tarea actual parece que termina mañana. Si tienes alguna duda, merece la pena consultar los papeles.",
@@ -384,7 +384,7 @@ export default {
     "tier.advanced": "Avanzado",
 
     "sub.tryFreeTitle": "¡Prueba aiBrenda Gratis!",
-    "sub.tryFreeBody": "Por tiempo limitado, solo por abrir una cuenta, obtienes <strong>40 minutos de conversación y 100 minutos de interacciones durante un mes sin costo!</strong><br>Puedes cancelar en cualquier momento.",
+    "sub.tryFreeBody": "Por tiempo limitado, solo por abrir una cuenta, ¡obtienes <strong>40 minutos de conversación y 100 minutos de interacciones durante un mes sin coste!</strong><br>Puedes cancelar en cualquier momento.",
     "sub.header": "Planes de Suscripción",
     "sub.topUpName": "Recarga",
     "sub.topUpPrice": "{n}€",

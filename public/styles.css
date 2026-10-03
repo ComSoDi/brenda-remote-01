@@ -119,7 +119,7 @@ body {
   align-self: flex-start;
   height: 45px;
   font-size: 24px;
-  width: 130px;
+  width: 170px; /* = .chat-rds-btn (Cambia tema), so Temas lines up above it */
   padding: 6px 6px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -2145,7 +2145,7 @@ body {
   align-self: flex-start;
   height: 45px;
   font-size: 24px;
-  width: 140px;
+  width: 135px; /* = .headlines-btn (Titulares), so Secciones lines up above it */
   padding: 6px 6px;
   background: #fff;
   color: #0f172a;
@@ -2619,7 +2619,7 @@ body {
 .snp {
   display: inline-block;
   padding: 5px 13px;
-  border-radius: 999px;
+  border-radius: 8px; /* same as the home-screen buttons (was a full pill, 999px) */
   border: 1px solid #555;
   font-size: 17px;
   font-weight: 700;
@@ -2628,9 +2628,32 @@ body {
   font-family: inherit;
 }
 
+.snp-white        { background: #ffffff;  color: #1a1a2e; }
 .snp-light        { background: #f5f5f5;  color: #1a1a2e; }
 .snp-salmon       { background: #F4A460;  color: #1a1a2e; }
 .snp-light-blue   { background: #B7DDF8;  color: #1a1a2e; }
+.snp-topic-blue   { background: #99CCFF;  color: #1a1a2e; } /* = header "Cambia tema" button (.chat-rds-btn) */
+.snp-headlines    { background: #FF74C4;  color: #000; }    /* = header "Titulares" button (.headlines-btn) */
+.snp-talk         { background: #FFB278;  color: #000; }    /* "Hablar" */
+.snp-text         { background: #8C25D3;  color: #fff; }    /* "Escribir" = home Text button */
+
+/* "?" row in the Help list — same look as the red header help button
+   (.help-btn: #ff0121, white bold "?", 8px rounded square), scaled to the row. */
+.snp.snp-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ff0121;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
 .snp-blue         { background: #ADD8E6;  color: #1a1a2e; }
 .snp-dark-blue    { background: #5B5DB1;  color: #fff; }
 .snp-fucsia-pink  { background: #F700F7;  color: #1a1a2e; }
@@ -2729,7 +2752,7 @@ body {
 }
 
 @media (max-width: 720px) {
-  .sidenav-pill-col { width: 120px; }
+  .sidenav-pill-col { width: 140px; } /* fits "Cambia tema" (133px) — 120px clipped it */
   .sidenav-title-col { width: 100px; }
 }
 .headline-heat-bar-fill--cool { background: #888780; }

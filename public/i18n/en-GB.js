@@ -153,10 +153,10 @@ export default {
     sideNavLabelAnon: "If you use me without an account",
     sideNavPillTomas: "Tasks",
     sideNavLabelTomas: "Your task schedule",
-    sideNavPillMisTemas: "My topics",
+    sideNavPillMisTemas: "Subjects",
     sideNavLabelMisTemas: "The topics that interest you",
-    sideNavPillInit: "I start",
-    sideNavLabelInit: "Brenda starts the conversation",
+    sideNavPillInit: "Change Topic",
+    sideNavLabelInit: "Start or switch to something else",
     sideNavPillNews: "Sections",
     sideNavLabelNews: "Categories I should look for",
     sideNavPillLatest: "Headlines",
@@ -207,18 +207,18 @@ export default {
     sideNavCuentaText6: "It is important that you remember or write down the nickname and secret PIN you used.",
     sideNavInitTitleText: "Brenda starts the conversation",
     sideNavInitText1: "Not sure what to ask me?",
-    sideNavInitText2: "Don't worry. Tap the yellow \"I start\" button and I'll bring up a conversation topic.",
+    sideNavInitText2: "Don't worry. Tap the light-blue \"Change Topic\" button and I'll bring up a conversation topic.",
     sideNavInitText3: "You don't need to ask anything, just go with the flow and we'll have a pleasant conversation.",
     sideNavInitText4: "If you want to change the subject, tell me what's on your mind and we'll switch to it.",
-    sideNavInitText5: "Or tap the yellow button again and I'll bring up another topic.",
-    sideNavInitText6: "What topics do you enjoy talking about most? Tell me using the \"My topics\" button.",
+    sideNavInitText5: "Or tap the light-blue button again and I'll bring up another topic.",
+    sideNavInitText6: "What topics do you enjoy talking about most? Tell me using the \"Subjects\" button.",
 
     // SideNav — My topics panel
-    sideNavMisTemasText1: "This button works alongside 'I Start' as a way for me to begin the conversation.",
-    sideNavMisTemasText2: "When you tap 'I Start', I can talk to you about thousands of different interesting things.",
+    sideNavMisTemasText1: "This button works alongside 'Change Topic' as a way for me to begin the conversation.",
+    sideNavMisTemasText2: "When you tap 'Change Topic', I can talk to you about thousands of different interesting things.",
     sideNavMisTemasText3: "If you prefer, I can focus the conversation on the topics you enter in the screen that opens with this button.",
     sideNavMisTemasText4: "Write up to five different topics and then tap the 'Save' button.",
-    sideNavMisTemasText5: "Then tap the yellow 'I Start' button and you'll see me start a conversation on one of those topics.",
+    sideNavMisTemasText5: "Then tap the light-blue 'Change Topic' button and you'll see me start a conversation on one of those topics.",
 
     // SideNav — Headlines panel
     sideNavLatestText1: "I'm the friend who scans the news and brings you the most relevant and current stories.",
@@ -250,7 +250,7 @@ export default {
 
     sideNavTalkText6: "Speak clearly in a quiet place and I'll understand you perfectly.",
 
-    sideNavTalkText7: "If you tap the yellow 'I Start' button while we're talking, I'll change subjects with one of your favourite topics.",
+    sideNavTalkText7: "If you tap the light-blue 'Change Topic' button while we're talking, I'll change subjects with one of your favourite topics.",
 
     sideNavTalkText8: "To hang up, just tap the red circle or the red 'Hang Up' button below.",
 
@@ -262,7 +262,7 @@ export default {
     sideNavWriteText4: "Type in the box at the bottom that says 'Type here' and tap 'Send'.",
     sideNavWriteText5: "What you write appears above in the green blocks.",
     sideNavWriteText6: "You'll see my replies in the white blocks.",
-    sideNavWriteText7: "If you tap the yellow 'I Start' button while we're chatting, I'll start the conversation with one of your favourite topics.",
+    sideNavWriteText7: "If you tap the light-blue 'Change Topic' button while we're chatting, I'll start the conversation with one of your favourite topics.",
 
     // I am Brenda Overlay
     brendaTitle: "I am aiBrenda",

@@ -142,10 +142,10 @@ export default {
     sideNavLabelAnon: "Si me usas sin cuenta",
     sideNavPillTomas: "Tareas",
     sideNavLabelTomas: "Tu plan de tareas",
-    sideNavPillMisTemas: "Mis temas",
+    sideNavPillMisTemas: "Temas",
     sideNavLabelMisTemas: "Los temas que te interesan",
-    sideNavPillInit: "Inicia tú",
-    sideNavLabelInit: "Brenda inicia la conversación",
+    sideNavPillInit: "Cambia tema",
+    sideNavLabelInit: "Inicia o cambia a otra cosa",
     sideNavPillNews: "Secciones",
     sideNavLabelNews: "Categorías que debo buscar",
     sideNavPillLatest: "Titulares",
@@ -196,18 +196,18 @@ export default {
     sideNavCuentaText6: "Es importante que recuerdes o apuntes el apodo y PIN secreto que usaste.",
     sideNavInitTitleText: "Brenda inicia la conversación",
     sideNavInitText1: "¿No se te ocurre que preguntarme?",
-    sideNavInitText2: "No te preocupes. Pulsa el botón amarillo \"Inicia tú\" y yo saco tema de conversación",
+    sideNavInitText2: "No te preocupes. Pulsa el botón azul claro \"Cambia tema\" y yo saco tema de conversación",
     sideNavInitText3: "No hace falta que preguntes, simplemente sígueme la corriente y conversamos amenamente.",
     sideNavInitText4: "Si quieres cambiar de tema, dime lo que tengas en mente y pasamos a ello.",
-    sideNavInitText5: "O pulsa el botón amarillo de nuevo y saco otro tema.",
-    sideNavInitText6: "¿De qué temas te gusta hablar más? Dímelo en el botón \"Mis temas\".",
+    sideNavInitText5: "O pulsa el botón azul claro de nuevo y saco otro tema.",
+    sideNavInitText6: "¿De qué temas te gusta hablar más? Dímelo en el botón \"Temas\".",
 
     // SideNav — Panel Mis temas
     sideNavMisTemasText1: "Este botón es la otra parte de la forma que tenemos para que yo inicie la conversación.",
-    sideNavMisTemasText2: "Cuando pulsas \"Inicia tú\" te puedo hablar de miles de cosas diferentes muy interesantes.",
+    sideNavMisTemasText2: "Cuando pulsas \"Cambia tema\" te puedo hablar de miles de cosas diferentes muy interesantes.",
     sideNavMisTemasText3: "Si prefieres, puedo dedicar los temas de conversación a los que tú me indiques en la pantalla que sale con este botón.",
     sideNavMisTemasText4: "Escribe hasta cinco temas diferentes y luego pulsa la tecla \"Guardar\".",
-    sideNavMisTemasText5: "Después pulsa el botón amarillo \"Inicia tú\" y verás que inicio conversación de uno de esos temas.",
+    sideNavMisTemasText5: "Después pulsa el botón azul claro \"Cambia tema\" y verás que inicio conversación de uno de esos temas.",
 
     // SideNav — Panel Titulares
     sideNavLatestText1: "Soy la amiga que repasa la prensa y te ofrece lo más relevante y actual.",
@@ -237,9 +237,9 @@ export default {
 
     sideNavTalkText5: "Me toma unos segundos atender. Mientras verás una señal amarilla animada que dice \"Conectando\". Cuando veas un cuadro verde con  \"Hablando con aiBrenda\" y un círculo redondo rojo de colgar, ¡podemos hablar!",
 
-    sideNavTalkText6: "Hábla con claridad en un lugar con poco ruido y entenderé perfectamente lo que digas o preguntes.",
+    sideNavTalkText6: "Habla con claridad en un lugar con poco ruido y entenderé perfectamente lo que digas o preguntes.",
 
-    sideNavTalkText7: "Si pulsas el botón amarillo \"Inicia\" mientras hablamos, cambierá de tópico con uno de tus temas favoritos.",
+    sideNavTalkText7: "Si pulsas el botón azul claro \"Cambia tema\" mientras hablamos, cambiaré de tópico con uno de tus temas favoritos.",
 
     sideNavTalkText8: "Para colgar, solo pulsa en círculo rojo o el botón rojo que dice 'Colgar'.",
 
@@ -250,7 +250,7 @@ export default {
     sideNavWriteText4: "Escribes en la ventanilla inferior que dice \"Escribe aquí\" y pulsa \"Enviar\".",
     sideNavWriteText5: "Lo que escribes aparece arriba en los bloques verdes.",
     sideNavWriteText6: "Verás lo que yo te contesto en los bloques blancos.",
-    sideNavWriteText7: "Si pulsas el botón amarillo \"Inicia\" mientras escribimos, iniciaré la conversación con uno de tus temas favoritos.",
+    sideNavWriteText7: "Si pulsas el botón azul claro \"Cambia tema\" mientras escribimos, iniciaré la conversación con uno de tus temas favoritos.",
 
     // I am Brenda Overlay
     brendaTitle: "aiBrenda",

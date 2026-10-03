@@ -1,18 +1,20 @@
 // public/sideNavManager.js
 import { t } from "./i18n/index.js";
 
+// Display order (Mike, 2026-10-03): account (user's Nick, rendered first —
+// see accountRowHtml), Mi info, Mi info 2, ?, Temas, Secciones, Tareas,
+// Inicia tú (Cambia tema), Titulares, Hablar, Escribir.
 const SIDENAV_HOME_PILLS = [
-  { pillKey: "sideNavPillHelp",     pillClass: "snp-light",      labelKey: "sideNavLabelHelp",     nav: null },
-  { pillKey: "sideNavPillMyInfo",   pillClass: "snp-light",      labelKey: "sideNavLabelMyInfo",   nav: "miInfo" },
-  { pillKey: "sideNavPillMyInfo2",  pillClass: "snp-light",      labelKey: "sideNavLabelMyInfo2",  nav: "miInfo02" },
-  // account pill is inserted here dynamically
-  { pillKey: "sideNavPillTomas",    pillClass: "snp-salmon",     labelKey: "sideNavLabelTomas",    nav: "tomas" },
-  { pillKey: "sideNavPillInit",     pillClass: "snp-yellow",     labelKey: "sideNavLabelInit",     nav: "iniciaTu" },
-  { pillKey: "sideNavPillMisTemas", pillClass: "snp-light",      labelKey: "sideNavLabelMisTemas", nav: "misTemas" },
-  { pillKey: "sideNavPillLatest",   pillClass: "snp-magenta",    labelKey: "sideNavLabelLatest",   nav: "latest" },
-  { pillKey: "sideNavPillNews",     pillClass: "snp-light",      labelKey: "sideNavLabelNews",     nav: "news" },
-  { pillKey: "sideNavPillTalk",     pillClass: "snp-green",      labelKey: "sideNavLabelTalk",     nav: "talk" },
-  { pillKey: "sideNavPillWrite",    pillClass: "snp-dark-blue",  labelKey: "sideNavLabelWrite",    nav: "write" },
+  { pillKey: "sideNavPillMyInfo",   pillClass: "snp-white",      labelKey: "sideNavLabelMyInfo",   nav: "miInfo" },
+  { pillKey: "sideNavPillMyInfo2",  pillClass: "snp-white",      labelKey: "sideNavLabelMyInfo2",  nav: "miInfo02" },
+  { pillKey: "sideNavPillHelp",     pillClass: "snp-help",       labelKey: "sideNavLabelHelp",     nav: null },
+  { pillKey: "sideNavPillMisTemas", pillClass: "snp-white",      labelKey: "sideNavLabelMisTemas", nav: "misTemas" },
+  { pillKey: "sideNavPillNews",     pillClass: "snp-white",      labelKey: "sideNavLabelNews",     nav: "news" },
+  { pillKey: "sideNavPillTomas",    pillClass: "snp-white",      labelKey: "sideNavLabelTomas",    nav: "tomas" },
+  { pillKey: "sideNavPillInit",     pillClass: "snp-topic-blue", labelKey: "sideNavLabelInit",     nav: "iniciaTu" },
+  { pillKey: "sideNavPillLatest",   pillClass: "snp-headlines",  labelKey: "sideNavLabelLatest",   nav: "latest" },
+  { pillKey: "sideNavPillTalk",     pillClass: "snp-talk",       labelKey: "sideNavLabelTalk",     nav: "talk" },
+  { pillKey: "sideNavPillWrite",    pillClass: "snp-text",       labelKey: "sideNavLabelWrite",    nav: "write" },
 ];
 
 // GA4 name suffix per nav target — mirrors the sidenav_{name}_popup ids below,
@@ -34,7 +36,7 @@ const SIDENAV_NAV_GA_SUFFIX = {
 const SIDENAV_DETAIL_CONFIGS = {
   tomas: {
     pillKey:  "sideNavPillTomas",
-    pillClass: "snp-salmon",
+    pillClass: "snp-white",
     titleKey: "sideNavTomasTitleText",
     blocks: [
       { type: "text",     key: "sideNavTomasText1" },
@@ -51,7 +53,7 @@ const SIDENAV_DETAIL_CONFIGS = {
   },
   miInfo: {
     pillKey:  "sideNavPillMyInfo",
-    pillClass: "snp-light",
+    pillClass: "snp-white",
     titleKey: "sideNavMiInfoTitleText",
     blocks: [
       { type: "text",     key: "sideNavMiInfoText1" },
@@ -66,7 +68,7 @@ const SIDENAV_DETAIL_CONFIGS = {
   },
   miInfo02: {
     pillKey:  "sideNavPillMyInfo2",
-    pillClass: "snp-light",
+    pillClass: "snp-white",
     titleKey: "sideNavMiInfo02TitleText",
     blocks: [
       { type: "text",  key: "sideNavMiInfo02Text1" },
@@ -81,7 +83,7 @@ const SIDENAV_DETAIL_CONFIGS = {
   },
   anon: {
     pillKey:  "accountBtnAnonymous",
-    pillClass: "snp-light",
+    pillClass: "snp-white",
     titleKey: "sideNavAnonTitleText",
     blocks: [
       { type: "text",  key: "sideNavAnonText1" },
@@ -97,7 +99,7 @@ const SIDENAV_DETAIL_CONFIGS = {
   },
   cuenta: {
     pillDynamic: true,
-    pillClass: "snp-light",
+    pillClass: "snp-white",
     titleKey: "sideNavCuentaTitleText",
     blocks: [
       { type: "text",  key: "sideNavCuentaText1" },
@@ -113,7 +115,7 @@ const SIDENAV_DETAIL_CONFIGS = {
   },
   misTemas: {
     pillKey:   "sideNavPillMisTemas",
-    pillClass: "snp-light-blue",
+    pillClass: "snp-white",
     titleKey:  "sideNavLabelMisTemas",
     blocks: [
       { type: "text",  key: "sideNavMisTemasText1" },
@@ -121,12 +123,12 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",  key: "sideNavMisTemasText3" },
       { type: "text",  key: "sideNavMisTemasText4" },
       { type: "text",     key: "sideNavMisTemasText5" },
-      { type: "pill-btn", key: "sideNavPillInit", pillClass: "snp-yellow" },
+      { type: "pill-btn", key: "sideNavPillInit", pillClass: "snp-topic-blue" },
     ],
   },
   write: {
     pillKey:   "sideNavPillWrite",
-    pillClass: "snp-dark-blue",
+    pillClass: "snp-text",
     titleKey:  "sideNavLabelWrite",
     blocks: [
       { type: "text", key: "sideNavWriteText1" },
@@ -140,7 +142,7 @@ const SIDENAV_DETAIL_CONFIGS = {
   },
   talk: {
     pillKey:   "sideNavPillTalk",
-    pillClass: "snp-green",
+    pillClass: "snp-talk",
     titleKey:  "sideNavTalkTitleText",
     blocks: [
       { type: "text", key: "sideNavTalkText1" },
@@ -155,7 +157,7 @@ const SIDENAV_DETAIL_CONFIGS = {
   },
   news: {
     pillKey:   "sideNavPillNews",
-    pillClass: "snp-light",
+    pillClass: "snp-white",
     titleKey:  "sideNavNewsTitleText",
     blocks: [
       { type: "text", key: "sideNavNewsText1" },
@@ -168,7 +170,7 @@ const SIDENAV_DETAIL_CONFIGS = {
   },
   latest: {
     pillKey:   "sideNavPillLatest",
-    pillClass: "snp-magenta",
+    pillClass: "snp-headlines",
     titleKey:  "sideNavLabelLatest",
     blocks: [
       { type: "text",  key: "sideNavLatestText1" },
@@ -176,12 +178,12 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",  key: "sideNavLatestText3" },
       { type: "text",  key: "sideNavLatestText4" },
       { type: "text",     key: "sideNavLatestText5" },
-      { type: "pill-btn", key: "sideNavPillNews", pillClass: "snp-light" },
+      { type: "pill-btn", key: "sideNavPillNews", pillClass: "snp-white" },
     ],
   },
   iniciaTu: {
     pillKey:  "sideNavPillInit",
-    pillClass: "snp-yellow",
+    pillClass: "snp-topic-blue",
     titleKey: "sideNavInitTitleText",
     blocks: [
       { type: "text",  key: "sideNavInitText1" },
@@ -265,13 +267,11 @@ export class SideNavManager {
     const accountRowHtml = `
       <div class="sidenav-pill-row${accountNav ? " sidenav-pill-row--nav" : ""}" data-nav="${accountNav}">
         <div class="sidenav-pill-col">
-          <span class="snp snp-light">${this._snEsc(accountPillText)}</span>
+          <span class="snp snp-white">${this._snEsc(accountPillText)}</span>
         </div>
         <span class="sidenav-row-label">${this._snEsc(t(v, accountLabelKey))}</span>
       </div>`;
 
-    const beforeAccount = SIDENAV_HOME_PILLS.slice(0, 3);
-    const afterAccount  = SIDENAV_HOME_PILLS.slice(3);
 
     const pillsHtml = (pills) => pills.map((pill) => {
       const isNav = !!pill.nav;
@@ -292,9 +292,8 @@ export class SideNavManager {
       </div>
       <p class="sidenav-intro">${this._snEsc(t(v, "sideNavIntro"))}</p>
       <div class="sidenav-pill-list">
-        ${pillsHtml(beforeAccount)}
         ${accountRowHtml}
-        ${pillsHtml(afterAccount)}
+        ${pillsHtml(SIDENAV_HOME_PILLS)}
       </div>`;
 
     inner.querySelector(".js-snav-home-close")

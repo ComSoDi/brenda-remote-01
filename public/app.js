@@ -1330,7 +1330,7 @@ class BrendaApp {
     list.innerHTML = "";
 
     try {
-      const data = await this.apiJSON("/api/brenda/headlines", { method: "GET" });
+      const data = await this.apiJSON(`/api/brenda/headlines?locale=${encodeURIComponent(this.locale.variant || "")}`, { method: "GET" });
       const headlines = data?.headlines || [];
       this.setHeadlinesLoading(false);
 

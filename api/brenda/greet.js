@@ -70,7 +70,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const headlines = await getHeadlines(session.userId, db);
+    const headlines = await getHeadlines(session.userId, db, null, locale);
 
     if (!headlines.length) {
       return json(res, 200, {

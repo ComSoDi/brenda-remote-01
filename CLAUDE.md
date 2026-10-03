@@ -55,7 +55,14 @@ api/                        Handler modules (export default async function handl
     topic-starter.js          Generate a progressive RDS conversation starter
   brenda/
     categories.js             Saved news-category preferences (ai_categories collection)
-    headlines.js               Ranked headlines for the session user
+    headlines.js               Ranked headlines for the session user. News country =
+                               saved "Mi info" country if config/outlets.js covers it,
+                               else US; no saved location → by locale (en-US→US, en-GB→GB,
+                               es-ES→ES, es-419→MX). Gemini request + headlines are in that
+                               country's language (config/outlets.js COUNTRIES). Outlets: config/outlets.js (ES, US, GB,
+                               MX, CO, AR, VE; VE = independent/exile media only, no state
+                               media). Gemini thinking OFF (it took 38-282 s with it on);
+                               now ~10-30 s per request (live Google Search grounding).
     gossip.js                  Brenda reacts to a tapped headline card
     greet.js                   Water-cooler session-opener built from headlines
     search.js                  Current-events Q&A with Gemini google_search grounding

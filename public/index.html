@@ -221,8 +221,13 @@
           <div class="auth-help" id="authNickHelp"></div>
 
           <label class="auth-label" for="authPin" id="authPinLabel"></label>
-          <input id="authPin" class="auth-input" type="password" inputmode="numeric" autocomplete="current-password"
-            maxlength="4" />
+          <div class="pin-field">
+            <input id="authPin" class="auth-input" type="password" inputmode="numeric" autocomplete="current-password"
+              maxlength="4" />
+            <button class="pin-toggle" type="button" data-pin-target="authPin" aria-pressed="false" data-ga-name="pin_visibility_toggle_btn">
+              <img class="eye-show" src="images/eye-open.png" alt="" /><img class="eye-hide" src="images/eye-closed.png" alt="" />
+            </button>
+          </div>
           <div class="auth-help" id="authPinHelp01"></div>
           <div class="auth-help" id="authPinHelp02"></div>
 
@@ -331,7 +336,12 @@
           <input id="deleteAccountFinalNick" class="auth-input" type="text" inputmode="text" autocomplete="username" />
 
           <label class="auth-label" id="deleteAccountFinalPinLabel" for="deleteAccountFinalPin"></label>
-          <input id="deleteAccountFinalPin" class="auth-input" type="password" inputmode="numeric" autocomplete="current-password" maxlength="4" />
+          <div class="pin-field">
+            <input id="deleteAccountFinalPin" class="auth-input" type="password" inputmode="numeric" autocomplete="current-password" maxlength="4" />
+            <button class="pin-toggle" type="button" data-pin-target="deleteAccountFinalPin" aria-pressed="false" data-ga-name="pin_visibility_toggle_btn">
+              <img class="eye-show" src="images/eye-open.png" alt="" /><img class="eye-hide" src="images/eye-closed.png" alt="" />
+            </button>
+          </div>
         </div>
 
         <div class="consent-error" id="deleteAccountFinalError" role="alert" aria-live="polite"></div>

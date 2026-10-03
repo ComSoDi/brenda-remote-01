@@ -32,6 +32,8 @@ export default {
     authNickLabel: "Nickname",
     authNickHelp: "Only letters, numbers and underscores (4-20 characters)",
     authPinLabel: "PIN",
+    pinShow: "Show PIN",
+    pinHide: "Hide PIN",
     authPinHelp01: "Create 4-digit PIN.",
     authPinHelp02: "Write down Nickname and PIN in safe place",
     authContinue: "Continue",

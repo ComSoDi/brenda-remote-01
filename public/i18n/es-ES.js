@@ -26,6 +26,8 @@ export default {
     authNickLabel: "Usuario",
     authNickHelp: "Solo letras, numeros y guiones bajos (4-20 caracteres)",
     authPinLabel: "PIN",
+    pinShow: "Mostrar PIN",
+    pinHide: "Ocultar PIN",
     authPinHelp01: "Crea PIN de 4 numeros.",
     authPinHelp02: "Apunta Usuario y PIN en sitio seguro",
     authContinue: "Continuar",

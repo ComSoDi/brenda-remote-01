@@ -555,8 +555,40 @@ class BrendaApp {
   /* --------------------
      AUTH HELPERS
   -------------------- */
+
+  // PIN Show/Hide eye button (login + delete-account PIN fields). Open eye =
+  // "show": tapping it reveals the digits and switches to the closed eye.
+  _setPinVisible(btn, visible) {
+    const input = document.getElementById(btn.dataset.pinTarget);
+    if (!input) return;
+    const v = this.locale.variant;
+    input.type = visible ? "text" : "password";
+    btn.setAttribute("aria-pressed", String(visible));
+    btn.setAttribute("aria-label", t(v, visible ? "pinHide" : "pinShow"));
+    // Icon swap is pure CSS on aria-pressed (both images preloaded in the button).
+  }
+
+  wirePinToggles() {
+    document.querySelectorAll(".pin-toggle").forEach((btn) => {
+      this._setPinVisible(btn, false);
+      if (btn.dataset.wired) return; // wireAuthOverlay can run more than once
+      btn.dataset.wired = "1";
+      // Keep focus (and the phone keyboard) in the PIN field while toggling.
+      btn.addEventListener("mousedown", (e) => e.preventDefault());
+      btn.addEventListener("click", () => {
+        this._setPinVisible(btn, btn.getAttribute("aria-pressed") !== "true");
+      });
+    });
+  }
+
+  // Back to hidden dots whenever a PIN form is (re)opened.
+  resetPinToggles() {
+    document.querySelectorAll(".pin-toggle").forEach((btn) => this._setPinVisible(btn, false));
+  }
+
   wireAuthOverlay() {
     const v = this.locale.variant;
+    this.wirePinToggles();
 
     // Copy strings
     if (this.elements.authGreeting) this.elements.authGreeting.textContent = t(v, "authGreeting");
@@ -680,7 +712,7 @@ class BrendaApp {
   openAuthOverlay({ closable, resetFields = false } = {}) {
     const o = this.elements.authOverlay;
     if (!o) return;
-
+    this.resetPinToggles(); // PIN always starts hidden
     // If already authenticated and closable, show X
     if (this.elements.authCloseBtn) {
       this.elements.authCloseBtn.classList.toggle("hidden", !closable);
@@ -1012,6 +1044,7 @@ class BrendaApp {
     if (this.elements.deleteAccountFinalBtn) this.elements.deleteAccountFinalBtn.textContent = t(v, "deleteAccountFinalBtn");
     if (this.elements.deleteAccountFinalNick) this.elements.deleteAccountFinalNick.value = "";
     if (this.elements.deleteAccountFinalPin) this.elements.deleteAccountFinalPin.value = "";
+    this.resetPinToggles();
     if (this.elements.deleteAccountFinalError) this.elements.deleteAccountFinalError.textContent = "";
 
     this.elements.deleteAccountFinalOverlay?.classList.remove("hidden");

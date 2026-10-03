@@ -1222,6 +1222,47 @@ body {
   color: #111;
 }
 
+/* PIN field + Show/Hide eye button to its right (login + delete-account) */
+.pin-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;        /* .auth-form centres its children — span the full row */
+  align-self: stretch; /* so the field lines up under "Usuario" */
+}
+
+.pin-field .auth-input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+.pin-toggle {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px; /* = .auth-input height */
+  padding: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-toggle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Both icons are in the button (preloaded, instant swap): open eye while the
+   PIN is hidden ("show"), closed eye while it's visible ("hide"). */
+.pin-toggle .eye-hide { display: none; }
+.pin-toggle[aria-pressed="true"] .eye-show { display: none; }
+.pin-toggle[aria-pressed="true"] .eye-hide { display: block; }
+
 .auth-input::placeholder {
   font-family: "Nunito Sans", sans-serif;
   font-weight: 400;

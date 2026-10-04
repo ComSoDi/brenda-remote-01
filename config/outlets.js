@@ -6,6 +6,11 @@
 // One entry per country that has outlets below: the name used in the Gemini
 // request and the language the request + headlines are written in.
 // (A saved country not listed here falls back to US — api/brenda/headlines.js.)
+//
+// App takes longer when it has more outlets to read. 
+// Max of 9 is deliberately set to control read time.
+// If needed we could reduce to 7 
+
 export const COUNTRIES = {
   ES: { name: 'España',             lang: 'es' },
   US: { name: 'the United States',  lang: 'en' },
@@ -17,6 +22,9 @@ export const COUNTRIES = {
 };
 
 export const OUTLETS = [
+  // ── Spain (ES) ──────────────────────────────────────────────────
+  // Mix across the political spectrum + wire service, gossip and sport.
+  // Enabled: 10
   {
     id: 'antena3', name: 'Antena 3', country: 'ES', city: null, enabled: true,
     categories: ['tv', 'gossip', 'actualidad', 'sport'],
@@ -30,7 +38,7 @@ export const OUTLETS = [
     searchHint: 'Telecinco noticias',
   },
   {
-    id: 'lasexta', name: 'La Sexta', country: 'ES', city: null, enabled: true,
+    id: 'lasexta', name: 'La Sexta', country: 'ES', city: null, enabled: false,
     categories: ['actualidad', 'politica'],
     textColor: '#854F0B', bgColor: '#FAEEDA',
     searchHint: 'La Sexta noticias',
@@ -42,7 +50,7 @@ export const OUTLETS = [
     searchHint: 'RTVE noticias',
   },
   {
-    id: 'elpais', name: 'El País', country: 'ES', city: null, enabled: false,
+    id: 'elpais', name: 'El País', country: 'ES', city: null, enabled: true,
     categories: ['actualidad', 'politica'],
     textColor: '#534AB7', bgColor: '#EEEDFE',
     searchHint: 'El País noticias',
@@ -78,7 +86,7 @@ export const OUTLETS = [
     searchHint: 'ABC España noticias',
   },
   {
-    id: 'marca', name: 'Marca', country: 'ES', city: null, enabled: false,
+    id: 'marca', name: 'Marca', country: 'ES', city: null, enabled: true,
     categories: ['sport'],
     textColor: '#0C447C', bgColor: '#E6F1FB',
     searchHint: 'Marca deportes',
@@ -90,7 +98,7 @@ export const OUTLETS = [
     searchHint: '¡Hola! Revista cotilleo de famosos',
   },
   {
-    id: 'lecturas', name: 'Lecturas', country: 'ES', city: null, enabled: true,
+    id: 'lecturas', name: 'Lecturas', country: 'ES', city: null, enabled: false,
     categories: ['gossip', 'tv'],
     textColor: '#72243E', bgColor: '#FBEAF0',
     searchHint: 'Lecturas. Revista de cotilleo de famosos',
@@ -104,6 +112,7 @@ export const OUTLETS = [
 
   // ── United States (US) ──────────────────────────────────────────────────
   // Mix across the political spectrum + wire service, gossip and sport.
+  // Enabled: 9
   {
     id: 'apnews', name: 'AP News', country: 'US', city: null, enabled: true,
     categories: ['actualidad', 'politica'],
@@ -172,6 +181,7 @@ export const OUTLETS = [
   },
 
   // ── United Kingdom (GB) ─────────────────────────────────────────────────
+  // Enabled: 9
   {
     id: 'bbcnews', name: 'BBC News', country: 'GB', city: null, enabled: true,
     categories: ['actualidad', 'politica'],
@@ -240,6 +250,7 @@ export const OUTLETS = [
   },
 
   // ── Mexico (MX) ─────────────────────────────────────────────────────────
+  // Enabled: 9
   {
     id: 'eluniversalmx', name: 'El Universal', country: 'MX', city: null, enabled: true,
     categories: ['actualidad', 'politica'],
@@ -302,6 +313,7 @@ export const OUTLETS = [
   },
 
   // ── Colombia (CO) ───────────────────────────────────────────────────────
+  // Enabled: 9
   {
     id: 'eltiempo', name: 'El Tiempo', country: 'CO', city: null, enabled: true,
     categories: ['actualidad', 'politica'],
@@ -358,6 +370,7 @@ export const OUTLETS = [
   },
 
   // ── Argentina (AR) ──────────────────────────────────────────────────────
+  // Enabled: 8
   {
     id: 'clarin', name: 'Clarín', country: 'AR', city: null, enabled: true,
     categories: ['actualidad', 'politica'],
@@ -424,6 +437,7 @@ export const OUTLETS = [
   // blocked inside Venezuela — chosen to avoid state-controlled/censored media.
   // (Gemini's Google Search runs outside VE, so in-country blocking doesn't
   // affect us.) Deliberately NO state media (VTV, Telesur, Últimas Noticias…).
+  // Enabled: 9
   {
     id: 'efectococuyo', name: 'Efecto Cocuyo', country: 'VE', city: null, enabled: true,
     categories: ['actualidad', 'politica'],

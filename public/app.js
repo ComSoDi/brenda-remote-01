@@ -315,6 +315,8 @@ class BrendaApp {
         document.getElementById("latestCatPoliticaLabel"),
         document.getElementById("latestCatTvLabel"),
       ],
+      latestNewsGreeting: document.getElementById("latestNewsGreeting"),
+      latestNewsGreetingLabel: document.getElementById("latestNewsGreetingLabel"),
 
       // News & Gossip — Headlines feed
       headlinesBtn: document.getElementById("headlinesBtn"),
@@ -1199,6 +1201,7 @@ class BrendaApp {
         if (el) el.textContent = t(v, `latestCat${catKeys[i]}`);
       });
     }
+    if (e.latestNewsGreetingLabel) e.latestNewsGreetingLabel.textContent = t(v, "latestNewsGreeting");
     if (e.headlinesBtn)   e.headlinesBtn.textContent   = t(v, "headlinesBtn");
     if (e.headlinesTitle) e.headlinesTitle.textContent = t(v, "headlinesTitle");
     if (e.legendHot)  e.legendHot.textContent  = t(v, "headlinesLegendHot");
@@ -1230,15 +1233,18 @@ class BrendaApp {
 
     // Load saved categories (default: all checked)
     let saved = ["actualidad", "gossip", "sport", "politica", "tv"];
+    let newsGreeting = false;
     try {
       const data = await this.apiJSON("/api/brenda/categories", { method: "GET" });
       if (data?.categories?.length) saved = data.categories;
+      newsGreeting = data?.newsGreeting === true;
     } catch { /* non-fatal */ }
 
     const checkboxes = this.elements.latestCatCheckboxes || [];
     checkboxes.forEach((cb) => {
       if (cb) cb.checked = saved.includes(cb.value);
     });
+    if (this.elements.latestNewsGreeting) this.elements.latestNewsGreeting.checked = newsGreeting;
   }
 
   closeLatestOverlay() {
@@ -1267,7 +1273,7 @@ class BrendaApp {
     try {
       await this.apiJSON("/api/brenda/categories", {
         method: "POST",
-        body: { categories: selected },
+        body: { categories: selected, newsGreeting: !!this.elements.latestNewsGreeting?.checked },
       });
       this.setLatestStatus(t(v, "latestSaved"));
       setTimeout(() => this.closeLatestOverlay(), 500);

@@ -7,6 +7,7 @@
 import { requireSession } from '../../lib/auth.js';
 import { getDb } from '../../lib/mongo.js';
 import { OUTLETS, COUNTRIES, getOutletsForUser } from '../../config/outlets.js';
+import { recordFeatureUsage } from '../../lib/featureUsage.js';
 
 const ALL_CATEGORIES = ['actualidad', 'gossip', 'sport', 'politica', 'tv'];
 
@@ -111,7 +112,9 @@ function json(res, status, body) {
 }
 
 // Core logic — exported so greet.js can reuse without an extra HTTP round-trip.
-export async function getHeadlines(userId, db, categories = null, locale = null) {
+// `usage` ({ session, requestId?, callIndex? }) records the call as charged
+// News usage (tokens + Google Search fee) — see lib/featureUsage.js.
+export async function getHeadlines(userId, db, categories = null, locale = null, usage = null) {
   const apiKey = process.env.GEMINI_API_KEY;
   const model  = process.env.GEMINI_CHAT_MODEL || 'gemini-2.5-flash';
   if (!apiKey) throw new Error('GEMINI_API_KEY not set');
@@ -172,6 +175,7 @@ export async function getHeadlines(userId, db, categories = null, locale = null)
   }
 
   const data  = await r.json();
+  if (usage?.session) recordFeatureUsage({ db, feature: 'news', model, data, ...usage });
   const raw   = data.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') ?? '[]';
   const items = extractJsonArray(raw);
 
@@ -217,7 +221,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const headlines = await getHeadlines(session.userId, db, null, req.query?.locale || null);
+      const headlines = await getHeadlines(session.userId, db, null, req.query?.locale || null, { session });
       return json(res, 200, { headlines });
     } catch (e) {
       console.error('[headlines/get]', e.message);
@@ -228,7 +232,7 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { categories, locale } = req.body || {};
     try {
-      const headlines = await getHeadlines(session.userId, db, categories || null, locale || null);
+      const headlines = await getHeadlines(session.userId, db, categories || null, locale || null, { session });
       return json(res, 200, { headlines });
     } catch (e) {
       console.error('[headlines/post]', e.message);

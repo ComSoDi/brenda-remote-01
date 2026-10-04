@@ -372,6 +372,7 @@ export default {
     latestCatSport: "Sport",
     latestCatPolitica: "Politics",
     latestCatTv: "TV & Entertainment",
+    latestNewsGreeting: "Tell me the news when you greet me",
     headlinesBtn: "Headlines",
     chatBtn: "Change Topic",
     headlinesTitle: "Top Headlines",

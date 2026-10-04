@@ -1,6 +1,8 @@
 :root {
   --color-voice:        #00FF00;
   --color-chat:         #00FFFF;
+  --color-news:         #FF74C4;  /* same pink as the app's Headlines pill */
+  --color-cleanup:      #D9D2E9;
   --color-totals:       #FFFF00;
   --color-thoughts:     #FF9900;
   --color-border:       #ccc;
@@ -156,6 +158,17 @@ tr.row-chat-subtotal td {
   font-weight: bold;
 }
 
+tr.row-news-subtotal td {
+  background: var(--color-news);
+  font-weight: bold;
+}
+
+/* Clean-up = housekeeping: costed per user, not charged in Brendys */
+tr.row-cleanup-subtotal td {
+  background: var(--color-cleanup);
+  font-weight: bold;
+}
+
 /* ── Combined totals row ────────────────────────────────── */
 tr.row-totals td {
   background: var(--color-totals);
@@ -205,6 +218,7 @@ td.col-green  { background: #00FF00 !important; }
 td.col-white  { background: #FFFFFF !important; color: #000; }
 td.col-orange { background: #F9CB9C !important; }
 td.col-yellow { background: #FFFF00 !important; }
+td.col-search { background: #FFC9E8 !important; }  /* Google Search fee columns */
 
 /* ── Toggle button in label cell ────────────────────────── */
 .toggle-btn {

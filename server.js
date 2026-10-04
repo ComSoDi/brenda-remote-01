@@ -44,6 +44,8 @@ import googleCallbackHandler from "./api/auth/google-callback.js";
 import dashUsersHandler      from "./api/dashboard/users.js";
 import dashVoiceHandler      from "./api/dashboard/voice-events.js";
 import dashChatHandler       from "./api/dashboard/chat-events.js";
+import dashNewsHandler       from "./api/dashboard/news-events.js";
+import dashCleanupHandler    from "./api/dashboard/cleanup-events.js";
 import ledgerEntriesHandler  from "./api/ledger/entries.js";
 import rdsStateHandler       from "./api/rds/state.js";
 import rdsInterestsHandler   from "./api/rds/interests.js";
@@ -185,6 +187,8 @@ app.get("/api/auth/google-callback", (req, res) => googleCallbackHandler(req, re
 app.get("/api/dashboard/users",       (req, res) => dashUsersHandler(req, res));
 app.get("/api/dashboard/voice-events",(req, res) => dashVoiceHandler(req, res));
 app.get("/api/dashboard/chat-events", (req, res) => dashChatHandler(req, res));
+app.get("/api/dashboard/news-events", (req, res) => dashNewsHandler(req, res));
+app.get("/api/dashboard/cleanup-events", (req, res) => dashCleanupHandler(req, res));
 
 // Admin "Ledger" report — reuses the dashboard session (requireDashboardSession).
 app.get("/api/ledger/entries",        (req, res) => ledgerEntriesHandler(req, res));
@@ -579,6 +583,13 @@ wss.on("connection", (ws) => {
   let setupFallbackTimer = null;
   let inputTranscriptBuf = "";
   let outputTranscriptBuf = "";
+  // Google Search fees in TALK: the Live model's built-in google_search
+  // reports what it searched in serverContent.groundingMetadata. Collected
+  // per turn and recorded at turnComplete as a zero-token Voice event that
+  // carries the fee (charged in Voice Brendys) — see lib/usage.js searchCharge.
+  let turnSearchQueries = new Set();
+  let turnGrounded = false;
+  let voiceSearchCounter = 0;
 
   // New Relic voice-flow latency instrumentation — purely observational,
   // doesn't gate or alter any existing behavior. Mirrors voice-proxy/index.js.
@@ -814,6 +825,10 @@ wss.on("connection", (ws) => {
       // docs/voice-vad-tuning.md. RDS extraction itself stays gated below.
       const sc = parsed?.serverContent;
       if (sc) {
+        if (sc.groundingMetadata) {
+          turnGrounded = true;
+          for (const q of sc.groundingMetadata.webSearchQueries || []) turnSearchQueries.add(q);
+        }
         if (sc.inputTranscription?.text) {
           inputTranscriptBuf += sc.inputTranscription.text;
           // Gemini's own signal that it was still hearing/transcribing the
@@ -844,6 +859,21 @@ wss.on("connection", (ws) => {
         }
 
         if (sc.turnComplete) {
+          if (turnGrounded && userId) {
+            const queries = [...turnSearchQueries];
+            console.log(`[voice-proxy] google_search session=${voiceSessionId} userId=${userId} queries=${JSON.stringify(queries)}`);
+            const responseId = `${voiceSessionId}_search_${voiceSearchCounter++}`;
+            getDb()
+              .then(db => db && recordVoiceUsage({
+                db, userId, voiceSessionId, responseId, model: MODEL, usage: {},
+                grounding: { webSearchQueries: queries, groundingChunks: [{}] },
+                planId, planDisplayName,
+              }))
+              .catch(e => console.error("[voice-proxy/search-usage]", e.message));
+          }
+          turnSearchQueries = new Set();
+          turnGrounded = false;
+
           const userMsg = inputTranscriptBuf.trim();
           const aiReply = outputTranscriptBuf.trim();
           console.log(`🗣️ [voice-vad] session=${voiceSessionId} userId=${userId ?? "null"} — turn complete. user="${userMsg}" brenda="${aiReply}"`);
@@ -886,7 +916,7 @@ wss.on("connection", (ws) => {
 
           if (userMsg && aiReply && ws.isAuthenticated && userId && ws.rdsProfile && !ws.challengeState) {
             const extractModel = process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash";
-            extractRdsItems(GEMINI_API_KEY, extractModel, userMsg, aiReply, ws.rdsUsername || "")
+            extractRdsItems(GEMINI_API_KEY, extractModel, userMsg, aiReply, ws.rdsUsername || "", { db: getDb(), userId })
               .then(async ({ extractions }) => {
                 if (!extractions?.length) return;
                 const db = await getDb();

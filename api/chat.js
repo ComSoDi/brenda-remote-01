@@ -844,6 +844,8 @@ export default async function handler(req, res) {
         db, userId: session.userId, chatRequestId, chatSessionId,
         callIndex, model: GEMINI_CHAT_MODEL,
         usage: d.usageMetadata,
+        // web_search's grounded call carries the Google Search fee.
+        grounding: d.candidates?.[0]?.groundingMetadata || null,
         planId: planInfo?.planId ?? null,
         planDisplayName: planInfo?.planDisplayName ?? null,
       })).catch(e => console.error("[chat/usage]", e.message));
@@ -1767,7 +1769,7 @@ export default async function handler(req, res) {
     // Skipped while a game is running (same as TALK) — game chatter isn't
     // personal facts about the user.
     if (rdsProfile && !session.isAnonymous && lastUserText && reply && !forgetDescription && !challengeState) {
-      extractRdsItems(GEMINI_API_KEY, GEMINI_CHAT_MODEL, lastUserText, reply, rdsUsername)
+      extractRdsItems(GEMINI_API_KEY, GEMINI_CHAT_MODEL, lastUserText, reply, rdsUsername, { db, userId: session.userId })
         .then(async ({ extractions }) => {
           for (const ex of (extractions || [])) {
             if (ex?.domain && ex?.item) {

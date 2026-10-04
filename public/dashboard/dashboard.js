@@ -1,11 +1,30 @@
+// Four blocks, same columns, all converted to money (tokens + Google Search
+// fees) so they compare like for like. NEWS = headlines, tap reaction, news
+// greeting (charged to Text Brendys). CLEAN-UP = housekeeping done for a user
+// (fact learning, daily clean-up, TALK transcript fix) — costed, NOT charged.
+const BLOCKS = [
+  { type: "voice",   label: "VOICE",    modelLabel: "Voice model:",    cls: "row-voice-subtotal",   dayGroups: false },
+  { type: "chat",    label: "CHAT",     modelLabel: "Chat model:",     cls: "row-chat-subtotal",    dayGroups: true  },
+  { type: "news",    label: "NEWS",     modelLabel: "News model:",     cls: "row-news-subtotal",    dayGroups: true  },
+  { type: "cleanup", label: "CLEAN-UP", modelLabel: "Clean-up model:", cls: "row-cleanup-subtotal", dayGroups: false, note: "not charged" },
+];
+const BLOCK_BY_TYPE = Object.fromEntries(BLOCKS.map((b) => [b.type, b]));
+const COLSPAN_ALL = 37;
+
+// Event-row labels (Plan column) for tagged chat calls and clean-up jobs.
+const FEATURE_LABELS = { topic: "Cambia tema", search: "news question", news: "news" };
+const CLEANUP_JOB_LABELS = {
+  rds_extract:       "Fact learning",
+  rds_consolidation: "Daily clean-up",
+  transcript_fix:    "Transcript fix",
+};
+
 class DashboardApp {
   constructor() {
-    this._voicePage    = 1;
-    this._chatPage     = 1;
-    this._voiceExp     = true;
-    this._chatExp      = true;
-    this._voiceData    = null;
-    this._chatData     = null;
+    this._page = {};
+    this._exp  = {};
+    this._data = {};
+    BLOCKS.forEach(({ type }) => { this._page[type] = 1; this._exp[type] = true; this._data[type] = null; });
   }
 
   // ── Init ─────────────────────────────────────────────────
@@ -78,8 +97,7 @@ class DashboardApp {
   }
 
   _onFilterChange() {
-    this._voicePage = 1;
-    this._chatPage  = 1;
+    BLOCKS.forEach(({ type }) => { this._page[type] = 1; });
     this.fetchAndRender();
   }
 
@@ -93,10 +111,10 @@ class DashboardApp {
     const to     = this._fTo.value   ? new Date(this._fTo.value).toISOString()   : "";
 
     try {
-      [this._voiceData, this._chatData] = await Promise.all([
-        this._fetchEvents("voice", userId, planId, from, to, this._voicePage),
-        this._fetchEvents("chat",  userId, planId, from, to, this._chatPage),
-      ]);
+      const results = await Promise.all(
+        BLOCKS.map(({ type }) => this._fetchEvents(type, userId, planId, from, to, this._page[type]))
+      );
+      BLOCKS.forEach(({ type }, i) => { this._data[type] = results[i]; });
       this._setStatus("");
       this._renderTable();
     } catch (e) {
@@ -117,20 +135,18 @@ class DashboardApp {
   // ── Table render ─────────────────────────────────────────
 
   _renderTable() {
-    const userId   = this._uSel.value;
-    const allUsers = !userId;
+    const allUsers = !this._uSel.value;
     const from     = this._fFrom.value;
 
     let rows = "";
-    rows += allUsers
-      ? this._renderAllUsersBlock(this._voiceData.events, "voice", this._voiceData.subtotals)
-      : this._renderBlock(this._voiceData, "voice");
+    BLOCKS.forEach(({ type }) => {
+      const data = this._data[type];
+      rows += allUsers
+        ? this._renderAllUsersBlock(data?.events, type, data?.subtotals)
+        : this._renderBlock(data, type);
+    });
 
-    rows += allUsers
-      ? this._renderAllUsersBlock(this._chatData.events, "chat", this._chatData.subtotals)
-      : this._renderBlock(this._chatData, "chat");
-
-    rows += this._renderTotalsRow(this._voiceData.subtotals, this._chatData.subtotals, from);
+    rows += this._renderTotalsRow(BLOCKS.map(({ type }) => this._data[type]?.subtotals), from);
 
     this._tbody.innerHTML = rows;
     this._wireToggles();
@@ -141,14 +157,14 @@ class DashboardApp {
 
   _renderBlock(data, type) {
     if (!data) return "";
-    const expanded = type === "voice" ? this._voiceExp : this._chatExp;
+    const expanded = this._exp[type];
     let rows = "";
     rows += this._renderSubtotalRow(data.subtotals, type, expanded, data.total);
     if (expanded) {
-      if (type === "chat") {
+      if (BLOCK_BY_TYPE[type].dayGroups) {
         rows += this._renderDayGroups(data.events, type, 14);
       } else {
-        data.events.forEach((ev) => { rows += this._renderEventRow(ev); });
+        data.events.forEach((ev) => { rows += this._renderEventRow(ev, type); });
       }
       if (data.totalPages > 1) {
         rows += this._renderPaginationRow(data.page, data.totalPages, type, data.total);
@@ -170,7 +186,7 @@ class DashboardApp {
       groups.get(ev.userId).push(ev);
     });
 
-    const expanded = type === "voice" ? this._voiceExp : this._chatExp;
+    const expanded = this._exp[type];
     let rows = "";
 
     // Grand subtotal row (toggle controls all)
@@ -181,10 +197,10 @@ class DashboardApp {
         const userSub = this._computeSubtotals(userEvents);
         const label   = this._uLabel(userId);
         rows += this._renderPerUserSubtotal(userSub, label, type);
-        if (type === "chat") {
+        if (BLOCK_BY_TYPE[type].dayGroups) {
           rows += this._renderDayGroups(userEvents, type, 28);
         } else {
-          userEvents.forEach((ev) => { rows += this._renderEventRow(ev); });
+          userEvents.forEach((ev) => { rows += this._renderEventRow(ev, type); });
         }
         rows += this._renderModelRow(userSub.models, type);
       });
@@ -202,9 +218,9 @@ class DashboardApp {
   }
 
   _computeSubtotals(events) {
-    const u = { textInputTokens:0, audioInputTokens:0, textOutputTokens:0, audioOutputTokens:0, thoughtsTokens:0, totalInputTokens:0, totalOutputTokens:0, totalTokens:0 };
-    const c = { textInput:0, audioInput:0, textOutput:0, audioOutput:0, thoughts:0, totalInput:0, totalOutput:0, total:0 };
-    const priceAccum = { textInput:[], audioInput:[], textOutput:[], audioOutput:[] };
+    const u = { textInputTokens:0, audioInputTokens:0, textOutputTokens:0, audioOutputTokens:0, thoughtsTokens:0, totalInputTokens:0, totalOutputTokens:0, totalTokens:0, searches:0, searchBrendys:0 };
+    const c = { textInput:0, audioInput:0, textOutput:0, audioOutput:0, thoughts:0, search:0, totalInput:0, totalOutput:0, total:0 };
+    const priceAccum = { textInput:[], audioInput:[], textOutput:[], audioOutput:[], search:[] };
     const models = new Set();
 
     events.forEach((ev) => {
@@ -218,6 +234,7 @@ class DashboardApp {
       c.textOutput  += cs.textOutput  || 0;
       c.audioOutput += cs.audioOutput || 0;
       c.thoughts    += cs.thoughts    || 0;
+      c.search      += cs.search      || 0;
       c.totalInput  += (cs.textInput  || 0) + (cs.audioInput  || 0);
       c.totalOutput += (cs.textOutput || 0) + (cs.audioOutput || 0);
       c.total       += cs.total       || 0;
@@ -226,6 +243,7 @@ class DashboardApp {
       if (pr.audioInput  != null) priceAccum.audioInput.push(pr.audioInput);
       if (pr.textOutput  != null) priceAccum.textOutput.push(pr.textOutput);
       if (pr.audioOutput != null) priceAccum.audioOutput.push(pr.audioOutput);
+      if (ev.search?.unitPrice != null) priceAccum.search.push(ev.search.unitPrice);
 
       if (ev.model) models.add(ev.model);
     });
@@ -239,12 +257,13 @@ class DashboardApp {
         audioInput:  avg(priceAccum.audioInput),
         textOutput:  avg(priceAccum.textOutput),
         audioOutput: avg(priceAccum.audioOutput),
+        search:      avg(priceAccum.search),
       },
       models: [...models],
     };
   }
 
-  // ── Day-boundary grouping (chat) ─────────────────────────
+  // ── Day-boundary grouping (chat, news) ───────────────────
   // Groups events into "business days" that roll over at 2am rather than
   // midnight, so a late-night chat isn't split from the evening before it.
 
@@ -270,23 +289,25 @@ class DashboardApp {
         .filter((t) => t != null);
       const spanMin = times.length ? (Math.max(...times) - Math.min(...times)) / 60000 : 0;
       rows += this._renderDaySubtotal(dayKey, sub, dayEvents.length, spanMin, type, indent);
-      dayEvents.forEach((ev) => { rows += this._renderEventRow(ev); });
+      dayEvents.forEach((ev) => { rows += this._renderEventRow(ev, type); });
     });
     return rows;
   }
 
   _renderDaySubtotal(dayKey, sub, count, spanMin, type, indent) {
-    const cls  = type === "voice" ? "row-voice-subtotal" : "row-chat-subtotal";
+    const cls  = BLOCK_BY_TYPE[type].cls;
     const u    = sub.usage || {};
     const c    = sub.cost  || {};
     const p    = sub.avgPricing || {};
     const tprc = this._calcThoughtsPrice(c.thoughts, u.thoughtsTokens);
+    const unit = type === "news" ? "call" : "msg";
 
     return `<tr class="${cls}" style="opacity:0.75;">
       <td colspan="3" style="text-align:left;padding-left:${indent}px;font-style:italic">${this._esc(dayKey)}
-        <span style="font-weight:normal;font-size:10px;margin-left:4px">(${count} msg${count === 1 ? "" : "s"})</span>
+        <span style="font-weight:normal;font-size:10px;margin-left:4px">(${count} ${unit}${count === 1 ? "" : "s"})</span>
       </td>
       ${this._tokenCells(u, true)}
+      ${this._searchCells(u, true)}
       ${this._voiceMinCells(u, true)}
       ${this._tokensPerMinFromDuration(u.totalTokens, spanMin)}
       ${this._priceCells(p, tprc, true)}
@@ -299,20 +320,21 @@ class DashboardApp {
   // ── Row renderers ────────────────────────────────────────
 
   _renderSubtotalRow(sub, type, expanded, total) {
-    const cls   = type === "voice" ? "row-voice-subtotal" : "row-chat-subtotal";
-    const label = type === "voice" ? "VOICE" : "CHAT";
+    const block = BLOCK_BY_TYPE[type];
     const icon  = expanded ? "▲" : "▼";
     const u     = sub?.usage   || {};
     const c     = sub?.cost    || {};
     const p     = sub?.avgPricing || {};
     const tprc  = this._calcThoughtsPrice(c.thoughts, u.thoughtsTokens);
+    const note  = block.note ? ` · ${block.note}` : "";
 
-    return `<tr class="${cls}" data-block="${type}">
-      <td colspan="3" style="text-align:left"><strong>${label}</strong>
+    return `<tr class="${block.cls}" data-block="${type}">
+      <td colspan="3" style="text-align:left"><strong>${block.label}</strong>
         <button class="toggle-btn js-toggle" data-block="${type}">${icon}</button>
-        <span style="font-weight:normal;font-size:10px;margin-left:4px">(${this._fmtInt(total)} events)</span>
+        <span style="font-weight:normal;font-size:10px;margin-left:4px">(${this._fmtInt(total)} ${type === "cleanup" ? "rows" : "events"}${note})</span>
       </td>
       ${this._tokenCells(u, true)}
+      ${this._searchCells(u, true)}
       ${this._voiceMinCells(u, true)}
       ${this._tokensPerMinCell(u)}
       ${this._priceCells(p, tprc, true)}
@@ -323,7 +345,7 @@ class DashboardApp {
   }
 
   _renderPerUserSubtotal(sub, label, type) {
-    const cls  = type === "voice" ? "row-voice-subtotal" : "row-chat-subtotal";
+    const cls  = BLOCK_BY_TYPE[type].cls;
     const u    = sub?.usage   || {};
     const c    = sub?.cost    || {};
     const p    = sub?.avgPricing || {};
@@ -332,6 +354,7 @@ class DashboardApp {
     return `<tr class="${cls}" style="opacity:0.75;">
       <td colspan="3" style="text-align:left;padding-left:14px;font-style:italic">${this._esc(label)}</td>
       ${this._tokenCells(u, true)}
+      ${this._searchCells(u, true)}
       ${this._voiceMinCells(u, true)}
       ${this._tokensPerMinCell(u)}
       ${this._priceCells(p, tprc, true)}
@@ -341,7 +364,21 @@ class DashboardApp {
     </tr>`;
   }
 
-  _renderEventRow(ev) {
+  // Plan column: the plan, plus what the call was for when it isn't a plain
+  // chat/voice turn; clean-up rows show the job and how many calls it folds.
+  _eventLabel(ev, type) {
+    if (type === "cleanup") {
+      const job = CLEANUP_JOB_LABELS[ev.job] || ev.job || "—";
+      const calls = ev.calls || 0;
+      const run = ev.job === "rds_consolidation" && ev.bucket ? ` ${ev.bucket}` : "";
+      return `${job}${run} (${calls} call${calls === 1 ? "" : "s"})`;
+    }
+    const plan = ev.planDisplayName || "—";
+    if (ev.search?.count && type === "voice") return `${plan} · search`;
+    return ev.feature && ev.feature !== "news" ? `${plan} · ${FEATURE_LABELS[ev.feature] || ev.feature}` : plan;
+  }
+
+  _renderEventRow(ev, type) {
     const d    = ev.createdAt ? new Date(ev.createdAt) : null;
     const u    = ev.usage  || {};
     const raw  = ev.cost   || {};
@@ -350,14 +387,17 @@ class DashboardApp {
       totalInput:  (raw.textInput  || 0) + (raw.audioInput  || 0),
       totalOutput: (raw.textOutput || 0) + (raw.audioOutput || 0),
     };
-    const p   = raw.pricingPer1K || {};
+    const p   = { ...(raw.pricingPer1K || {}), search: ev.search?.unitPrice ?? null };
     const tprc = this._calcThoughtsPrice(c.thoughts, u.thoughtsTokens);
+    // Daily clean-up rows are per UTC day: show that day, not the first call's time.
+    const dayOnly = type === "cleanup" && ev.job !== "rds_consolidation";
 
     return `<tr class="row-event">
-      <td class="col-dt">${d ? this._fmtDate(d) : ""}</td>
-      <td class="col-dt">${d ? this._fmtTime(d) : ""}</td>
-      <td>${this._esc(ev.planDisplayName || "—")}</td>
+      <td class="col-dt">${dayOnly ? this._esc(ev.bucket || "") : (d ? this._fmtDate(d) : "")}</td>
+      <td class="col-dt">${dayOnly ? "" : (d ? this._fmtTime(d) : "")}</td>
+      <td>${this._esc(this._eventLabel(ev, type))}</td>
       ${this._tokenCells(u)}
+      ${this._searchCells(u)}
       ${this._voiceMinCells(u)}
       <td></td>
       ${this._priceCells(p, tprc)}
@@ -368,10 +408,10 @@ class DashboardApp {
   }
 
   _renderModelRow(models, type) {
-    const label = type === "voice" ? "Voice model:" : "Chat model:";
+    const label = BLOCK_BY_TYPE[type].modelLabel;
     const value = (models || []).filter(Boolean).sort().join(", ") || "—";
     return `<tr class="row-model">
-      <td colspan="33">${label} ${this._esc(value)}</td>
+      <td colspan="${COLSPAN_ALL}">${label} ${this._esc(value)}</td>
     </tr>`;
   }
 
@@ -379,7 +419,7 @@ class DashboardApp {
     const prevDis = page <= 1 ? "disabled" : "";
     const nextDis = page >= totalPages ? "disabled" : "";
     return `<tr class="row-pagination">
-      <td colspan="33">
+      <td colspan="${COLSPAN_ALL}">
         <button class="pagination-btn js-prev-page" data-block="${type}" ${prevDis}>&#8592; Previous</button>
         <span class="pagination-label">Page ${page} of ${totalPages} &nbsp;(${this._fmtInt(total)} total)</span>
         <button class="pagination-btn js-next-page" data-block="${type}" ${nextDis}>Next &#8594;</button>
@@ -387,37 +427,29 @@ class DashboardApp {
     </tr>`;
   }
 
-  _renderTotalsRow(voiceSub, chatSub, fromValue) {
-    // Sum VOICE + CHAT subtotals
-    const vc = voiceSub?.cost    || {};
-    const cc = chatSub?.cost     || {};
-    const vu = voiceSub?.usage   || {};
-    const cu = chatSub?.usage    || {};
+  _renderTotalsRow(subs, fromValue) {
+    // Sum every block's subtotals (VOICE + CHAT + NEWS + CLEAN-UP)
+    const present = (subs || []).filter(Boolean);
+    const sum = (pick, k) => present.reduce((a, s) => a + ((s[pick] || {})[k] || 0), 0);
 
     const u = {};
     ["textInputTokens","audioInputTokens","textOutputTokens","audioOutputTokens",
-     "thoughtsTokens","totalInputTokens","totalOutputTokens","totalTokens"].forEach((k) => {
-      u[k] = (vu[k]||0) + (cu[k]||0);
-    });
+     "thoughtsTokens","totalInputTokens","totalOutputTokens","totalTokens",
+     "searches","searchBrendys"].forEach((k) => { u[k] = sum("usage", k); });
 
-    const c = {
-      textInput:   (vc.textInput   ||0) + (cc.textInput   ||0),
-      audioInput:  (vc.audioInput  ||0) + (cc.audioInput  ||0),
-      textOutput:  (vc.textOutput  ||0) + (cc.textOutput  ||0),
-      audioOutput: (vc.audioOutput ||0) + (cc.audioOutput ||0),
-      thoughts:    (vc.thoughts    ||0) + (cc.thoughts    ||0),
-      totalInput:  (vc.totalInput  ||0) + (cc.totalInput  ||0),
-      totalOutput: (vc.totalOutput ||0) + (cc.totalOutput ||0),
-      total:       (vc.total       ||0) + (cc.total       ||0),
-    };
+    const c = {};
+    ["textInput","audioInput","textOutput","audioOutput","thoughts","search",
+     "totalInput","totalOutput","total"].forEach((k) => { c[k] = sum("cost", k); });
 
-    // Weighted avg pricing across all events
-    const allPricings = [voiceSub?.avgPricing, chatSub?.avgPricing].filter(Boolean);
+    // Simple average of each block's average pricing
     const wavg = (key) => {
-      const vals = allPricings.map((p) => p[key]).filter((v) => v != null);
+      const vals = present.map((s) => s.avgPricing?.[key]).filter((v) => v != null);
       return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
     };
-    const p = { textInput: wavg("textInput"), audioInput: wavg("audioInput"), textOutput: wavg("textOutput"), audioOutput: wavg("audioOutput") };
+    const p = {
+      textInput: wavg("textInput"), audioInput: wavg("audioInput"),
+      textOutput: wavg("textOutput"), audioOutput: wavg("audioOutput"), search: wavg("search"),
+    };
     const tprc = this._calcThoughtsPrice(c.thoughts, u.thoughtsTokens);
 
     // Date/time label from From filter
@@ -433,6 +465,7 @@ class DashboardApp {
       <td class="col-dt">${this._esc(timeCell)}</td>
       <td></td>
       ${this._tokenCells(u, true)}
+      ${this._searchCells(u, true)}
       ${this._voiceMinCells(u, true)}
       ${this._tokensPerMinCell(u)}
       ${this._priceCells(p, tprc, true)}
@@ -454,21 +487,30 @@ class DashboardApp {
     ].map((v, i) => `<td class="${cls[i]}">${this._fmtInt(v)}</td>`).join("");
   }
 
+  // Google Search: number of billed searches, and the Brendys charged for them
+  // (on top of the tokens — Brendys charged = tokens total + these).
+  _searchCells(u, isSubtotal = false) {
+    const cls = isSubtotal ? "col-search" : "";
+    return [u.searches, u.searchBrendys]
+      .map((v) => `<td class="${cls}">${this._fmtInt(v)}</td>`).join("");
+  }
+
   _priceCells(p, thoughtsPrice, isSubtotal = false) {
     const baseCls = isSubtotal ? "col-orange col-price" : "col-price";
     return [
       p?.textInput, p?.audioInput, p?.textOutput, p?.audioOutput,
     ].map((v) => `<td class="${baseCls}">${this._fmtPricePerM(v)}</td>`).join("")
-      + `<td class="${isSubtotal ? "col-yellow col-price" : "col-price"}">${thoughtsPrice}</td>`;
+      + `<td class="${isSubtotal ? "col-yellow col-price" : "col-price"}">${thoughtsPrice}</td>`
+      + `<td class="${isSubtotal ? "col-search col-price" : "col-price"}">${this._fmtSmartDecimal(p?.search ?? null)}</td>`;
   }
 
   _costCells(c, isSubtotal = false) {
     const cls = isSubtotal
-      ? ["col-blue","col-blue","col-green","col-green","col-yellow","col-blue","col-green","col-white"]
-      : ["","","","","","","",""];
+      ? ["col-blue","col-blue","col-green","col-green","col-yellow","col-search","col-blue","col-green","col-white"]
+      : ["","","","","","","","",""];
     return [
       c.textInput, c.audioInput, c.textOutput, c.audioOutput,
-      c.thoughts, c.totalInput, c.totalOutput, c.total,
+      c.thoughts, c.search, c.totalInput, c.totalOutput, c.total,
     ].map((v, i) => `<td class="${cls[i]}">${this._fmtCost(v)}</td>`).join("");
   }
 
@@ -518,8 +560,7 @@ class DashboardApp {
     this._tbody.querySelectorAll(".js-toggle").forEach((btn) => {
       btn.addEventListener("click", () => {
         const block = btn.dataset.block;
-        if (block === "voice") this._voiceExp = !this._voiceExp;
-        else                   this._chatExp  = !this._chatExp;
+        this._exp[block] = !this._exp[block];
         this._renderTable();
       });
     });
@@ -529,16 +570,14 @@ class DashboardApp {
     this._tbody.querySelectorAll(".js-prev-page").forEach((btn) => {
       btn.addEventListener("click", () => {
         if (btn.disabled) return;
-        if (btn.dataset.block === "voice") this._voicePage--;
-        else                               this._chatPage--;
+        this._page[btn.dataset.block]--;
         this.fetchAndRender();
       });
     });
     this._tbody.querySelectorAll(".js-next-page").forEach((btn) => {
       btn.addEventListener("click", () => {
         if (btn.disabled) return;
-        if (btn.dataset.block === "voice") this._voicePage++;
-        else                               this._chatPage++;
+        this._page[btn.dataset.block]++;
         this.fetchAndRender();
       });
     });

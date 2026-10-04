@@ -5,7 +5,9 @@
 
 import { requireSession } from '../../lib/auth.js';
 import { getDb } from '../../lib/mongo.js';
+import { randomUUID } from 'crypto';
 import { getHeadlines } from './headlines.js';
+import { recordFeatureUsage } from '../../lib/featureUsage.js';
 
 const GREET_SYSTEM = {
   'es-ES':
@@ -69,8 +71,27 @@ export default async function handler(req, res) {
     return json(res, 500, { error: e.message });
   }
 
+  // Opt-in only (Mike, 2026-10-04): the news greeting runs a full headlines
+  // search the user pays for, so it needs the "Tell me the news when you
+  // greet me" box ticked in the News sections popup (api/brenda/categories.js).
   try {
-    const headlines = await getHeadlines(session.userId, db, null, locale);
+    const user = await db.collection('users').findOne(
+      { userId: session.userId },
+      { projection: { 'preferences.newsGreeting': 1 } }
+    );
+    if (user?.preferences?.newsGreeting !== true) {
+      return json(res, 200, { greeting: null, headlinesUsed: [], skipped: 'disabled' });
+    }
+  } catch (e) {
+    console.error('[greet] preference lookup failed:', e.message);
+    return json(res, 200, { greeting: null, headlinesUsed: [], skipped: 'error' });
+  }
+
+  // Both Gemini calls are News usage, charged to Text Brendys.
+  const requestId = randomUUID();
+
+  try {
+    const headlines = await getHeadlines(session.userId, db, null, locale, { session, requestId, callIndex: 0 });
 
     if (!headlines.length) {
       return json(res, 200, {
@@ -116,6 +137,7 @@ export default async function handler(req, res) {
     }
 
     const data    = await r.json();
+    recordFeatureUsage({ db, session, feature: 'news', model, data, requestId, callIndex: 1 });
     const greeting = data.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') ?? '';
 
     return json(res, 200, {

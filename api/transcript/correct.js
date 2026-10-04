@@ -1,3 +1,7 @@
+import { getSession } from "../../lib/auth.js";
+import { getDb } from "../../lib/mongo.js";
+import { recordCleanupUsage } from "../../lib/usage.js";
+
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json");
   if (req.method !== "POST") {
@@ -7,6 +11,12 @@ export default async function handler(req, res) {
 
   const { text, language } = req.body || {};
   if (!text) return res.end(JSON.stringify({ corrected: text || "" }));
+
+  // Signed-in users only (this used to be open to anyone — a free Gemini
+  // proxy). Without a session the raw text comes back unchanged, which is
+  // the same graceful fallback the client already handles.
+  const session = getSession(req);
+  if (!session?.userId) return res.end(JSON.stringify({ corrected: text }));
 
   const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
   if (!GEMINI_API_KEY) return res.end(JSON.stringify({ corrected: text }));
@@ -43,6 +53,13 @@ ${text}`;
     });
 
     const data = await r.json();
+    // TALK transcript clean-up = Clean-up usage (one row per user per day):
+    // costed per user, not charged.
+    if (data?.usageMetadata) {
+      getDb()
+        .then((db) => recordCleanupUsage({ db, userId: session.userId, job: "transcript_fix", model, usage: data.usageMetadata }))
+        .catch((e) => console.error("[transcript/correct/usage]", e?.message || e));
+    }
     const parts = data?.candidates?.[0]?.content?.parts || [];
     const outputPart = parts.find(p => !p.thought && typeof p.text === "string") ?? parts[0];
     const corrected = outputPart?.text?.trim();

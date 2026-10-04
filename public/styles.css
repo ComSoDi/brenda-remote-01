@@ -2276,6 +2276,12 @@ body {
   flex-shrink: 0;
 }
 
+/* "Tell me the news when you greet me" — double spacing sets it apart
+   from the sections list above. */
+.latest-cat-item.latest-news-greeting {
+  margin-top: 18px;
+}
+
 /* ── Headlines card ─────────────────────────────────────────────────────────── */
 
 .headlines-card {

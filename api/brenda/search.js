@@ -2,6 +2,8 @@
 // POST /api/brenda/search — Brenda answers a current-events query with google_search grounding.
 
 import { requireSession } from '../../lib/auth.js';
+import { getDb } from '../../lib/mongo.js';
+import { recordFeatureUsage } from '../../lib/featureUsage.js';
 
 const SYSTEM = {
   'es-ES':
@@ -68,6 +70,10 @@ export default async function handler(req, res) {
     }
 
     const data  = await r.json();
+    // News question → charged as Text ("search" feature) incl. the search fee.
+    getDb()
+      .then((db) => recordFeatureUsage({ db, session, feature: 'search', model, data }))
+      .catch((e) => console.error('[search/usage]', e.message));
     const reply = data.candidates?.[0]?.content?.parts?.map((p) => p.text).join('') ?? '';
     return json(res, 200, { reply: reply || fallback(locale) });
   } catch (e) {

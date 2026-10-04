@@ -4,6 +4,8 @@
 
 import { requireSession } from '../../lib/auth.js';
 import { brendaGossip } from '../../lib/brendaGossip.js';
+import { getDb } from '../../lib/mongo.js';
+import { recordFeatureUsage } from '../../lib/featureUsage.js';
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -23,7 +25,14 @@ export default async function handler(req, res) {
   const userMessage = snippet ? `${headline} — ${snippet}` : headline;
 
   try {
-    const result = await brendaGossip(userMessage, { history, locale });
+    // Tap reaction = News usage, charged to Text Brendys (the spoken version
+    // in TALK goes through the Live session and is already Voice usage).
+    const onResponse = (data, model) => {
+      getDb()
+        .then((db) => recordFeatureUsage({ db, session, feature: 'news', model, data }))
+        .catch((e) => console.error('[gossip/usage]', e.message));
+    };
+    const result = await brendaGossip(userMessage, { history, locale, onResponse });
     return json(res, 200, result);
   } catch (e) {
     console.error('[gossip]', e.message);

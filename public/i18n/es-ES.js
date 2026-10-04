@@ -360,6 +360,7 @@ export default {
     latestCatSport: "Deporte",
     latestCatPolitica: "Política",
     latestCatTv: "TV y entretenimiento",
+    latestNewsGreeting: "Cuéntame las noticias cuando me saludes",
     headlinesBtn: "Titulares",
     chatBtn: "Cambia tema",
     headlinesTitle: "Titulares Top",

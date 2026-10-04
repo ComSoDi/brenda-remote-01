@@ -4,6 +4,7 @@
 import { getDb } from "../../lib/mongo.js";
 import { requireSession } from "../../lib/auth.js";
 import { getTopicStarterContext, recordTopicAngle } from "../../lib/rdsService.js";
+import { recordFeatureUsage } from "../../lib/featureUsage.js";
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -92,6 +93,9 @@ export default async function handler(req, res) {
     }
 
     const geminiData = await geminiRes.json();
+    // "Cambia tema" — charged as Text ("topic" feature). In TALK, Brenda
+    // speaking it is recorded separately as Voice by the Live session.
+    recordFeatureUsage({ db, session, feature: "topic", model: GEMINI_CHAT_MODEL, data: geminiData });
     const raw = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     const stripped  = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();

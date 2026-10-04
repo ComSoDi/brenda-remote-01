@@ -103,11 +103,11 @@ async function getOrCreateSubscription(db, userId) {
       const [vAgg, cAgg] = await Promise.all([
         db.collection("gemini_voice_usage_events").aggregate([
           { $match: { userId, createdAt: { $gte: sub.periodStartDate } } },
-          { $group: { _id: null, total: { $sum: "$usage.totalTokens" } } },
+          { $group: { _id: null, total: { $sum: { $add: ["$usage.totalTokens", { $ifNull: ["$usage.searchBrendys", 0] }] } } } },
         ]).toArray(),
         db.collection("gemini_chat_usage_events").aggregate([
           { $match: { userId, createdAt: { $gte: sub.periodStartDate } } },
-          { $group: { _id: null, total: { $sum: "$usage.totalTokens" } } },
+          { $group: { _id: null, total: { $sum: { $add: ["$usage.totalTokens", { $ifNull: ["$usage.searchBrendys", 0] }] } } } },
         ]).toArray(),
       ]);
       const vOverflow = Math.max((vAgg[0]?.total || 0) - (sub.voiceQuota || 0), 0);
@@ -201,7 +201,7 @@ async function getVoiceTokensUsedSince(db, userId, sinceDate) {
   const [agg] = await db.collection("gemini_voice_usage_events")
     .aggregate([
       { $match: { userId, createdAt: { $gte: sinceDate } } },
-      { $group: { _id: null, total: { $sum: "$usage.totalTokens" } } },
+      { $group: { _id: null, total: { $sum: { $add: ["$usage.totalTokens", { $ifNull: ["$usage.searchBrendys", 0] }] } } } },
     ])
     .toArray();
   return agg?.total || 0;

@@ -253,7 +253,8 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
 | `plans` | Subscription tier definitions/seed data |
 | `subscriptions` | Per-user subscription state (plan, period, deferred downgrades, top-ups) |
 | `gemini_voice_usage_events` / `_summary` | Per-response voice usage events / rolling rollups |
-| `gemini_chat_usage_events` / `_summary` | Per-response chat usage events / rolling rollups, grouped by `chatSessionId` |
+| `gemini_chat_usage_events` / `_summary` | Per-response chat usage events / rolling rollups, grouped by `chatSessionId`. `feature` tags non-chat Text usage: `news` (headlines, tap reaction, news greeting), `topic` ("Cambia tema"), `search` (`/api/brenda/search`) |
+| `gemini_cleanup_usage_events` | Housekeeping done for a user (job `rds_extract` / `rds_consolidation` / `transcript_fix`), folded into one row per user per day (per run for consolidation). Costed, **not** charged |
 | `ledger_entries` | Formal billing-transaction log for the admin Ledger report — one immutable doc per `grant` / `topup` / `downgrade_scheduled`, written synchronously by `lib/subscriptions.js` (mirrored in `voice-proxy/index.js` for rollover) + backfilled once via `npm run migrate:backfill-ledger`. Idempotent on `dedupeKey`. Consumption is NOT copied here — the report derives daily debit rows from `gemini_*_usage_events`. See `lib/ledger.js`. |
 
 > The `gemini_` prefix matches the active Gemini backend for both chat and voice.
@@ -328,6 +329,25 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
   @comerciosocialdigital.com addresses everywhere, 2026-10-03).
 - **Pricing currency by locale**: `en-GB` → £, `es-ES` → €, `en-US`/`es-419`/rest-of-world → $.
   Applies to all plan/top-up price displays.
+
+### Usage attribution & Google Search fees (2026-10-04)
+- **Every Gemini call must be recorded.** User-chosen features are charged in Brendys; background
+  work done for a user is recorded as Clean-up (costed, not charged — decision pending).
+  REST features use `recordFeatureUsage()` (`lib/featureUsage.js`, Text Brendys); housekeeping
+  uses `recordCleanupUsage()` (`lib/usage.js`). New Gemini call → pick one of the two.
+- **Search fee** (`searchCharge()` in `lib/usage.js`): Gemini 2.5 = $0.035 per grounded request,
+  Gemini 3 (incl. 3.1 Live) = $0.014 per search query; free allowances deliberately ignored.
+  Charged as Brendys at $2.50/1M (14,000 per 2.5 request, 5,600 per 3.x query), stored as
+  `usage.searchBrendys`. **Brendys used = `usage.totalTokens` + `usage.searchBrendys`** — every
+  quota/ledger sum uses that (`lib/subscriptions.js`, `lib/ledger.js`, `voice-proxy/index.js`).
+- TALK searches: `server.js` collects `serverContent.groundingMetadata` per turn and records a
+  zero-token Voice event carrying the fee at `turnComplete`.
+- `toolUsePromptTokenCount` (search results the model reads) counts as text input.
+- **News greeting is opt-in** ("Tell me the news when you greet me" in the News sections popup):
+  `users.preferences.newsGreeting` (default off), every change logged in
+  `preferences.newsGreetingLog` `{ enabled, at }`. `api/brenda/greet.js` refuses when off.
+- Admin dashboard has four blocks (VOICE, CHAT, NEWS, CLEAN-UP) with Search count / Brendys /
+  price / cost columns; endpoints share `api/dashboard/events.js`.
 
 ### Token budget rule — keep always-on prompts minimal
 - **Every always-on token is re-billed on every voice turn** (Gemini Live bills the whole

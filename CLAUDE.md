@@ -349,6 +349,21 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
 - Admin dashboard has four blocks (VOICE, CHAT, NEWS, CLEAN-UP) with Search count / Brendys /
   price / cost columns; endpoints share `api/dashboard/events.js`.
 
+### Latency switches (Render env, no deploy) — 2026-10-04
+- Target: Brenda answers 2-3 s after the user stops (over 5 s feels strange). No filler phrases.
+- `CHAT_THINKING_BUDGET` (default 0 = off; -1 = Gemini decides; N = max tokens) for every TEXT
+  Gemini call; `CHAT_THINKING_BUDGET_GAME` while a TEXT game runs. Thinking cost 4-6 s per call.
+- `BRENDA_GOOGLE_SEARCH=off` removes Brenda's own search (TALK google_search, TEXT web_search).
+  When on, `brendaSearchRule()` limits it to news / current events / changing facts, never in
+  games. A TALK turn with 3 searches took ~40 s and tripped the 60 s silence cut-off.
+- TEXT history: the app saves every message itself (`/api/conversation/append`); `api/chat.js`
+  saves nothing when the request has `messages[]` and sends Gemini the saved history once
+  (exact repeats dropped) + the new user message. Before 2026-10-04 it re-saved and re-sent
+  the app's 16-message context every turn.
+- Felt TALK wait: `public/vad-stopwatch.js` posts each turn to `/api/voice/latency` → New Relic
+  `VoiceClientLatency` (`msWait` = stopped talking → first sound). Server-side
+  `VoiceTurnLatency.msToFirstAudio` reads ~0 on gemini-3.1 Live and can't measure this.
+
 ### Token budget rule — keep always-on prompts minimal
 - **Every always-on token is re-billed on every voice turn** (Gemini Live bills the whole
   accumulated context per turn) **and every text message** (stateless, full re-send). Users pay

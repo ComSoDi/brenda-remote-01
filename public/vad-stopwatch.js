@@ -99,6 +99,7 @@
   // state: idle | talking | black | red | frozen
   var state = "idle";
   var t0 = 0;                 // performance.now() ms — when the user stopped talking
+  var redAt = 0;              // when it went waiting → replying (0 = never this turn)
   var lastLoudAt = 0;         // last chunk at/above the speaking gate
   var loudRunStart = 0;       // start of the current uninterrupted run of loud chunks
   var lastUserTxAt = 0;       // last user-transcript fragment
@@ -248,12 +249,33 @@
     if (role === "user") { lastUserTxAt = performance.now(); haveTx = true; }
   }
 
+  // Sends the felt wait of each finished turn to New Relic (VoiceClientLatency,
+  // api/voice/latency.js) so latency is measured, not guessed. Fire-and-forget.
+  function report(now) {
+    try {
+      var body = JSON.stringify({
+        msWait: Math.round(now - t0),
+        msWaiting: Math.round((redAt || now) - t0),
+        msReplying: redAt ? Math.round(now - redAt) : null,
+        signal: micUsable() ? "mic" : "txt",
+        locale: (document.documentElement.lang || ""),
+        platform: /BrendaAndroid\//.test(navigator.userAgent) ? "android-app" : "web",
+      });
+      fetch("/api/voice/latency", {
+        method: "POST", credentials: "include", keepalive: true,
+        headers: { "Content-Type": "application/json" }, body: body,
+      }).catch(function () { /* measurement only — never affects the conversation */ });
+    } catch (e) { /* measurement only */ }
+  }
+
   function onStatus(name) {
     if (name === "speaking") {
       brendaSpeaking = true;
       if (state === "black" || state === "red") {
-        paint(fmt(performance.now() - t0), RED);
+        var now = performance.now();
+        paint(fmt(now - t0), RED);
         state = "frozen";
+        report(now);
       }
     } else if (name === "connected" || name === "disconnected") {
       brendaSpeaking = false;
@@ -316,6 +338,7 @@
       if (stopped) {
         t0 = anchorMic ? (lastLoudAt || now) : (lastUserTxAt || now);
         state = "black";
+        redAt = 0;
         paint(fmt(now - t0), BLACK);
       }
       return;
@@ -331,7 +354,7 @@
         (!m && haveTx && (now - lastUserTxAt) < 200);
       if (resumed) { state = "talking"; haveTx = false; lastUserTxAt = 0; paint("0.00 s", BLACK); return; }
 
-      if (state === "black" && haveTx && (now - lastUserTxAt) >= CFG.TRANSCRIPT_STALL_MS) state = "red";
+      if (state === "black" && haveTx && (now - lastUserTxAt) >= CFG.TRANSCRIPT_STALL_MS) { state = "red"; redAt = now; }
       paint(fmt(now - t0), state === "red" ? RED : BLACK);
       return;
     }

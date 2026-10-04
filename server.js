@@ -28,6 +28,7 @@ import planSwitchHandler from "./api/user/plan.js";
 import topUpHandler from "./api/user/topup.js";
 import weatherHandler from "./api/weather.js";
 import realtimeKeyHandler from "./api/voice/realtime-key.js";
+import voiceLatencyHandler from "./api/voice/latency.js";
 import appendHandler from "./api/conversation/append.js";
 import updateMessageHandler from "./api/conversation/update-message.js";
 import transcriptCorrectHandler from "./api/transcript/correct.js";
@@ -64,7 +65,7 @@ import {
   RDS_PROMPT_MODE, RECALL_USER_FACTS_TOOL, searchUserFacts,
 } from "./lib/rdsService.js";
 import { buildNowContext } from "./lib/promptContext.js";
-import { brendaBio, brendaSelfRule, brendaVocabulary } from "./lib/brendaPersona.js";
+import { brendaBio, brendaSelfRule, brendaVocabulary, brendaSearchRule, brendaSearchEnabled } from "./lib/brendaPersona.js";
 import { recallMemory, RECALL_MEMORY_TOOL } from "./lib/canonMemory.js";
 import { CHALLENGE_TOOL, runChallengeAction } from "./lib/brendaSkills.js";
 
@@ -169,6 +170,7 @@ app.post("/api/user/topup", topUpHandler);
 app.post("/api/chat", chatHandler);
 app.post("/api/weather", weatherHandler);
 app.post("/api/voice/realtime-key", realtimeKeyHandler);
+app.post("/api/voice/latency", voiceLatencyHandler);
 
 app.all("/api/greeting", greetingHandler);
 app.all("/api/tasks", tasksHandler);
@@ -242,12 +244,17 @@ function buildGenderLine(locale, gender) {
   return "\nDirígete al usuario con lenguaje neutro e inclusivo, sin usar términos marcados por género.";
 }
 
+// Search rule only when the google_search tool is actually offered.
+function searchRule(locale) {
+  return brendaSearchEnabled() ? brendaSearchRule(locale) + " " : "";
+}
+
 function buildSystemInstruction(locale, gender) {
   const genderLine = buildGenderLine(locale, gender);
 
   if (locale === "es-ES") {
     return (
-      brendaBio(locale) + " " + brendaSelfRule(locale) + " " +
+      brendaBio(locale) + " " + brendaSelfRule(locale) + " " + searchRule(locale) +
       "Habla en español de España (castellano peninsular) con acento madrileño impecable. " +
       brendaVocabulary(locale) + " " +
       "Pronuncia la z y la c (ante e/i) como /θ/ (\"grathias\"). " +
@@ -261,7 +268,7 @@ function buildSystemInstruction(locale, gender) {
 
   if (locale === "es-419") {
     return (
-      brendaBio(locale) + " " + brendaSelfRule(locale) + " " +
+      brendaBio(locale) + " " + brendaSelfRule(locale) + " " + searchRule(locale) +
       "Habla en español latinoamericano neutro, como el usado para doblar series de TV. " +
       brendaVocabulary(locale) + " " +
       "Seseo: pronuncia z y c (ante e/i) como /s/ (\"grasias\"). " +
@@ -275,7 +282,7 @@ function buildSystemInstruction(locale, gender) {
 
   if (locale === "en-GB") {
     return (
-      brendaBio(locale) + " " + brendaSelfRule(locale) + " " +
+      brendaBio(locale) + " " + brendaSelfRule(locale) + " " + searchRule(locale) +
       "Speak with an Estuary English accent leaning toward Received Pronunciation (RP) — " +
       "polished Southern English, like a warm BBC presenter. NOT Cockney: don't drop your h's, " +
       "don't glottal-stop your t's (say \"better\", not \"be'er\"), don't front your th-sounds " +
@@ -290,7 +297,7 @@ function buildSystemInstruction(locale, gender) {
 
   // en-US default
   return (
-    brendaBio("en-US") + " " + brendaSelfRule("en-US") + " " +
+    brendaBio("en-US") + " " + brendaSelfRule("en-US") + " " + searchRule("en-US") +
     "Speak American English with a warm General American accent (no strong regional twang). " +
     brendaVocabulary("en-US") + " " +
     "Be warm, brief, and conversational. Never use markdown or lists. " +
@@ -655,7 +662,8 @@ wss.on("connection", (ws) => {
         // the prompt, since every always-on token is re-billed each turn.
         // Same tool + handler as TEXT chat — see lib/brendaSkills.js.
         tools: [
-          { google_search: {} },
+          // Off with BRENDA_GOOGLE_SEARCH=off (slow + billed per search).
+          ...(brendaSearchEnabled() ? [{ google_search: {} }] : []),
           { function_declarations: [
             RECALL_MEMORY_TOOL,
             CHALLENGE_TOOL,

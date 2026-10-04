@@ -15,7 +15,7 @@ import { recordChatUsage } from "../lib/usage.js";
 import { resolvePlanForUsage, getUsageSinceDate, computeStatus, getEffectiveUsage } from "../lib/subscriptions.js";
 import { ANONYMOUS_CHAT_QUOTA } from "../lib/plans.js";
 import { buildNowContext } from "../lib/promptContext.js";
-import { brendaBio, brendaSelfRule, brendaVocabulary } from "../lib/brendaPersona.js";
+import { brendaBio, brendaSelfRule, brendaVocabulary, brendaSearchRule, brendaSearchEnabled } from "../lib/brendaPersona.js";
 import { recallMemory, RECALL_MEMORY_TOOL } from "../lib/canonMemory.js";
 import { CHALLENGE_TOOL, runChallengeAction, getSkillInstructions } from "../lib/brendaSkills.js";
 import { WEB_SEARCH_TOOL, groundedSearch } from "../lib/webSearch.js";
@@ -184,10 +184,25 @@ function toGeminiContents(messages) {
  * Call Gemini generateContent.
  * Returns the raw Response so callers can check r.ok before parsing.
  */
+// Thinking: gemini-2.5-flash "thinks" before answering unless told not to —
+// 4-6 s per call on a trivial question vs 0.5-0.7 s off (measured 2026-10-04),
+// and one TEXT reply can chain up to 3 calls. Render env, read per request:
+//   CHAT_THINKING_BUDGET       everyday replies — 0 = off (default),
+//                              -1 = Gemini decides, N = at most N thinking tokens
+//   CHAT_THINKING_BUDGET_GAME  while a game runs (defaults to the above)
+function chatThinkingBudget({ game = false } = {}) {
+  const read = (v) => (v === undefined || String(v).trim() === "" ? null : Number(v));
+  const base = read(process.env.CHAT_THINKING_BUDGET);
+  const budget = game ? (read(process.env.CHAT_THINKING_BUDGET_GAME) ?? base) : base;
+  return Number.isFinite(budget) ? budget : 0;
+}
+
 async function geminiGenerate(apiKey, model, { systemPrompt, contents, tools, temperature = 0.7 }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  // Game mode is the only caller passing CHALLENGE_MODE_TOOLS.
+  const game = tools === CHALLENGE_MODE_TOOLS;
   const body = {
-    generationConfig: { temperature },
+    generationConfig: { temperature, thinkingConfig: { thinkingBudget: chatThinkingBudget({ game }) } },
     contents,
   };
   if (systemPrompt) body.systemInstruction = { parts: [{ text: systemPrompt }] };
@@ -271,6 +286,12 @@ const GEMINI_TOOLS = [
   },
 ];
 
+// BRENDA_GOOGLE_SEARCH=off (lib/brendaPersona.js) drops web_search.
+const GEMINI_TOOLS_NO_SEARCH = GEMINI_TOOLS.map((t) => ({
+  ...t,
+  functionDeclarations: (t.functionDeclarations || []).filter((f) => f.name !== WEB_SEARCH_TOOL.name),
+}));
+
 // Tools the TEXT tool loop answers itself (weather/location keep their own
 // dedicated handling further down).
 const BRENDA_TOOL_NAMES = new Set([RECALL_MEMORY_TOOL.name, CHALLENGE_TOOL.name, WEB_SEARCH_TOOL.name, RECALL_USER_FACTS_TOOL.name]);
@@ -319,7 +340,7 @@ function genderAddressLine(localeVariant, gender) {
 }
 
 function brendaSystemPrompt(localeVariant = "en-US", gender = null, nowContext = "") {
-  const baseInstructions = `${brendaBio(localeVariant, { lang: "en" })} ${brendaSelfRule(localeVariant, { lang: "en" })} You are warm, curious, and knowledgeable. You love to talk about any subject — history, science, art, travel, cooking, literature, health, technology, current events, personal stories, and much more. You engage people like a caring and witty friend who is genuinely interested in ideas and in the person you are talking with.
+  const baseInstructions = `${brendaBio(localeVariant, { lang: "en" })} ${brendaSelfRule(localeVariant, { lang: "en" })} ${brendaSearchEnabled() ? brendaSearchRule(localeVariant, { lang: "en" }) + " " : ""}You are warm, curious, and knowledgeable. You love to talk about any subject — history, science, art, travel, cooking, literature, health, technology, current events, personal stories, and much more. You engage people like a caring and witty friend who is genuinely interested in ideas and in the person you are talking with.
 
 GENERAL CONVERSATION:
 - Discuss any topic openly and with enthusiasm. You have broad knowledge and real opinions.
@@ -772,6 +793,14 @@ export default async function handler(req, res) {
       return json(res, 400, { error: "Provide message or messages[]" });
     }
 
+    // The app saves every message itself (/api/conversation/append, with ids)
+    // and sends its last ~16 messages in messages[] only as CONTEXT. So with
+    // messages[] the server saves nothing — it used to re-save all 16 + the
+    // reply on every turn (bug since 2026-03, found 2026-10-04), filling the
+    // history with repeats. Legacy { message } requests still save here.
+    const clientPersists = Array.isArray(body.messages) && body.messages.length > 0;
+    const toSave = (msgs) => (clientPersists ? [] : msgs);
+
     // Load conversation history from Mongo
     const db = await getDb();
 
@@ -810,13 +839,13 @@ export default async function handler(req, res) {
             $setOnInsert: { userId: session.userId, createdAt: new Date() },
             $push: {
               messages: {
-                $each: [
+                $each: toSave([
                   ...inputMessages.map((m) => ({
                     id: new ObjectId(), role: m.role, content: m.content,
                     timestamp: new Date(), fromChannel: "text",
                   })),
                   { id: new ObjectId(), role: "assistant", content: quotaMsg, timestamp: new Date(), fromChannel: "text" },
-                ],
+                ]),
               },
             },
             $set: { updatedAt: new Date() },
@@ -871,9 +900,30 @@ export default async function handler(req, res) {
     const history = challengeState
       ? recentMsgs.filter((m) => m?.timestamp && new Date(m.timestamp) >= new Date(challengeState.startedAt))
       : recentMsgs.slice(-CHAT_HISTORY_LIMIT);
+    // Exact repeats are dropped (keeping the latest) — older history still
+    // holds the copies the pre-2026-10-04 re-save bug left behind.
+    const seenMsgs = new Set();
     const historyMsgs = history
       .filter((m) => m && (m.role === "user" || m.role === "assistant"))
-      .map((m) => ({ role: m.role, content: String(m.content || "") }));
+      .map((m) => ({ role: m.role, content: String(m.content || "") }))
+      .reverse()
+      .filter((m) => {
+        const k = `${m.role}\u0000${m.content}`;
+        if (seenMsgs.has(k)) return false;
+        seenMsgs.add(k);
+        return true;
+      })
+      .reverse();
+    // What Gemini sees: the saved history once, plus the new user message only
+    // if the app hasn't saved it yet. (It used to get the saved history AND
+    // the app's 16-message context — most lines 2-3 times.)
+    const newestInput = inputMessages[inputMessages.length - 1];
+    const lastSaved = historyMsgs[historyMsgs.length - 1];
+    const alreadySaved = newestInput && lastSaved
+      && lastSaved.role === newestInput.role && lastSaved.content === newestInput.content;
+    const convoMsgs = clientPersists
+      ? [...historyMsgs, ...(newestInput && !alreadySaved ? [newestInput] : [])]
+      : [...historyMsgs, ...inputMessages];
     // Conversation length confound: a longer history resent on every call means a
     // bigger prompt for Gemini to process, independent of any code/model change
     // being measured -- tag it so duration comparisons can control for it.
@@ -920,13 +970,13 @@ export default async function handler(req, res) {
           $setOnInsert: { userId: session.userId, createdAt: new Date() },
           $push: {
             messages: {
-              $each: [
+              $each: toSave([
                 ...inputMessages.map(m => ({
                   id: new ObjectId(), role: m.role, content: m.content,
                   timestamp: new Date(), fromChannel: "text",
                 })),
                 { id: new ObjectId(), role: "assistant", content: narrative, timestamp: new Date(), fromChannel: "text" },
-              ],
+              ]),
             },
           },
           $set: { updatedAt: new Date() },
@@ -969,7 +1019,7 @@ export default async function handler(req, res) {
             $setOnInsert: { userId: session.userId, createdAt: new Date() },
             $push: {
               messages: {
-                $each: [
+                $each: toSave([
                   {
                     id: new ObjectId(),
                     role: "user",
@@ -984,7 +1034,7 @@ export default async function handler(req, res) {
                     timestamp: new Date(),
                     fromChannel: "text",
                   },
-                ],
+                ]),
               },
             },
             $set: { updatedAt: new Date() },
@@ -1075,7 +1125,7 @@ export default async function handler(req, res) {
           $setOnInsert: { userId: session.userId, createdAt: new Date() },
           $push: {
             messages: {
-              $each: [
+              $each: toSave([
                 {
                   id: new ObjectId(),
                   role: "user",
@@ -1090,7 +1140,7 @@ export default async function handler(req, res) {
                   timestamp: new Date(),
                   fromChannel: "text",
                 },
-              ],
+              ]),
             },
           },
           $set: { updatedAt: new Date() },
@@ -1119,13 +1169,13 @@ export default async function handler(req, res) {
           $setOnInsert: { userId: session.userId, createdAt: new Date() },
           $push: {
             messages: {
-              $each: [
+              $each: toSave([
                 ...inputMessages.map((m) => ({
                   id: new ObjectId(), role: m.role, content: m.content,
                   timestamp: new Date(), fromChannel: "text",
                 })),
                 { id: new ObjectId(), role: "assistant", content: combinedReply, timestamp: new Date(), fromChannel: "text" },
-              ],
+              ]),
             },
           },
           $set: { updatedAt: new Date() },
@@ -1225,7 +1275,7 @@ export default async function handler(req, res) {
                 const autoFormatR = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
                   systemPrompt: brendaSystemPrompt(localeVariant, userGender, buildNowContext(localeVariant, userPrefsDoc?.preferences?.location)),
                   contents: [
-                    ...toGeminiContents([...historyMsgs, ...inputMessages]),
+                    ...toGeminiContents(convoMsgs),
                     {
                       role: "user",
                       parts: [{
@@ -1250,7 +1300,7 @@ export default async function handler(req, res) {
                 ];
                 await db.collection("conversations").updateOne(
                   { userId: session.userId },
-                  { $setOnInsert: { userId: session.userId, createdAt: new Date() }, $push: { messages: { $each: autoMsgs } }, $set: { updatedAt: new Date() } },
+                  { $setOnInsert: { userId: session.userId, createdAt: new Date() }, $push: { messages: { $each: toSave(autoMsgs) } }, $set: { updatedAt: new Date() } },
                   { upsert: true }
                 );
                 return json(res, 200, { reply: autoReply, meta: { weather: { status: "complete" } } });
@@ -1289,7 +1339,7 @@ export default async function handler(req, res) {
       const weatherFormatR = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
         systemPrompt: brendaSystemPrompt(localeVariant, userGender, buildNowContext(localeVariant, userPrefsDoc?.preferences?.location)),
         contents: [
-          ...toGeminiContents([...historyMsgs, ...inputMessages]),
+          ...toGeminiContents(convoMsgs),
           {
             role: "user",
             parts: [{
@@ -1322,7 +1372,7 @@ export default async function handler(req, res) {
         { userId: session.userId },
         {
           $setOnInsert: { userId: session.userId, createdAt: new Date() },
-          $push: { messages: { $each: wMsgs } },
+          $push: { messages: { $each: toSave(wMsgs) } },
           $set: { updatedAt: new Date() },
         },
         { upsert: true }
@@ -1334,10 +1384,12 @@ export default async function handler(req, res) {
 
     // Call Gemini with function calling support
     console.log("📞 Calling Gemini with tools enabled");
-    const activeTools = challengeState ? CHALLENGE_MODE_TOOLS : GEMINI_TOOLS;
+    const activeTools = challengeState
+      ? CHALLENGE_MODE_TOOLS
+      : (brendaSearchEnabled() ? GEMINI_TOOLS : GEMINI_TOOLS_NO_SEARCH);
     const r = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
       systemPrompt: system,
-      contents: toGeminiContents([...historyMsgs, ...inputMessages]),
+      contents: toGeminiContents(convoMsgs),
       tools: activeTools,
     });
 
@@ -1368,7 +1420,7 @@ export default async function handler(req, res) {
       console.warn("[chat] empty Gemini reply, retrying once. finishReason:", data?.candidates?.[0]?.finishReason);
       const rr = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
         systemPrompt: system,
-        contents: toGeminiContents([...historyMsgs, ...inputMessages]),
+        contents: toGeminiContents(convoMsgs),
         tools: activeTools,
       });
       const rd = await rr.json().catch(() => ({}));
@@ -1393,7 +1445,7 @@ export default async function handler(req, res) {
     // handling further down.
     // ────────────────────────────────────────────────────────────────────────
     if (functionCall && BRENDA_TOOL_NAMES.has(functionCall.name)) {
-      const contents = toGeminiContents([...historyMsgs, ...inputMessages]);
+      const contents = toGeminiContents(convoMsgs);
       let call = functionCall;
       let modelTurn = contentObj;
       let text = geminiReplyText;
@@ -1460,7 +1512,7 @@ export default async function handler(req, res) {
         const secondR = await geminiGenerate(GEMINI_API_KEY, GEMINI_CHAT_MODEL, {
           systemPrompt: system,
           contents: [
-            ...toGeminiContents([...historyMsgs, ...inputMessages]),
+            ...toGeminiContents(convoMsgs),
             contentObj,  // model turn that made the function call
             {
               role: "user",
@@ -1502,7 +1554,7 @@ export default async function handler(req, res) {
           { userId: session.userId },
           {
             $setOnInsert: { userId: session.userId, createdAt: new Date() },
-            $push: { messages: { $each: newMessages } },
+            $push: { messages: { $each: toSave(newMessages) } },
             $set: { updatedAt: new Date() },
           },
           { upsert: true }
@@ -1758,7 +1810,7 @@ export default async function handler(req, res) {
       { userId: session.userId },
       {
         $setOnInsert: { userId: session.userId, createdAt: new Date() },
-        $push: { messages: { $each: newMessages } },
+        $push: { messages: { $each: toSave(newMessages) } },
         $set: { updatedAt: new Date() },
       },
       { upsert: true }

@@ -364,6 +364,20 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
   `VoiceClientLatency` (`msWait` = stopped talking → first sound). Server-side
   `VoiceTurnLatency.msToFirstAudio` reads ~0 on gemini-3.1 Live and can't measure this.
 
+### "Shall we carry on…?" — conversation recap (2026-10-05)
+- `lib/conversationRecap.js`: one small Gemini call (thinking off, charged as Text, feature
+  `recap`) writes `conversations.recap` {topic, stoppedAt, worthResuming, cutOff, lastLines,
+  endedAt, offeredAt}. Written when a TALK call ends (`POST /api/conversation/recap`, cutOff =
+  ended by the silence clock) or, for TEXT, at the next greeting.
+- `api/greeting.js` adds `resume: { topic, cutOff }` to a real greeting (full/short) within
+  `RECAP_WINDOW_HOURS` (default 24), once per recap; the app appends `resumeOffer` /
+  `resumeOfferCutOff` (i18n) to the greeting line in TALK and TEXT.
+- If the user says yes: TEXT has the history; TALK gets `recapPromptLine()` in the voice setup
+  only for 30 min after the offer (no always-on tokens).
+- TALK hang-up clock: `Config.VOICE_COUNTDOWN_SECONDS` 120 (was 60); the user's mic voice counts
+  as activity (`_noteMicSpeech` in app.js) — gemini-3.1 Live only sends the user transcript
+  after they finish, so long stories used to look like silence and got cut.
+
 ### Token budget rule — keep always-on prompts minimal
 - **Every always-on token is re-billed on every voice turn** (Gemini Live bills the whole
   accumulated context per turn) **and every text message** (stateless, full re-send). Users pay

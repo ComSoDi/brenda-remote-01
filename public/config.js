@@ -168,6 +168,13 @@ const Config = {
     OUTPUT_SAMPLE_RATE: 24000
   },
 
+  // TALK hang-up clock: after VOICE_COUNTDOWN_SILENCE_SECONDS with nobody
+  // speaking (user's mic voice or Brenda), a countdown of
+  // VOICE_COUNTDOWN_SECONDS starts; the call ends when it runs out.
+  // Was 60 s (app.js default) — raised 2026-10-05, users were cut off.
+  VOICE_COUNTDOWN_SECONDS: 120,
+  VOICE_COUNTDOWN_SILENCE_SECONDS: 3,
+
   // Voice turn detection (silence/padding) can be tuned here.
   // Used by the Gemini path.
   TURN_DETECTION: {

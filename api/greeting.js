@@ -5,6 +5,7 @@
 import { getDb } from "../lib/mongo.js";
 import { requireSession } from "../lib/auth.js";
 import { getRdsProfile, incrementRdsSession, setDeclaredInterests } from "../lib/rdsService.js";
+import { takeRecapOffer } from "../lib/conversationRecap.js";
 
 // Same-day "Hey!" once a few hours have passed (after lunch, late afternoon, that night).
 const SAME_DAY_SHORT_GREETING_GAP_MS = 3 * 60 * 60 * 1000;
@@ -108,8 +109,18 @@ export default async function handler(req, res) {
         } catch (e) { console.error("[greeting/rds]", e.message); }
       }
 
+      // "Shall we carry on…?" — only with a real greeting (i.e. after a gap),
+      // once per conversation, within RECAP_WINDOW_HOURS (lib/conversationRecap.js).
+      let resume = null;
+      if (greetingType !== "none" && !session.isAnonymous) {
+        try {
+          resume = await takeRecapOffer(db, session, { localeVariant: url.searchParams.get("locale") || "en-US" });
+        } catch (e) { console.error("[greeting/recap]", e.message); }
+      }
+
       const displayName = session.displayName || session.username || "";
       return json(res, 200, {
+        resume,
         greetingType,
         displayName,
         pendingReminders: pendingReminders.map(r => ({

@@ -361,6 +361,9 @@ export default {
     latestCatPolitica: "Política",
     latestCatTv: "TV y entretenimiento",
     latestNewsGreeting: "Cuéntame las noticias cuando me saludes",
+    // Saludo: seguir la última conversación ({topic} lo escribe Gemini, p. ej. "los planes de boda de tu nieta")
+    resumeOffer: "¿Quieres que sigamos hablando de {topic}?",
+    resumeOfferCutOff: "La última vez se nos cortó mientras hablábamos de {topic}. ¿Seguimos?",
     headlinesBtn: "Titulares",
     chatBtn: "Cambia tema",
     headlinesTitle: "Titulares Top",

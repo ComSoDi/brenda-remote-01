@@ -30,6 +30,7 @@ import weatherHandler from "./api/weather.js";
 import realtimeKeyHandler from "./api/voice/realtime-key.js";
 import voiceLatencyHandler from "./api/voice/latency.js";
 import appendHandler from "./api/conversation/append.js";
+import recapHandler from "./api/conversation/recap.js";
 import updateMessageHandler from "./api/conversation/update-message.js";
 import transcriptCorrectHandler from "./api/transcript/correct.js";
 import greetingHandler from "./api/greeting.js";
@@ -64,6 +65,7 @@ import {
   getRdsProfile, buildRdsSystemAddendum, extractRdsItems, addRdsItem,
   RDS_PROMPT_MODE, RECALL_USER_FACTS_TOOL, searchUserFacts,
 } from "./lib/rdsService.js";
+import { recapPromptLine } from "./lib/conversationRecap.js";
 import { buildNowContext } from "./lib/promptContext.js";
 import { brendaBio, brendaSelfRule, brendaVocabulary, brendaSearchRule, brendaSearchEnabled } from "./lib/brendaPersona.js";
 import { recallMemory, RECALL_MEMORY_TOOL } from "./lib/canonMemory.js";
@@ -159,6 +161,7 @@ app.post("/api/auth/policy-accept", policyAcceptHandler);
 app.post("/api/auth/delete-account", deleteAccountHandler);
 
 app.post("/api/conversation/append", appendHandler);
+app.post("/api/conversation/recap", recapHandler);
 app.post("/api/conversation/update-message", updateMessageHandler);
 
 app.get("/api/history", historyHandler);
@@ -458,6 +461,7 @@ server.on("upgrade", async (req, socket, head) => {
     let planDisplayName = "Anonymous";
     let savedLocation = null;
     let weatherPlan = null; // lib/weatherNudge.js — set inside the lookup below
+    let recapLine = "";     // lib/conversationRecap.js — set inside the lookup below
     let voiceQuotaExhausted = false;
     const profileLookupStartAt = Date.now();
     await requestContext.run({ userId }, async () => {
@@ -468,7 +472,7 @@ server.on("upgrade", async (req, socket, head) => {
       // failed plan lookup must never be indistinguishable from a genuinely
       // anonymous session (that's what caused plan to show "Anonymous" for
       // authenticated users — see 2026-07-19 bugfix).
-      const [userDoc, tasks, profile, planInfo, voiceStatus] = await Promise.all([
+      const [userDoc, tasks, profile, planInfo, voiceStatus, convRecap] = await Promise.all([
         db.collection("users").findOne(
           { userId },
           { projection: { "preferences.gender": 1, "preferences.location": 1, "preferences.weatherNudges": 1 } }
@@ -485,7 +489,13 @@ server.on("upgrade", async (req, socket, head) => {
         getEffectiveUsage(db, userId)
           .then((eu) => eu.voice.status)
           .catch(e => { console.error(`[voice-proxy] quota check failed for userId=${userId}:`, e.message); return "active"; }),
+        // Just offered "shall we carry on…?" → Brenda gets that conversation's
+        // recap (lib/conversationRecap.js). Empty otherwise.
+        db.collection("conversations").findOne({ userId }, { projection: { recap: 1 } })
+          .then((c) => recapPromptLine(c?.recap))
+          .catch(e => { console.error("[voice-proxy] recap lookup failed:", e.message); return ""; }),
       ]);
+      recapLine = convRecap || "";
       if (!gender) gender = userDoc?.preferences?.gender || null;
       activeTasks = tasks || [];
       rdsProfile = profile || null;
@@ -527,6 +537,7 @@ server.on("upgrade", async (req, socket, head) => {
       ws.planId = planId;
       ws.planDisplayName = planDisplayName;
       ws.savedLocation = savedLocation;
+      ws.recapLine = recapLine;
       // Lookup failed → the safe default ("never volunteer weather").
       ws.weatherNudge = weatherPlan || weatherNudge(null, null, locale, null);
       ws.geminiWs = geminiWs;          // R5: pre-opened upstream (handshake ran during the lookup)
@@ -572,6 +583,7 @@ wss.on("connection", (ws) => {
   const systemText = buildSystemInstruction(locale, ws.userGender || null)
     + buildTaskSystemBlock(ws.activeTasks || [], locale)
     + locationLine
+    + (ws.recapLine || "")
     + "\n\n" + ws.weatherNudge.line
     + (ws.rdsProfile ? "\n\n" + buildRdsSystemAddendum(ws.rdsProfile, locale, ws.rdsUsername || "") : "")
     // Reference date/time so the model doesn't guess when a time/day question

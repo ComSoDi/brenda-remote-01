@@ -373,6 +373,9 @@ export default {
     latestCatPolitica: "Politics",
     latestCatTv: "TV & Entertainment",
     latestNewsGreeting: "Tell me the news when you greet me",
+    // Greeting add-on: carry on the last conversation ({topic} written by Gemini, e.g. "your granddaughter's wedding plans")
+    resumeOffer: "Do you want to carry on talking about {topic}?",
+    resumeOfferCutOff: "We got cut off last time while we were talking about {topic}. Do you want to carry on?",
     headlinesBtn: "Headlines",
     chatBtn: "Change Topic",
     headlinesTitle: "Top Headlines",

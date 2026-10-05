@@ -12,7 +12,7 @@ const BLOCK_BY_TYPE = Object.fromEntries(BLOCKS.map((b) => [b.type, b]));
 const COLSPAN_ALL = 37;
 
 // Event-row labels (Plan column) for tagged chat calls and clean-up jobs.
-const FEATURE_LABELS = { topic: "Cambia tema", search: "news question", news: "news" };
+const FEATURE_LABELS = { topic: "Cambia tema", search: "news question", news: "news", recap: "carry-on recap" };
 const CLEANUP_JOB_LABELS = {
   rds_extract:       "Fact learning",
   rds_consolidation: "Daily clean-up",

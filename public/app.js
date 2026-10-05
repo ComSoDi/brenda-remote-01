@@ -517,7 +517,10 @@ class BrendaApp {
     // Voice callbacks
     this.agent.onStatusChange = (s) => this.updateVoiceStatus(s);
     this.agent.onTranscript = (role, text, meta) => this.onVoiceTranscript(role, text, meta);
-    this.agent.onAudioData = (data) => this.updateWaveform(data);
+    this.agent.onAudioData = (data) => {
+      this.updateWaveform(data);
+      this._noteMicSpeech(data);
+    };
     this.agent.onError = (err) => this.showError(err);
 
     // Account button
@@ -2166,8 +2169,19 @@ class BrendaApp {
     }
   }
 
-  hangUp() {
+  // cutOff = ended by the silence clock, not by the user.
+  hangUp({ cutOff = false } = {}) {
     this._postToShell("conversation:end");
+    // Recap of this conversation for "shall we carry on…?" at the next
+    // greeting (lib/conversationRecap.js). Background; the server skips it
+    // if nothing new was said.
+    if (this.user && !this.user.isAnonymous && this._lastVoiceStatus && this._lastVoiceStatus !== "disconnected") {
+      fetch("/api/conversation/recap", {
+        method: "POST", credentials: "include", keepalive: true,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cutOff, localeVariant: this.locale.variant }),
+      }).catch((e) => console.warn("[recap] request failed:", e?.message || e));
+    }
     this._releaseWakeLock();
     this.clearVoiceCountdown();
     this.stopRingback();
@@ -3490,6 +3504,26 @@ class BrendaApp {
     this.render();
   }
 
+  // The user's voice on the mic counts as activity for the hang-up clock.
+  // Needed because gemini-3.1 Live sends the user's transcript only once
+  // they've finished — a long story looked like silence and the call was cut
+  // mid-sentence (2026-10-05). Adaptive noise floor so fans/traffic don't
+  // keep a forgotten call open forever.
+  _noteMicSpeech(float32) {
+    if (!float32?.length) return;
+    let sum = 0;
+    for (let i = 0; i < float32.length; i++) sum += float32[i] * float32[i];
+    const rms = Math.sqrt(sum / float32.length);
+    const floor = this._micNoiseFloor ?? 0.01;
+    // Floor creeps up slowly under steady noise, drops fast when it's quiet.
+    this._micNoiseFloor = floor + (rms - floor) * (rms > floor ? 0.002 : 0.05);
+    if (rms < Math.max(0.02, this._micNoiseFloor * 2.5)) return;
+    const now = Date.now();
+    if (now - (this._lastMicActivityAt || 0) < 500) return; // throttle
+    this._lastMicActivityAt = now;
+    this.recordVoiceActivity();
+  }
+
   recordVoiceActivity() {
     this.lastVoiceActivityMs = Date.now();
     this.scheduleVoiceCountdownAfterSilence();
@@ -3599,7 +3633,7 @@ class BrendaApp {
 
     this.voiceCountdownTimer = setTimeout(() => {
       this.voiceCountdownTimer = null;
-      this.hangUp();
+      this.hangUp({ cutOff: true });
     }, timeoutMs);
   }
 
@@ -3655,7 +3689,7 @@ class BrendaApp {
 
     try {
       const localDay = this._localDayBucket();
-      const data = await this.apiJSON(`/api/greeting?localDay=${encodeURIComponent(localDay)}`, { method: "GET" });
+      const data = await this.apiJSON(`/api/greeting?localDay=${encodeURIComponent(localDay)}&locale=${encodeURIComponent(this.locale.variant || "")}`, { method: "GET" });
       const greetingType = data?.greetingType || "none";
 
       // Reset session-level state (but NOT _greetingType/_greetingText yet —
@@ -3683,6 +3717,12 @@ class BrendaApp {
         greetingText = this.buildFullGreeting(displayName);
       } else if (greetingType === "short") {
         greetingText = this.buildShortGreeting(displayName);
+      }
+      // "Shall we carry on with what we were talking about?" — last
+      // conversation within 24 h, offered once (lib/conversationRecap.js).
+      if (greetingText && data?.resume?.topic) {
+        const key = data.resume.cutOff ? "resumeOfferCutOff" : "resumeOffer";
+        greetingText = `${greetingText} ${t(this.locale.variant, key, { topic: data.resume.topic })}`;
       }
 
       // Atomic: both fields written with no await between them.

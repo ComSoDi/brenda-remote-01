@@ -73,10 +73,10 @@ const SIDENAV_DETAIL_CONFIGS = {
     blocks: [
       { type: "text",  key: "sideNavMiInfo02Text1" },
       { type: "text",  key: "sideNavMiInfo02Text2" },
-      { type: "image", src: "images/usageMonitor.webp", wrapClass: "sidenav-screenshot-img-wrap" },
+      { type: "image", src: { es: "images/usageMonitor.webp", en: "images/usageMonitor_en.png" }, wrapClass: "sidenav-screenshot-img-wrap" },
       { type: "text",  key: "sideNavMiInfo02Text3" },
       { type: "text",  key: "sideNavMiInfo02Text4" },
-      { type: "image", src: "images/masTiempo.webp", wrapClass: "sidenav-rectangular-img-wrap" },
+      { type: "image", src: { es: "images/masTiempo.webp", en: "images/moreTime_en.png" }, wrapClass: "sidenav-rectangular-img-wrap" },
       { type: "text",  key: "sideNavMiInfo02Text5" },
       { type: "text",  key: "sideNavMiInfo02Text6" },
     ],
@@ -192,7 +192,9 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",  key: "sideNavInitText4" },
       { type: "text",  key: "sideNavInitText5" },
       { type: "text",  key: "sideNavInitText6" },
-      { type: "image", src: "images/mis_temas_01.png", wrapClass: "sidenav-rectangular-img-wrap" },
+      // Picture of the header's Topics button, per language (the button reads
+      // "Temas" in Spanish, "Subjects" in English).
+      { type: "image", src: { es: "images/temas_btn_es.png", en: "images/subjects_btn_en.png" }, wrapClass: "sidenav-rectangular-img-wrap" },
     ],
   },
 };
@@ -326,8 +328,12 @@ export class SideNavManager {
       }
       if (block.type === "image") {
         const imgWrap = block.wrapClass ?? "sidenav-round-img-wrap";
+        // src is a path, or { es, en } for a picture that contains text.
+        const src = typeof block.src === "string"
+          ? block.src
+          : block.src[String(v).startsWith("es") ? "es" : "en"];
         return `<div class="${imgWrap}">
-          <img src="${block.src}" alt="Brenda" />
+          <img src="${src}" alt="Brenda" />
         </div>`;
       }
       return "";

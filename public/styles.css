@@ -2721,7 +2721,7 @@ body {
 }
 
 .sidenav-title-col {
-  width: 150px;
+  min-width: 150px;
   display: flex;
   justify-content: flex-end;
   flex-shrink: 0;
@@ -2800,7 +2800,9 @@ body {
 
 @media (max-width: 720px) {
   .sidenav-pill-col { width: 140px; } /* fits "Cambia tema" (133px) — 120px clipped it */
-  .sidenav-title-col { width: 100px; }
+  /* min-width, not width: a wider pill ("Change Topic" ≈133px) grows the
+     column and pushes the title right instead of spilling off the left edge. */
+  .sidenav-title-col { width: auto; min-width: 100px; }
 }
 .headline-heat-bar-fill--cool { background: #888780; }
 

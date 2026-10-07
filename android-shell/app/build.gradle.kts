@@ -40,10 +40,10 @@ android {
                        // as of Aug 31, 2026 (confirmed live against
                        // developer.android.com 2026-09-26).
 
-        // Current live Play Console release is versionCode 7 (versionName
-        // 1.0.0.7, confirmed 2026-09-26). This build must exceed it.
-        versionCode = 8
-        versionName = "1.0.0.8"
+        // Each Play Console upload must exceed the previous versionCode
+        // (1.0.0.8 = 8 was the last upload before 2026-10-06).
+        versionCode = 9
+        versionName = "1.0.0.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

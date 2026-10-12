@@ -126,7 +126,7 @@
       tile("Subscribed · voice + text", `${nf(g.grantVoice)} + ${nf(g.grantText)}`, "is-credit") +
       tile("Purchased · voice + text", `${nf(g.topupVoice)} + ${nf(g.topupText)}`, "is-topup") +
       tile("Spent · voice + text", `${nf(g.voiceDebited)} + ${nf(g.textDebited)}`, "is-debit") +
-      tile("Amount “paid”", money(g.amountByCurrency, sym) || `${sym.USD} 0.00`);
+      tile("Amount “paid” (USD)", money(g.amountByCurrency, sym) || `${sym.USD} 0.00`);
 
     const tb = [];
     const rowsByUser = new Map();
@@ -166,7 +166,8 @@
   function txnRow(r, sym) {
     const isUsage = r.type === "usage";
     const paid = (r.type === "grant" || r.type === "topup")
-      ? `<td>${moneyOne(r.amountPaidCents, r.currency, sym)}</td>`
+      // USD list price; the symbol the user saw is a hint only.
+      ? `<td>${moneyOne(r.amountPaidCents, r.currency, sym)}${r.shownAs && r.shownAs !== r.currency ? ` <span class="lg-muted" title="Shown to the user with the ${r.shownAs} symbol (same number, no conversion)">(${sym[r.shownAs] || r.shownAs})</span>` : ""}</td>`
       : `<td class="lg-muted">—</td>`;
     const cr = (v) => (v ? `<td class="lg-credit">${nf(v)}</td>` : `<td class="lg-muted">–</td>`);
     const db = (v) => (v ? `<td class="lg-debit">${nf(v)}</td>` : `<td class="lg-muted">–</td>`);

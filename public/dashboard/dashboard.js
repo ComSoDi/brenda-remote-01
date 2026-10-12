@@ -37,12 +37,14 @@ class DashboardApp {
     this._fFrom  = document.getElementById("filter-from");
     this._fTo    = document.getElementById("filter-to");
 
-    // Default date range: now−1 month to now
+    // Date-only filters, whole UTC days, "To" inclusive — same as the Ledger
+    // (and subscription periods). A month = 1st → last day of that month.
+    // Default: one month back → today.
     const now  = new Date();
     const from = new Date(now);
-    from.setMonth(from.getMonth() - 1);
-    this._fFrom.value = this._toLocalIso(from);
-    this._fTo.value   = this._toLocalIso(now);
+    from.setUTCMonth(from.getUTCMonth() - 1);
+    this._fFrom.value = from.toISOString().slice(0, 10);
+    this._fTo.value   = now.toISOString().slice(0, 10);
 
     // Load users
     try {
@@ -107,8 +109,8 @@ class DashboardApp {
     this._setStatus("Loading…");
     const userId = this._uSel.value || "";
     const planId = this._pSel.value || "";
-    const from   = this._fFrom.value ? new Date(this._fFrom.value).toISOString() : "";
-    const to     = this._fTo.value   ? new Date(this._fTo.value).toISOString()   : "";
+    const from   = this._fFrom.value ? `${this._fFrom.value}T00:00:00.000Z` : "";
+    const to     = this._fTo.value   ? `${this._fTo.value}T23:59:59.999Z`   : "";
 
     try {
       const results = await Promise.all(
@@ -454,11 +456,7 @@ class DashboardApp {
 
     // Date/time label from From filter
     let dateCell = "", timeCell = "";
-    if (fromValue) {
-      const d = new Date(fromValue);
-      dateCell = this._fmtDate(d);
-      timeCell = this._fmtTime(d);
-    }
+    if (fromValue) dateCell = fromValue; // "YYYY-MM-DD" (UTC day)
 
     return `<tr class="row-totals">
       <td class="col-dt">${this._esc(dateCell)}</td>

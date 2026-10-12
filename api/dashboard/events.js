@@ -136,13 +136,9 @@ export function makeEventsHandler(type) {
     try {
       const db = await getDb();
 
-      // ALL-users view: restrict to userIds that exist in the users collection
-      if (!userId) {
-        const validUsers = await db.collection("users")
-          .find({}, { projection: { userId: 1 } })
-          .toArray();
-        match.userId = { $in: validUsers.map(u => u.userId) };
-      }
+      // ALL-users view counts every user's events, including users whose
+      // account record was removed by hand — same as the Ledger, so the two
+      // reports' totals match to the token (Mike, 2026-10-12).
 
       const collection = db.collection(block.collection);
 

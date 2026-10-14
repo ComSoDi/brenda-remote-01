@@ -10,7 +10,7 @@ export default {
     thinking: "Thinking",
 
     // Hints / placeholders
-    hintTalk: "Tap to speak",
+    hintTalk: "Tap to TALK",
     hintText: "Tap to WRITE",
     aiDisclaimer: "Remember: Brenda is an AI and can make mistakes",
     placeholder: "Conversation will appear here...",

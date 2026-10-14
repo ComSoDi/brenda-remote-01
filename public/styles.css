@@ -2572,24 +2572,39 @@ body {
 .sidenav-home   { z-index: 900; }
 .sidenav-detail { z-index: 950; }
 
-/* Scrollable inner container */
+/* Panel layout: fixed header (Close × + title / intro) over a scrolling body.
+   Before 2026-10-14 the whole panel scrolled and long text slid up behind
+   the transparent "Close ×" row. */
 .sidenav-inner {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  scrollbar-width: thin;
-  scrollbar-color: #b0c4de transparent;
 }
 
-.sidenav-inner::-webkit-scrollbar { width: 4px; }
-.sidenav-inner::-webkit-scrollbar-thumb { background: #b0c4de; border-radius: 2px; }
+.sidenav-header {
+  flex: 0 0 auto;
+}
 
-/* Sticky close row */
+.sidenav-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #b0c4de transparent;
+  /* Soft fade: text dissolves over 12px as it scrolls up under the header. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12px);
+          mask-image: linear-gradient(to bottom, transparent 0, #000 12px);
+  padding-top: 6px;
+}
+
+.sidenav-scroll::-webkit-scrollbar { width: 4px; }
+.sidenav-scroll::-webkit-scrollbar-thumb { background: #b0c4de; border-radius: 2px; }
+
+/* Close row (part of the fixed header) */
 .sidenav-close-row {
-  position: sticky;
-  top: 0;
   display: flex;
   justify-content: flex-end;
   padding: 10px 14px 4px;

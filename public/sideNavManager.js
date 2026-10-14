@@ -285,7 +285,10 @@ export class SideNavManager {
       </div>`;
     }).join("");
 
+    // Fixed header (close + intro) above a scrolling body — text can't
+    // scroll up behind "Close ×" (sidenav-header / sidenav-scroll in styles.css).
     inner.innerHTML = `
+      <div class="sidenav-header">
       <div class="sidenav-close-row">
         <button class="sidenav-close-btn js-snav-home-close" data-ga-name="sidenav_home_close_btn">
           <span class="sidenav-close-label">${this._snEsc(t(v, "sideNavCloseLabel"))}</span>
@@ -293,9 +296,12 @@ export class SideNavManager {
         </button>
       </div>
       <p class="sidenav-intro">${this._snEsc(t(v, "sideNavIntro"))}</p>
+      </div>
+      <div class="sidenav-scroll">
       <div class="sidenav-pill-list">
         ${accountRowHtml}
         ${pillsHtml(SIDENAV_HOME_PILLS)}
+      </div>
       </div>`;
 
     inner.querySelector(".js-snav-home-close")
@@ -339,7 +345,9 @@ export class SideNavManager {
       return "";
     }).join("");
 
+    // Fixed header (close + title) above a scrolling body — see openSideNavHome.
     inner.innerHTML = `
+      <div class="sidenav-header">
       <div class="sidenav-close-row">
         <button class="sidenav-close-btn js-snav-detail-close">
           <span class="sidenav-close-label">${this._snEsc(t(v, "sideNavCloseLabel"))}</span>
@@ -352,7 +360,10 @@ export class SideNavManager {
         </div>
         <span class="sidenav-title-text">${this._snEsc(t(v, cfg.titleKey))}</span>
       </div>
-      <div class="sidenav-body">${blocksHtml}</div>`;
+      </div>
+      <div class="sidenav-scroll">
+      <div class="sidenav-body">${blocksHtml}</div>
+      </div>`;
 
     inner.querySelector(".js-snav-detail-close")
       ?.setAttribute("data-ga-name", `sidenav_${SIDENAV_NAV_GA_SUFFIX[name] || name}_close_btn`);

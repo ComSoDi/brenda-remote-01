@@ -2,7 +2,7 @@ export default {
     // Call UI
     callTitle: "Speaking with aiBrenda",
     voiceMode: "TALK",
-    textMode: "TEXT",
+    textMode: "WRITE",
     connect: "TALK",
     disconnect: "Hang Up",
     connecting: "Connecting",
@@ -11,7 +11,7 @@ export default {
 
     // Hints / placeholders
     hintTalk: "Tap to speak",
-    hintText: "Tap to text",
+    hintText: "Tap to Write",
     aiDisclaimer: "Remember: Brenda is an AI and can make mistakes",
     placeholder: "Conversation will appear here...",
     send: "Send",
@@ -151,7 +151,7 @@ export default {
     sideNavLabelHelp: "This Help window",
     sideNavPillMyInfo: "My info",
     sideNavLabelMyInfo: "Where you live, who you are",
-    sideNavPillMyInfo2: "My info 2",
+    sideNavPillMyInfo2: "My info",
     sideNavLabelMyInfo2: "Usage & add more time",
     sideNavLabelAccount: "Your selected account",
     sideNavLabelAnon: "If you use me without an account",
@@ -165,9 +165,9 @@ export default {
     sideNavLabelNews: "Categories I should look for",
     sideNavPillLatest: "Headlines",
     sideNavLabelLatest: "The most current news",
-    sideNavPillTalk: "Talk",
+    sideNavPillTalk: "TALK",
     sideNavLabelTalk: "I hear you and you hear me",
-    sideNavPillWrite: "Write",
+    sideNavPillWrite: "WRITE",
     sideNavLabelWrite: "You write to me and I write back",
     sideNavTomasTitleText: "Your task schedule plan",
     sideNavTomasText1: "I help you remember the tasks you have scheduled",
@@ -293,7 +293,7 @@ export default {
     // Tasks module
     taskBtn: "Tasks",
     taskDisclaimerTitle: "Task Reminders",
-    taskDisclaimerText: "Brenda's task reminders are friendly nudges only — not professional advice. Always seek professional advice. Due to network issues, device settings, and other factors Brenda cannot guarantee that reminders will always be delivered. Do not rely solely on Brenda for important plans.",
+    taskDisclaimerText: "Only created accounts can save tasks and get reminders. Brenda's task reminders are friendly nudges only — not professional advice. Always seek professional advice. Due to network issues, device settings, and other factors Brenda cannot guarantee that reminders will always be delivered. Do not rely solely on Brenda for important plans.",
     taskDisclaimerConfirm: "I understand",
     taskPersistentNote: "Reminders are friendly nudges only. Always follow professional advice.",
     taskTitle: "My Tasks",

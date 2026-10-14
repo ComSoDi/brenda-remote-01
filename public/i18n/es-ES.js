@@ -140,7 +140,7 @@ export default {
     sideNavLabelHelp: "Esta ventana de Ayuda",
     sideNavPillMyInfo: "Mi info",
     sideNavLabelMyInfo: "Dónde vives, tu género",
-    sideNavPillMyInfo2: "Mi info 2",
+    sideNavPillMyInfo2: "Mi info",
     sideNavLabelMyInfo2: "Consumo & Añadir Brendys",
     sideNavLabelAccount: "Cuenta seleccionada",
     sideNavLabelAnon: "Si me usas sin cuenta",
@@ -281,7 +281,7 @@ export default {
     // Módulo de Tareas
     taskBtn: "Tareas",
     taskDisclaimerTitle: "Recordatorios de tareas",
-    taskDisclaimerText: "Los recordatorios de tareas son solo avisos amistosos, no consejos profesionales. Sigue siempre indicaciones profesionales. Brenda no puede garantizar que los recordatorios se entreguen siempre (problemas de red, ajustes del dispositivo u otros factores pueden impedirlo). No dependas únicamente de Brenda para planes importantes.",
+    taskDisclaimerText: "Solo guardo las tareas y envío recordatorios de cuentas creadas. Los recordatorios de tareas son solo avisos amistosos, no consejos profesionales. Sigue siempre indicaciones profesionales. Brenda no puede garantizar que los recordatorios se entreguen siempre. Problemas de red, ajustes del dispositivo u otros factores pueden impedirlo. No dependas únicamente de Brenda para planes importantes.",
     taskDisclaimerConfirm: "Lo entiendo",
     taskPersistentNote: "Los recordatorios son solo avisos amistosos. Sigue siempre la información formal que tengas.",
     taskTitle: "Mis Tareas",

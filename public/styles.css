@@ -119,7 +119,7 @@ body {
   align-self: flex-start;
   height: 45px;
   font-size: 24px;
-  width: 170px; /* = .chat-rds-btn (Cambia tema), so Temas lines up above it */
+  width: 180px; /* = .chat-rds-btn (Cambia tema), so Temas lines up above it */
   padding: 6px 6px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -795,7 +795,7 @@ body {
   flex-shrink: 0;
   height: 45px;
   font-size: 24px;
-  width: 110px;  
+  width: 120px;  
   padding: 6px 12px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.12);
@@ -2233,7 +2233,7 @@ body {
   align-self: flex-start;
   height: 45px;
   font-size: 24px;
-  width: 170px;
+  width: 180px;
   padding: 6px 6px;
   background: #99CCFF;
   color: #000000;

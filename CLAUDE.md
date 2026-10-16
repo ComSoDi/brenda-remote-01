@@ -360,6 +360,14 @@ npm run dev            # Local dev with nodemon (server.js) — the real local d
   saves nothing when the request has `messages[]` and sends Gemini the saved history once
   (exact repeats dropped) + the new user message. Before 2026-10-04 it re-saved and re-sent
   the app's 16-message context every turn.
+- Gemini Live VAD (`lib/voiceVad.js`): `GEMINI_VAD_SILENCE_DURATION_MS` (800),
+  `GEMINI_VAD_END_SENSITIVITY` (LOW), `GEMINI_VAD_START_SENSITIVITY` (HIGH),
+  `GEMINI_VAD_PREFIX_PADDING_MS` (300) — defaults = production (none set on Render, 2026-10-15).
+  Every latency event carries them (`vadSilenceMs`, `vadEndSensitivity`…) so NRQL can FACET by setting.
+- `false_turn_end` (Backchanneling PRD Phase 0): New Relic `VoiceInterruption` — user talked over
+  Brenda; `falseTurnEnd: true` when within `FALSE_TURN_END_MS` (2000) of her answer starting.
+- Latency timer overlay visible only to `ADMIN_NICKS` (Render, comma-separated Nicks, `lib/admin.js`)
+  or `?vadsw` in a browser URL; it measures silently for everyone.
 - Felt TALK wait: `public/vad-stopwatch.js` posts each turn to `/api/voice/latency` → New Relic
   `VoiceClientLatency` (`msWait` = stopped talking → first sound). Server-side
   `VoiceTurnLatency.msToFirstAudio` reads ~0 on gemini-3.1 Live and can't measure this.

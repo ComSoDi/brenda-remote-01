@@ -396,7 +396,10 @@
   function sync() {
     var app = window.__app;
     var inTalk = !!(app && app.mode === "talk");
-    if (el) el.style.display = inTalk ? "flex" : "none";
+    // Visible only to admin users (ADMIN_NICKS on Render, set by app.js) or
+    // with ?vadsw in a browser URL. Measuring + reporting runs for everyone.
+    var visible = inTalk && !!((window.Config && window.Config.SHOW_LATENCY_TIMER) || /[?&]vadsw/.test(location.search));
+    if (el) el.style.display = visible ? "flex" : "none";
     if (inTalk) place();
     if (!inTalk && state !== "idle") { state = "idle"; haveTx = false; lastUserTxAt = 0; paint("0.00 s", BLACK); }
   }

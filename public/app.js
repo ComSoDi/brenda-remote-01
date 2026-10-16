@@ -775,8 +775,12 @@ class BrendaApp {
         gender: meOrNull.gender || null,
         talkDisclaimerAcceptedAt: meOrNull.talkDisclaimerAcceptedAt || null,
         policyAcceptedAt: meOrNull.policyAcceptedAt || null,
+        isAdmin: !!meOrNull.isAdmin,
       }
       : null;
+    // TALK latency timer (vad-stopwatch.js) is shown only to admin users
+    // (Render env ADMIN_NICKS); it keeps measuring silently for everyone.
+    if (window.Config) window.Config.SHOW_LATENCY_TIMER = !!this.user?.isAdmin;
 
     if (!meOrNull || meOrNull.userId !== prevUserId) {
       this.declaredInterests = [];

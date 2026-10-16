@@ -66,6 +66,7 @@ import {
   RDS_PROMPT_MODE, RECALL_USER_FACTS_TOOL, searchUserFacts,
 } from "./lib/rdsService.js";
 import { recapPromptLine } from "./lib/conversationRecap.js";
+import { buildAutomaticActivityDetectionConfig, vadAttrs } from "./lib/voiceVad.js";
 import { buildNowContext } from "./lib/promptContext.js";
 import { brendaBio, brendaSelfRule, brendaVocabulary, brendaSearchRule, brendaSearchEnabled } from "./lib/brendaPersona.js";
 import { recallMemory, RECALL_MEMORY_TOOL } from "./lib/canonMemory.js";
@@ -379,25 +380,7 @@ function processClientMessage(rawData, isGemini31) {
   return rawData;
 }
 
-// Gemini Live's automatic_activity_detection (server-side VAD) — tunable via
-// env so "Brenda didn't respond, had to repeat myself" reports can be dialed
-// out without a redeploy of the setup message shape itself. See
-// docs/voice-vad-tuning.md for what each knob does and how to read the
-// [voice-vad] diagnostic logs below.
-function resolveVadSensitivity(envVal, fallback) {
-  const v = String(envVal || "").trim().toUpperCase();
-  return v === "HIGH" || v === "LOW" ? v : fallback;
-}
-
-function buildAutomaticActivityDetectionConfig() {
-  return {
-    disabled: false,
-    start_of_speech_sensitivity: `START_SENSITIVITY_${resolveVadSensitivity(process.env.GEMINI_VAD_START_SENSITIVITY, "HIGH")}`,
-    end_of_speech_sensitivity: `END_SENSITIVITY_${resolveVadSensitivity(process.env.GEMINI_VAD_END_SENSITIVITY, "LOW")}`,
-    prefix_padding_ms: Number(process.env.GEMINI_VAD_PREFIX_PADDING_MS) || 300,
-    silence_duration_ms: Number(process.env.GEMINI_VAD_SILENCE_DURATION_MS) || 800,
-  };
-}
+// Gemini Live VAD settings: lib/voiceVad.js (env-tunable, also attached to latency events).
 
 const wss = new WebSocketServer({ noServer: true });
 
@@ -621,6 +604,10 @@ wss.on("connection", (ws) => {
   let lastInputTranscriptionAt = null;
   let firstInputTranscriptionAt = null;
   let turnFirstAudioAt = null;
+  // First audio chunk of Brenda's current answer, regardless of transcripts
+  // (gemini-3.1 Live sends the user's transcript only with the answer, so
+  // turnFirstAudioAt above rarely fires). Used for false_turn_end.
+  let answerAudioStartedAt = null;
   let relayMsSum = 0;
   let relayMsMax = 0;
   let relayCount = 0;
@@ -760,6 +747,7 @@ wss.on("connection", (ws) => {
           voiceSessionId, userId, locale, model: MODEL, source: "server", gitSha: GIT_SHA,
           msProfileLookup: ws.msProfileLookup ?? null, msGeminiWsOpen,
           msSetupComplete: Date.now() - geminiWsCreatedAt,
+          ...vadAttrs(),
         });
       }
 
@@ -869,9 +857,26 @@ wss.on("connection", (ws) => {
           );
           if (hasAudio) turnFirstAudioAt = Date.now();
         }
+        if (answerAudioStartedAt === null
+            && sc.modelTurn?.parts?.some((p) => p.inlineData?.mimeType?.startsWith("audio/pcm"))) {
+          answerAudioStartedAt = Date.now();
+        }
 
         if (sc.interrupted) {
           console.log(`🗣️ [voice-vad] session=${voiceSessionId} userId=${userId ?? "null"} — Gemini reported an interruption (serverContent.interrupted)`);
+          // Phase 0 (Backchanneling PRD): the user talked over Brenda. Within
+          // FALSE_TURN_END_MS of her answer starting = she jumped in while the
+          // user was only pausing (false turn end). Later = a normal barge-in.
+          if (answerAudioStartedAt !== null) {
+            const msIntoAnswer = Date.now() - answerAudioStartedAt;
+            newrelic.recordCustomEvent("VoiceInterruption", {
+              voiceSessionId, userId, locale, model: MODEL, gitSha: GIT_SHA,
+              msIntoAnswer,
+              falseTurnEnd: msIntoAnswer <= (Number(process.env.FALSE_TURN_END_MS) || 2000),
+              ...vadAttrs(),
+            });
+          }
+          answerAudioStartedAt = null;
           lastInputTranscriptionAt = null;
           firstInputTranscriptionAt = null;
           turnFirstAudioAt = null;
@@ -912,11 +917,13 @@ wss.on("connection", (ws) => {
               msUserSpeech: firstInputTranscriptionAt ? lastInputTranscriptionAt - firstInputTranscriptionAt : null,
               msMaxRelayOverhead: relayMsMax,
               msAvgRelayOverhead: relayCount ? Math.round(relayMsSum / relayCount) : 0,
+              ...vadAttrs(),
             });
           }
           lastInputTranscriptionAt = null;
           firstInputTranscriptionAt = null;
           turnFirstAudioAt = null;
+          answerAudioStartedAt = null;
           relayMsSum = 0; relayMsMax = 0; relayCount = 0;
 
           // Brenda Challenges (brenda-challenges-prd.md §7, decided

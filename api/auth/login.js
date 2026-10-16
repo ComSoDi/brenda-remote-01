@@ -2,6 +2,7 @@
 import bcrypt from "bcryptjs";
 import { getDb } from "../../lib/mongo.js";
 import { setSessionCookie } from "../../lib/auth.js";
+import { isAdminNick } from "../../lib/admin.js";
 
 const MAX_PIN_ATTEMPTS = 3;
 
@@ -116,6 +117,7 @@ export default async function handler(req, res) {
       username: user.username,
       displayName: user.username,
       isAnonymous: false,
+      isAdmin: isAdminNick(user.username),
       gender: effectiveGender,
       consentAcceptedAt: user.preferences?.consentAcceptedAt || null,
       talkDisclaimerAcceptedAt: user.preferences?.talkDisclaimerAcceptedAt || null,

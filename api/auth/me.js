@@ -1,6 +1,7 @@
 // api/auth/me.js
 import { getSession, setSessionCookie, signSession } from "../../lib/auth.js";
 import { getDb } from "../../lib/mongo.js";
+import { isAdminNick } from "../../lib/admin.js";
 
 function json(res, status, body) {
   res.statusCode = status;
@@ -80,6 +81,7 @@ export default async function handler(req, res) {
     username: s.username || "",
     displayName: s.isAnonymous ? "anonymous" : (s.username || ""),
     isAnonymous: !!s.isAnonymous,
+    isAdmin: !s.isAnonymous && isAdminNick(s.username),
     gender,
     consentAcceptedAt,
     talkDisclaimerAcceptedAt,

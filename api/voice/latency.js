@@ -8,6 +8,7 @@
 
 import newrelic from "newrelic";
 import { getSession } from "../../lib/auth.js";
+import { vadAttrs } from "../../lib/voiceVad.js";
 
 const GIT_SHA = process.env.RENDER_GIT_COMMIT?.slice(0, 7) || null;
 
@@ -45,6 +46,8 @@ export default async function handler(req, res) {
     locale: String(b.locale || "").slice(0, 10) || null,
     platform: String(b.platform || "").slice(0, 20) || null,
     gitSha: GIT_SHA,
+    model: process.env.GEMINI_LIVE_MODEL || null,
+    ...vadAttrs(),                  // settings in force, so NR can compare them directly
   });
   res.statusCode = 204;
   return res.end();

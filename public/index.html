@@ -2,13 +2,6 @@
 <html lang="en">
 
 <head>
-  <!-- Google Tag Manager -->
-  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-  })(window,document,'script','dataLayer','GTM-KB9LWQDF');</script>
-  <!-- End Google Tag Manager -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Soy aiBrenda</title>
@@ -27,15 +20,8 @@
   <meta name="theme-color" content="#FFFFFF" />
   <link rel="privacy-policy" href="/privacy.html">
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-WK6MTEQ51M"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-WK6MTEQ51M');
-  </script>
+  <!-- Umami (cookieless analytics, replaced GA4/GTM 2026-10-27) -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="9a28dbad-36d5-4c15-a472-fe91b7e68636"></script>
 
   <!-- Moved up from the bottom of body + given defer (2026-09-21, load-order
        fix): lets the browser start fetching all three in parallel the moment
@@ -52,11 +38,6 @@
 </head>
 
 <body>
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KB9LWQDF"
-  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
-
   <div class="container">
     <!-- Fixed header inside container -->
     <div class="header">
@@ -239,7 +220,14 @@
 
           <button id="authAnonBtn" class="auth-anon-link" type="button" data-ga-name="account_anon_btn"></button>
 
+          <div class="auth-divider" aria-hidden="true"></div>
+
           <a class="auth-privacy" id="authPrivacyLink" href="privacy.html" target="_blank" rel="noopener" data-ga-name="account_popup__privacy_link_btn"></a>
+          <!-- Legal documents: tap opens the in-app popup; href (set per locale in app.js) keeps "open in new tab" working -->
+          <a class="auth-privacy auth-legal-link" id="authAboutLink" data-legal-doc="about" href="legal/en-US/about.html" target="_blank" rel="noopener" data-ga-name="account_popup__about_link_btn"></a>
+          <a class="auth-privacy auth-legal-link" id="authLegalLink" data-legal-doc="legal" href="legal/en-US/legal.html" target="_blank" rel="noopener" data-ga-name="account_popup__legal_link_btn"></a>
+          <a class="auth-privacy auth-legal-link" id="authCookiesLink" data-legal-doc="cookies" href="legal/en-US/cookies.html" target="_blank" rel="noopener" data-ga-name="account_popup__cookies_link_btn"></a>
+          <a class="auth-privacy auth-legal-link" id="authTermsLink" data-legal-doc="terms" href="legal/en-US/terms.html" target="_blank" rel="noopener" data-ga-name="account_popup__terms_link_btn"></a>
 
           <!-- Only shown when logged in as a named account (auth overlay reopened via the Account button) -->
           <button id="deleteAccountLinkBtn" class="delete-account-link hidden" type="button" data-ga-name="account_delete_link_btn"></button>
@@ -288,17 +276,71 @@
 
     <!-- PRIVACY POLICY OVERLAY (on-demand, viewable anytime, not gated) -->
     <div id="privacyOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true" data-ga-name="privacy_popup">
-      <div class="brenda-card consent-card privacy-card" role="dialog" aria-modal="true">
+      <div class="brenda-card consent-card privacy-card legal-card" role="dialog" aria-modal="true">
         <button id="privacyCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close" data-ga-name="privacy_close_btn">×</button>
 
         <div class="brenda-top">
           <h1 id="privacyTitle" class="brenda-title"></h1>
         </div>
 
-        <div id="privacyContent" class="brenda-content"></div>
+        <div id="privacyContent" class="brenda-content legal-content"></div>
 
         <div class="privacy-actions">
           <button id="privacyUnderstoodBtn" class="privacy-understood-btn" type="button" data-ga-name="privacy_understood_btn"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEGAL DOCUMENT OVERLAYS (same layout as the privacy popup; content loaded from public/legal/<locale>/<doc>.html) -->
+    <div id="termsOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true" data-ga-name="terms_popup">
+      <div class="brenda-card consent-card privacy-card legal-card" role="dialog" aria-modal="true">
+        <button id="termsCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close" data-ga-name="terms_close_btn">×</button>
+        <div class="brenda-top">
+          <h1 id="termsTitle" class="brenda-title"></h1>
+        </div>
+        <div id="termsContent" class="brenda-content legal-content"></div>
+        <div class="privacy-actions">
+          <button id="termsUnderstoodBtn" class="privacy-understood-btn" type="button" data-ga-name="terms_understood_btn"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="legalOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true" data-ga-name="legal_popup">
+      <div class="brenda-card consent-card privacy-card legal-card" role="dialog" aria-modal="true">
+        <button id="legalCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close" data-ga-name="legal_close_btn">×</button>
+        <div class="brenda-top">
+          <h1 id="legalTitle" class="brenda-title"></h1>
+        </div>
+        <div id="legalContent" class="brenda-content legal-content"></div>
+        <div class="privacy-actions">
+          <button id="legalUnderstoodBtn" class="privacy-understood-btn" type="button" data-ga-name="legal_understood_btn"></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="cookiesOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true" data-ga-name="cookies_popup">
+      <div class="brenda-card consent-card privacy-card legal-card" role="dialog" aria-modal="true">
+        <button id="cookiesCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close" data-ga-name="cookies_close_btn">×</button>
+        <div class="brenda-top">
+          <h1 id="cookiesTitle" class="brenda-title"></h1>
+        </div>
+        <div id="cookiesContent" class="brenda-content legal-content"></div>
+        <div class="privacy-actions">
+          <button id="cookiesUnderstoodBtn" class="privacy-understood-btn" type="button" data-ga-name="cookies_understood_btn"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- About: informative only — "Close" button, no acceptance recorded -->
+    <div id="aboutOverlay" class="brenda-overlay privacy-overlay hidden" aria-hidden="true" data-ga-name="about_popup">
+      <div class="brenda-card consent-card privacy-card legal-card" role="dialog" aria-modal="true">
+        <button id="aboutCloseBtn" class="popup-close-btn privacy-close-btn" type="button" aria-label="Close" data-ga-name="about_close_btn">×</button>
+        <div class="brenda-top">
+          <h1 id="aboutTitle" class="brenda-title"></h1>
+        </div>
+        <div id="aboutContent" class="brenda-content legal-content"></div>
+        <div class="privacy-actions">
+          <button id="aboutBottomCloseBtn" class="privacy-understood-btn" type="button" data-ga-name="about_close_bottom_btn"></button>
         </div>
       </div>
     </div>

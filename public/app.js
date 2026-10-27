@@ -16,6 +16,10 @@ const RINGBACK_FILES = {
   "en-GB": "ONE Ringback UK-Ireland-New Zealand-Singapore.wav",
 };
 
+// Legal documents shown as in-app popups — pages generated into public/legal/<locale>/ by docs/legal/build.mjs
+const LEGAL_DOCS = ["privacy", "terms", "legal", "cookies", "about"];
+const LEGAL_LOCALES = ["en-US", "en-GB", "es-ES", "es-419"];
+
 class BrendaApp {
   constructor() {
     this.locale = detectLocale(); // { lang, variant }
@@ -612,7 +616,7 @@ class BrendaApp {
       this.elements.authAnonBtn.style.display = ""; // in case inline styles hid it
     }
 
-    // âœ… Ensure Privacy link exists + is visible + has label + points to privacy.html
+    // âœ… Ensure Privacy link exists + is visible + has label + points to this locale's privacy page
     if (this.elements.authPrivacyLink) {
       this.elements.authPrivacyLink.textContent = t(v, "authPrivacy");
       this.elements.authPrivacyLink.classList.remove("hidden");
@@ -620,14 +624,21 @@ class BrendaApp {
 
       // If it's an <a>, set href/target safely
       if (this.elements.authPrivacyLink.tagName === "A") {
-        this.elements.authPrivacyLink.setAttribute("href", "privacy.html");
+        this.elements.authPrivacyLink.setAttribute("href", this.legalDocUrl("privacy"));
         this.elements.authPrivacyLink.setAttribute("target", "_blank");
         this.elements.authPrivacyLink.setAttribute("rel", "noopener");
       } else {
         // If it's not an <a>, fall back to click handler
-        this.elements.authPrivacyLink.addEventListener("click", () => window.open("privacy.html", "_blank", "noopener"));
+        this.elements.authPrivacyLink.addEventListener("click", () => window.open(this.legalDocUrl("privacy"), "_blank", "noopener"));
       }
     }
+
+    // About / legal / cookies / terms links (below the privacy link)
+    const LEGAL_LINK_KEYS = { about: "authAboutLink", legal: "authLegalLink", cookies: "authCookiesLink", terms: "authTermsLink" };
+    document.querySelectorAll(".auth-legal-link[data-legal-doc]").forEach((a) => {
+      a.textContent = t(v, LEGAL_LINK_KEYS[a.dataset.legalDoc]);
+      a.setAttribute("href", this.legalDocUrl(a.dataset.legalDoc));
+    });
 
     // Events
     this.elements.authContinueBtn?.addEventListener("click", () => this.authContinue());
@@ -659,19 +670,36 @@ class BrendaApp {
 
     this.elements.talkGotItBtn?.addEventListener("click", () => this.acceptTalkDisclaimer());
 
-    // Privacy policy — on demand, from anywhere it's linked. Left-click opens
-    // the in-app popup; middle-click / right-click "open in new tab" still
-    // falls through to the real href (the standalone page stays available).
+    // Legal documents — on demand, from anywhere they're linked. Left-click
+    // opens the in-app popup; middle-click / right-click "open in new tab"
+    // still falls through to the real href (the standalone page stays available).
     this.elements.authPrivacyLink?.addEventListener("click", (e) => {
       e.preventDefault();
-      this.openPrivacyOverlay();
+      this.openLegalOverlay("privacy");
     });
     this.elements.planNotePrivacy?.addEventListener("click", (e) => {
       e.preventDefault();
-      this.openPrivacyOverlay();
+      this.openLegalOverlay("privacy");
     });
-    this.elements.privacyCloseBtn?.addEventListener("click", () => this.closePrivacyOverlay());
-    this.elements.privacyUnderstoodBtn?.addEventListener("click", () => this.acceptPrivacyPolicy());
+    document.querySelectorAll(".auth-legal-link[data-legal-doc]").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        this.openLegalOverlay(a.dataset.legalDoc);
+      });
+    });
+    for (const doc of LEGAL_DOCS) {
+      document.getElementById(`${doc}CloseBtn`)?.addEventListener("click", () => this.closeLegalOverlay(doc));
+      document.getElementById(`${doc}UnderstoodBtn`)?.addEventListener("click", () => this.acceptLegalDoc(doc));
+      document.getElementById(`${doc}BottomCloseBtn`)?.addEventListener("click", () => this.closeLegalOverlay(doc));
+      // Cross-references inside a document ("see our Privacy Policy") open that popup
+      document.getElementById(`${doc}Content`)?.addEventListener("click", (e) => {
+        const target = e.target.closest?.("a[href]")?.getAttribute("href")?.match(/^(\w+)\.html$/)?.[1];
+        if (target && LEGAL_DOCS.includes(target)) {
+          e.preventDefault();
+          this.openLegalOverlay(target);
+        }
+      });
+    }
 
     this.elements.deleteAccountLinkBtn?.addEventListener("click", () => {
       this.closeAuthOverlay();
@@ -989,36 +1017,81 @@ class BrendaApp {
     }
   }
 
-  openPrivacyOverlay() {
-    const v = this.locale.variant;
-    if (this.elements.privacyTitle) this.elements.privacyTitle.textContent = t(v, "privacyTitle");
-    if (this.elements.privacyContent) {
-      this.elements.privacyContent.innerHTML = t(v, "privacyContent");
-      this.elements.privacyContent.scrollTop = 0;
+  // Legal documents (privacy, terms, legal, cookies, about) — the popup shows
+  // the <main> of the generated page public/legal/<locale>/<doc>.html, so the
+  // text has a single source (docs/legal/src/*.md). Fetched once per session.
+  legalDocUrl(doc) {
+    const folder = LEGAL_LOCALES.includes(this.locale.variant) ? this.locale.variant : "en-US";
+    return `legal/${folder}/${doc}.html`;
+  }
+
+  async loadLegalDoc(doc) {
+    this._legalDocs ??= {};
+    if (!this._legalDocs[doc]) {
+      this._legalDocs[doc] = (async () => {
+        const res = await fetch(this.legalDocUrl(doc));
+        if (!res.ok) throw new Error(`${doc}: HTTP ${res.status}`);
+        const page = new DOMParser().parseFromString(await res.text(), "text/html");
+        const main = page.querySelector("main");
+        if (!main) throw new Error(`${doc}: no <main> in page`);
+        const h1 = main.querySelector("h1");
+        const title = h1?.textContent.trim() || "";
+        h1?.remove();
+        return { title, html: main.innerHTML };
+      })();
+      // A failed fetch (e.g. offline) is retried on the next open
+      this._legalDocs[doc].catch(() => delete this._legalDocs[doc]);
     }
-    if (this.elements.privacyUnderstoodBtn) this.elements.privacyUnderstoodBtn.textContent = t(v, "privacyUnderstood");
-
-    this.elements.privacyOverlay?.classList.remove("hidden");
-    this.elements.privacyOverlay?.setAttribute("aria-hidden", "false");
+    return this._legalDocs[doc];
   }
 
-  closePrivacyOverlay() {
-    this.elements.privacyOverlay?.classList.add("hidden");
-    this.elements.privacyOverlay?.setAttribute("aria-hidden", "true");
-  }
+  async openLegalOverlay(doc) {
+    const v = this.locale.variant;
+    const el = (suffix) => document.getElementById(`${doc}${suffix}`);
+    const overlay = el("Overlay");
+    const content = el("Content");
+    if (!overlay || !content) return;
 
-  // On-demand, not gated — "Understood" just records the first time this
-  // account confirmed reading it (never overwritten after that). Best-effort:
-  // closes either way, including when there's no session yet (e.g. viewed
-  // from the pre-login signup screen).
-  async acceptPrivacyPolicy() {
+    LEGAL_DOCS.filter((d) => d !== doc).forEach((d) => this.closeLegalOverlay(d));
+    el("UnderstoodBtn") && (el("UnderstoodBtn").textContent = t(v, "privacyUnderstood"));
+    el("BottomCloseBtn") && (el("BottomCloseBtn").textContent = t(v, "brendaClose"));
+    overlay.classList.remove("hidden");
+    overlay.setAttribute("aria-hidden", "false");
+
     try {
-      const { policyAcceptedAt } = await this.apiJSON("/api/auth/policy-accept", { method: "POST", body: {} });
-      if (this.user) this.user.policyAcceptedAt = policyAcceptedAt;
+      const { title, html } = await this.loadLegalDoc(doc);
+      el("Title").textContent = title;
+      content.innerHTML = html;
+    } catch (e) {
+      console.error(e);
+      el("Title").textContent = "";
+      content.innerHTML = `<p><a href="${this.legalDocUrl(doc)}" target="_blank" rel="noopener">${this.legalDocUrl(doc)}</a></p>`;
+    }
+    content.scrollTop = 0;
+  }
+
+  closeLegalOverlay(doc) {
+    const overlay = document.getElementById(`${doc}Overlay`);
+    if (!overlay || overlay.classList.contains("hidden")) return;
+    overlay.classList.add("hidden");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  // On-demand, not gated — "Understood" records that this session's account
+  // confirmed reading the document (first time kept + every tap logged, see
+  // api/auth/policy-accept.js). Best-effort: closes either way, including when
+  // there's no session yet (e.g. viewed from the pre-login signup screen).
+  async acceptLegalDoc(doc) {
+    try {
+      const { acceptedAt } = await this.apiJSON("/api/auth/policy-accept", {
+        method: "POST",
+        body: { doc, locale: this.locale.variant },
+      });
+      if (this.user && doc === "privacy") this.user.policyAcceptedAt = acceptedAt;
     } catch (e) {
       console.error(e);
     } finally {
-      this.closePrivacyOverlay();
+      this.closeLegalOverlay(doc);
     }
   }
 

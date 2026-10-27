@@ -1,15 +1,11 @@
 // public/analytics.js
-// Generic GA4 activity tracking for every button/pill tap and every
-// popup/panel open-close, without wiring each individual handler by hand.
-// Safe no-op if gtag isn't loaded (ad blockers, offline, gtag.js not yet
-// fetched).
-
-function gtagSafe(...args) {
-  if (typeof window.gtag === "function") window.gtag(...args);
-}
+// Generic Umami activity tracking (cookieless; replaced GA4 2026-10-27) for
+// every button/pill tap and every popup/panel open-close, without wiring each
+// individual handler by hand. Safe no-op if Umami isn't loaded (ad blockers,
+// offline, script.js not yet fetched).
 
 export function trackEvent(name, params = {}) {
-  gtagSafe("event", name, params);
+  if (typeof window.umami?.track === "function") window.umami.track(name, params);
 }
 
 function labelForElement(el) {

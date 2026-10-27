@@ -1,0 +1,391 @@
+=== about
+# Acerca de aiBrenda
+
+_Última actualización: octubre de 2026_
+
+# ¿Qué es aiBrenda?
+
+aiBrenda es una app para charlar. Brenda es una compañera de conversación pensada especialmente para personas mayores, con la que puedes hablar de lo que te apetezca, cuando te apetezca: de tu día, de tus recuerdos, de tus aficiones o de lo que salga.
+
+Brenda no es una persona real. Fue desarrollada con inteligencia artificial, por lo que tiene todo el tiempo del mundo, amplios conocimientos y paciencia infinita.
+
+# ¿Cómo funciona?
+
+- **Modo HABLAR:** pulsa el botón y habla con Brenda como si fuera una llamada.
+- **Modo ESCRIBIR:** si lo prefieres, escríbele y te contestará por escrito.
+- **Brenda se acuerda de ti:** guarda en texto algunos detalles de vuestras charlas para que la conversación sea más natural.
+- **Brenda olvida cuando tú quieras:** si quieres que Brenda olvide algo, solo tienes que decírselo: “Brenda, olvida que me gusta la tarta de chocolate”.
+
+# ¿Cuánto cuesta?
+
+Al instalar aiBrenda desde Google Play disfrutas de una **cuenta gratuita** con cierto tiempo de conversación disponible cada mes. Si quieres más tiempo, puedes hacer una **recarga** o elegir el plan de **suscripción** que más te interese (Básico, Superior o Avanzado). Todos los pagos se hacen de forma segura a través de Google Play. Más detalles en las [Condiciones de Contratación](terms.html).
+
+# Brenda es súper discreta
+
+Brenda no es una red social tipo Facebook, Twitter o WhatsApp en las que todo el mundo se entera de lo que dices. Brenda no comparte lo que hayas conversado con otros usuarios de Brenda.
+
+# Tu privacidad
+
+- No grabamos ni guardamos tu voz.
+- No te pedimos tu dirección ni tus datos bancarios.
+- No te pedimos datos de salud, económicos ni legales.
+- No vendemos tus datos ni te mostramos publicidad.
+
+Puedes ver más detalles en nuestra [Política de Privacidad](privacy.html).
+
+# Lo que Brenda no es
+
+Brenda no es una persona y a veces se equivoca. No es tu médico, ni tu abogado, ni tu asesor: para cualquier consulta sobre esos temas te recomendará hablar con un profesional.
+
+!! Brenda tampoco es un servicio de emergencias: **si necesitas ayuda urgente, llama al 112 o al número de urgencias de tu país.**
+
+# ¿Quién está detrás?
+
+aiBrenda es un servicio de Comercio Social Digital, S.L., una empresa con sede en Madrid (España).
+
+# Ayuda y contacto
+
+¿Tienes dudas o algún problema? Escríbenos a **info@aibrenda.co** y te echamos una mano encantados.
+
+=== cookies
+# Política de cookies
+
+_Última actualización: octubre de 2026_
+
+# 1. ¿Qué son las cookies?
+
+Las cookies son pequeños archivos que algunas webs guardan en tu navegador para recordar cosas, como que ya has iniciado sesión. Hay tecnologías parecidas, como el “almacenamiento local” del navegador, que funcionan de forma similar. En esta política, cuando decimos “cookies” nos referimos a todas ellas.
+
+# 2. Lo que usamos en aiBrenda
+
+**aiBrenda no usa cookies de publicidad, ni de redes sociales, ni de análisis de terceros** (como Google Analytics). No te seguimos por otras webs ni creamos perfiles para mostrarte anuncios.
+
+Solo usamos, cuando hace falta, **elementos técnicos imprescindibles** para que la web funcione. Por ejemplo:
+
+- Mantener tu sesión iniciada mientras usas aiBrenda.
+- Recordar ajustes básicos, como si prefieres hablar o escribir.
+- Proteger la web frente a ataques y accesos automáticos. Cuando usamos Cloudflare, nuestro proveedor de red y seguridad, este puede instalar alguna cookie técnica con este fin.
+
+| Nombre | Para qué sirve | Duración |
+| `brenda_session` | Mantener tu sesión iniciada. | 30 días |
+| Almacenamiento local | Recordar ajustes básicos de la app en tu dispositivo. | Hasta que lo borres |
+| `__cf_bm` | Cloudflare: distinguir a las personas de los robots. Solo cuando Cloudflare protege la web. | 30 minutos |
+| `cf_clearance` | Cloudflare: recordar que has superado una comprobación de seguridad. Solo cuando Cloudflare protege la web. | Normalmente 30 minutos (máximo 1 año) |
+
+Según la ley (artículo 22.2 de la LSSI) estas cookies técnicas no necesitan tu consentimiento, ya que son imprescindibles para que funcione nuestro servicio. Por eso no te mostramos un aviso previo para aceptarlas.
+
+## Supervisión técnica (New Relic)
+
+Usamos New Relic para detectar fallos y medir si la web funciona con rapidez. Si para ello se guarda algún dato en tu navegador, lo indicaremos en la lista anterior.
+
+# 3. ¿Y las estadísticas de uso?
+
+Sí analizamos cómo se usa aiBrenda para mejorarla (por ejemplo, desde qué países se visita, qué páginas se ven, cuánto dura cada visita, cuántos minutos de conversación se usan o qué funciones fallan). Para ello usamos los datos de actividad de nuestros propios servidores y Umami, una herramienta de estadísticas que **no usa cookies ni guarda nada en tu navegador** y no te identifica personalmente. Tienes más información en nuestra [Política de Privacidad](privacy.html).
+
+# 4. En la app de Android
+
+La app de aiBrenda no usa cookies publicitarias ni de seguimiento. Ten en cuenta que Google Play y tu teléfono tienen sus propias políticas, que no dependen de nosotros.
+
+# 5. Cómo borrar o bloquear las cookies
+
+Puedes borrar o bloquear las cookies desde los ajustes de tu navegador (Chrome, Safari, Firefox, Edge…), normalmente en el apartado de “Privacidad” o “Seguridad”. Si bloqueas las cookies técnicas, es posible que tengas que iniciar sesión cada vez o que algunas funciones no vayan bien.
+
+# 6. Cambios
+
+Si en el futuro añadimos cookies que no sean técnicas (por ejemplo, de análisis o publicidad), te lo explicaremos aquí y **te pediremos permiso antes** de instalarlas.
+
+# 7. Contacto
+
+Para cualquier duda, escríbenos a info@aibrenda.co.
+
+=== legal
+# Aviso legal
+
+_Última actualización: octubre de 2026_
+
+# 1. Quiénes somos
+
+En cumplimiento de la Ley 34/2002, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI), te contamos quién está detrás de aiBrenda:
+
+- **Titular:** Comercio Social Digital, S.L.
+- **NIF:** B86597390
+- **Domicilio:** C/ Rufino González, 14, 28037 Madrid (España)
+- **Correo electrónico:** info@aibrenda.co
+- **Web:** [https://aibrenda.co](https://aibrenda.co)
+- **Datos registrales:** inscrita en el Registro Mercantil de Madrid, Tomo 30.435, Folio 115, Hoja 547.775.
+
+# 2. Qué es aiBrenda
+
+aiBrenda es una app y una web de **entretenimiento**: una compañera de conversación con inteligencia artificial con la que puedes charlar por voz o por escrito. Está pensada especialmente para personas mayores, aunque puede usarla cualquier adulto.
+
+aiBrenda no vende productos físicos ni hace envíos a domicilio. Lo único que ofrece es **tiempo de conversación**. Por eso no necesitamos, ni pedimos, ni guardamos tu dirección postal.
+
+# 3. Qué aceptas al usar aiBrenda
+
+Al usar la app o la web aceptas este Aviso legal. Junto a él se aplican la [Política de Privacidad](privacy.html), la [Política de cookies](cookies.html) y las [Condiciones de Contratación](terms.html). Si no estás de acuerdo, por favor no uses aiBrenda.
+
+# 4. Quién puede usar aiBrenda
+
+Para crear una cuenta tienes que ser mayor de 18 años. En cualquier caso, solo las personas adultas pueden hacer compras de tiempo adicional o suscribirse a los planes de suscripción desarrollados para que puedas disfrutar de aiBrenda todo el tiempo que quieras.
+
+# 5. Los pagos los gestiona Google Play
+
+Todos los pagos de aiBrenda (recargas y suscripciones) se hacen a través de **Google Play**. Es Google quien cobra y quien trata tus datos de pago, según sus propias condiciones, que puedes encontrar en este enlace: [Condiciones de Servicio de Google Play](https://play.google.com/intl/es_es/about/play-terms/index.html).
+
+**aiBrenda no pide ni guarda datos bancarios:** ni números de cuenta, ni tarjetas de crédito o débito, ni ningún otro medio de pago electrónico.
+
+# 6. Brenda es un personaje creado con inteligencia artificial
+
+- Las respuestas de Brenda las genera automáticamente un sistema de inteligencia artificial de proveedores externos (hoy, Google Gemini; en el futuro podrían ser otros, como OpenAI, ElevenLabs, etc.).
+- **Recuerda: Brenda es una máquina, no una persona.**
+- Puede equivocarse, entender mal lo que dices o dar información incompleta o desactualizada.
+- **No es un servicio de asesoramiento.** Brenda no da consejos médicos, legales, financieros, fiscales ni psicológicos. Si sacas alguno de estos temas durante una conversación te sugerirá que lo consultes con un profesional.
+- **No es un servicio de emergencias.** Si estás en peligro o necesitas ayuda urgente, llama al 112 (en España) o al número de emergencias de tu país.
+- No tomes decisiones importantes basándote solo en lo que te diga Brenda.
+
+# 7. Uso correcto
+
+Te comprometes a usar aiBrenda de forma legal y respetuosa. Por ejemplo, no está permitido:
+
+- Usarla para actividades ilegales o para acosar, amenazar o engañar a otras personas.
+- Intentar entrar en cuentas ajenas, dañar el servicio o saltarse sus medidas de seguridad.
+- Intentar que la inteligencia artificial genere contenido ilegal, violento, sexual o que incite al odio.
+- Copiar, revender o aprovechar comercialmente el servicio sin nuestro permiso.
+
+Podemos suspender o cerrar las cuentas que no respeten estas normas.
+
+# 8. Responsabilidad
+
+Hacemos todo lo posible para que aiBrenda funcione bien, pero:
+
+- No podemos garantizar que esté siempre disponible ni libre de errores. Puede haber cortes por mantenimiento, fallos técnicos o problemas de nuestros proveedores (conexión a internet, servidores, servicios de inteligencia artificial).
+- El funcionamiento de la inteligencia artificial depende de proveedores externos. Cada uno tiene sus propias condiciones y responsabilidades sobre su tecnología. Nosotros no controlamos cómo están construidos sus modelos ni podemos garantizar el contenido de cada respuesta.
+- No respondemos de los daños que se deriven de un mal uso del servicio, de decisiones tomadas a partir de las respuestas de la inteligencia artificial o de causas que no dependan de nosotros.
+
+Nada de lo anterior limita los derechos que la ley te reconoce como consumidor, ni nuestra responsabilidad en los casos en que la ley no permite limitarla.
+
+# 9. Propiedad intelectual
+
+La marca aiBrenda, los dominios aiBrenda.co y iaBrenda.com, el nombre y la imagen de Brenda, el diseño, los textos, el código y el resto de elementos del servicio son propiedad de Comercio Social Digital, S.L. o se usan con licencia. Puedes usarlos únicamente para disfrutar de aiBrenda. Lo que tú escribes o dices sigue siendo tuyo.
+
+# 10. Enlaces a otras webs
+
+Podemos incluir enlaces a webs de terceros, como Google Play. No somos responsables de su contenido ni de sus políticas.
+
+# 11. Cambios en este aviso
+
+Podemos actualizar este Aviso legal. Si el cambio es importante, te avisaremos en la app o en la web.
+
+# 12. Ley aplicable
+
+Este Aviso legal se rige por la ley española. Si eres consumidor, mantienes la protección que te den las leyes de tu país de residencia y puedes reclamar ante los tribunales de tu domicilio.
+
+=== privacy
+# Política de Privacidad
+
+_Última actualización: octubre de 2026_
+
+En aiBrenda nos tomamos en serio tu privacidad. Aquí te explicamos, de forma clara, qué datos tratamos, para qué los usamos y qué derechos tienes. Cumplimos el Reglamento General de Protección de Datos (RGPD) y la Ley Orgánica 3/2018 de Protección de Datos (LOPDGDD).
+
+# 1. Responsable de tus datos
+
+- **Titular:** Comercio Social Digital, S.L.
+- **NIF:** B86597390
+- **Domicilio:** C/ Rufino González, 14, 28037 Madrid (España)
+- **Correo electrónico:** info@aibrenda.co
+- **Web:** [https://aibrenda.co](https://aibrenda.co)
+
+# 2. Lo más importante, en pocas palabras
+
+- **No guardamos tus audios.** Tu voz se procesa en el momento y no se graba.
+- **Guardamos en texto algunos extractos de vuestras conversaciones,** para que Brenda se acuerde de ti, igual que haría cualquier persona con la que hablas a menudo.
+- **Puedes pedirle a Brenda que olvide algo** y lo borrará de su memoria.
+- **No pedimos ni guardamos tu dirección postal ni tus datos bancarios.**
+- **No pedimos datos de salud, económicos ni legales.** Si hablas de esos temas, Brenda te recomendará consultar con un profesional.
+- **No vendemos tus datos ni los usamos para publicidad.**
+
+# 3. Qué datos tratamos
+
+## Apodo y PIN secreto
+
+Para asegurar tu privacidad te recomendamos que no uses tu nombre real al crear una cuenta, menos aún tu nombre y apellidos.
+
+Más adelante incorporaremos un inicio de sesión con una cuenta externa (por ejemplo, la que tengas con Google) o con dirección de email y contraseña. En ese momento recibiremos también los datos básicos que esa cuenta comparta, como tu nombre y tu correo electrónico.
+
+## Tu voz, solo mientras hablas
+
+Cuando usas el modo HABLAR, el micrófono capta tu voz y la envía en tiempo real al proveedor de inteligencia artificial (hoy, Google Gemini) para que Brenda pueda entenderte y contestarte. **aiBrenda no graba, ni guarda, ni conserva el audio** en ningún momento. Tampoco guardamos datos biométricos de tu voz (lo que se conoce como “huella de voz”).
+
+## Lo que habláis, en texto
+
+Lo que decís tú y Brenda se pasa a texto (se “transcribe”). De esas transcripciones guardamos:
+
+- **Tu historial reciente:** aproximadamente tus últimas 20 interacciones, para que puedas repasarlas en la app.
+- **La memoria de Brenda:** pequeños extractos en texto de vuestras charlas (por ejemplo, cómo se llama tu nieta o que te gusta la zarzuela). Así Brenda se acuerda de ti y la conversación resulta más natural, como con un amigo o un vecino.
+
+## Datos de uso
+
+Información sobre cómo se usa el servicio: cuándo te conectas, cuánto tiempo hablas, cuántos Brendys (tokens) consumes, los errores técnicos y el tipo de dispositivo. Esa información es esencial para el funcionamiento del sistema, llevar la cuenta de tu saldo de Brendys (tokens) y mejorar aiBrenda.
+
+## Qué son los Brendys o tokens
+
+Los tokens (que nosotros llamamos Brendys) son un tipo de medida que se usa en procesos informáticos, especialmente los relacionados con inteligencia artificial. Una palabra muy común (p. ej., “diciembre”) puede ser identificada con un solo token, mientras que otra que se usa poco (p. ej., “antonomasia”) necesitaría, probablemente, cinco tokens (uno por sílaba). No podemos anticipar cuántos tokens se consumen por cada minuto de conversación, solo tenemos una aproximación. Por eso, el consumo y pago de los servicios de aiBrenda se hacen en función de los tokens y no en base al tiempo de conversación.
+
+## Datos de tus compras
+
+Google Play nos dice qué plan o recarga has comprado y si sigue activo. **No recibimos tus datos de pago.**
+
+# 4. Lo que NO pedimos ni guardamos
+
+- **Tu dirección postal.** Aparte del tiempo de uso, aiBrenda no te vende nada ni te envía nada a casa. Solo ofrece tiempo de conversación.
+- **Datos bancarios o de pago:** ni cuentas, ni tarjetas de crédito o débito, ni ningún otro medio de pago electrónico. Los pagos los gestiona Google Play.
+- **Audios o grabaciones de tu voz.**
+- **Datos de salud, económicos o legales.** Brenda no te los pide. Si mencionas algo de esto, te sugerirá consultarlo con un experto (tu médico, un abogado, un asesor…). Te pedimos que no compartas este tipo de información con Brenda. Si aun así aparece en una conversación, podría quedar en tu historial reciente; puedes pedirle a Brenda que lo olvide o escribirnos para que lo borremos.
+
+# 5. Para qué usamos tus datos y su base legal
+
+- **Usamos estos datos para darte el servicio** (crear tu cuenta, conversar, recordar lo que nos cuentas, llevar la cuenta de tus Brendys). La base legal para ello está en el contrato que aceptas al usar aiBrenda.
+- **Gestionar tus compras y suscripciones** con Google Play. Base legal: el contrato de Google Play que aceptaste para descargarte la aplicación.
+- **Seguridad, prevención de abusos y solución de fallos.** La base legal es nuestro interés legítimo en que el servicio funcione de forma segura.
+- **Hacer estadísticas propias para mejorar aiBrenda,** usando datos anonimizados siempre que sea posible. La base legal es nuestro interés legítimo en conocer los patrones de uso para optimizar los procesos existentes y crear funciones nuevas.
+- **Atender tus consultas y peticiones.** La base legal es poder atender tus solicitudes para mejorar nuestra relación contigo.
+- **Cumplir obligaciones legales** (por ejemplo, fiscales). La base legal es poder atender las exigencias de las diferentes leyes que rigen en España.
+
+No tomamos decisiones automáticas que tengan efectos legales sobre ti, ni usamos tus conversaciones para publicidad.
+
+# 6. Cuánto tiempo guardamos tus datos
+
+- Mientras tengas cuenta, guardamos los datos asociados a ella, tu historial reciente y la memoria que tenga Brenda de tus preferencias, además de copia de la historia comercial que hayas tenido con Google Play.
+- Lo que le pides a Brenda que olvide se borra de su memoria.
+- Si borras tu cuenta, eliminamos tus datos personales, tus conversaciones y la memoria de Brenda. Solo conservamos datos estadísticos anónimos (que no permiten identificarte) y, bloqueados, los datos que la ley nos obligue a guardar durante el plazo legal.
+- Si tu cuenta pasa mucho tiempo sin usarse, podremos borrarla. Actualmente este plazo de inactividad es de 24 meses.
+
+# 7. Con quién compartimos tus datos
+
+No vendemos tus datos. Solo los compartimos con los proveedores que necesitamos para prestar el servicio, que trabajan por encargo nuestro y con contratos que protegen tu información:
+
+- **Proveedores de inteligencia artificial** (comprensión de voz, generación de respuestas y voz sintética): hoy, Google (Gemini). También podremos trabajar con otros, como OpenAI (ChatGPT), ElevenLabs y muchos más, que reciben tu voz y el texto de la conversación solo para generar las respuestas, según sus condiciones para empresas.
+- **Servidores y base de datos:** actualmente trabajamos con Render.com como servidores de la aplicación, MongoDB Atlas como base de datos y Google Cloud. Los servidores y la base de datos están alojados en la Unión Europea, sobre la infraestructura de Amazon Web Services (AWS).
+- **Supervisión técnica del servicio:** New Relic.
+- **Red y seguridad web:** Cloudflare, cuando la usamos para proteger la web.
+- **Estadísticas de uso de la web:** Umami, sin cookies y sin identificarte personalmente.
+- **Pagos:** Google Play, que gestiona los cobros como responsable, con sus propias normas.
+- **Autoridades públicas,** solo cuando la ley nos obligue.
+
+Si cambiamos de proveedores principales, lo indicaremos en esta política.
+
+# 8. Datos que salen de la Unión Europea
+
+Tus datos se guardan en la Unión Europea: los servidores de la aplicación están en Fráncfort (Alemania) y la base de datos se aloja en París (Francia). Gemini AI se aloja en Madrid (España).
+
+Aun así, algunos proveedores (por ejemplo, los de inteligencia artificial o de supervisión técnica) son empresas de Estados Unidos y pueden tratar datos fuera del Espacio Económico Europeo. Solo trabajamos con proveedores que ofrecen garantías adecuadas: por ejemplo, estar adheridos al Marco de Privacidad de Datos UE-EE. UU. o firmar las cláusulas contractuales tipo aprobadas por la Comisión Europea.
+
+# 9. Tus derechos
+
+Puedes pedirnos en cualquier momento:
+
+- **Acceso:** saber qué datos tuyos tenemos.
+- **Rectificación:** corregir datos incorrectos.
+- **Supresión:** borrar tus datos o tu cuenta entera.
+- **Oposición y limitación:** que dejemos de usar tus datos para algo o que los usemos solo para lo imprescindible.
+- **Portabilidad:** recibir tus datos en un formato que puedas llevarte a otro servicio.
+
+Para ejercerlos, escríbenos a **soporte@aibrenda.co** indicando tu apodo. Te responderemos en un plazo máximo de un mes. Y para cosas concretas, recuerda que basta con decirle a Brenda que lo olvide.
+
+Si crees que no hemos tratado bien tus datos, puedes reclamar ante la Agencia Española de Protección de Datos ([www.aepd.es](https://www.aepd.es)).
+
+# 10. Seguridad
+
+Aplicamos medidas técnicas y organizativas para proteger tus datos (conexiones cifradas, accesos restringidos, supervisión del servicio). Mientras el acceso sea con apodo y PIN, te recomendamos elegir un PIN que no uses en otros sitios y no compartirlo con nadie.
+
+# 11. Menores de edad
+
+aiBrenda no está dirigida a menores de 18 años. Si descubrimos que un menor ha creado una cuenta, la borraremos.
+
+# 12. Cambios en esta política
+
+Podemos actualizar esta Política de Privacidad. Si el cambio es importante, te avisaremos en la app o en la web antes de que se aplique.
+
+=== terms
+# Condiciones de Contratación
+
+_Última actualización: octubre de 2026_
+
+# 1. Quién te presta el servicio
+
+- **Titular:** Comercio Social Digital, S.L.
+- **NIF:** B86597390
+- **Domicilio:** C/ Rufino González, 14, 28037 Madrid (España)
+- **Correo electrónico:** info@aibrenda.co
+- **Web:** [https://aibrenda.co](https://aibrenda.co)
+
+# 2. Qué contratas
+
+Con aiBrenda contratas **tiempo de conversación** con Brenda, una compañera de inteligencia artificial, por voz o por escrito. Es un servicio digital de **entretenimiento**. No incluye productos físicos ni envíos a domicilio, así que no necesitamos tu dirección postal.
+
+# 3. Cómo medimos y cobramos el servicio: presentamos los tokens
+
+- Los **tokens** son las unidades con las que los proveedores de inteligencia artificial miden el trabajo que hacen. Cada vez que hablas o escribes y Brenda te responde, se gastan tokens.
+- Nosotros llamamos **Brendys** a los tokens. **Un Brendy es igual a un token.**
+- Hay **tokens (Brendys) de voz** (modo HABLAR) y **tokens (Brendys) de chat** (modo ESCRIBIR). Hablar suele gastar más tokens que escribir.
+- Para que te resulte más fácil, te mostramos los Brendys también como un **tiempo aproximado de uso**. Esa equivalencia se calcula con las fórmulas que fijan nuestros proveedores de inteligencia artificial (por ejemplo, Google Gemini, OpenAI ChatGPT o ElevenLabs).
+- Ten en cuenta que el cálculo de tiempo es solo una **aproximación**: lo que gastas de verdad depende de cómo sea la conversación (lo largas que sean las respuestas, las pausas, si hablas o escribes y otros factores que no podemos controlar).
+- **Los proveedores pueden cambiar sus fórmulas y precios en cualquier momento.** Si eso pasa, podremos actualizar la equivalencia aproximada entre Brendys y tiempo de uso, y te lo indicaremos en la app. Los Brendys que ya tengas no pierden valor: mantienes la misma cantidad hasta que los consumas.
+
+# 4. Planes disponibles
+
+- **Cuenta gratuita:** al instalar la app desde Google Play tienes una cuenta gratuita, sin fecha de caducidad, con una cantidad limitada de Brendys de voz y otra cantidad de Brendys de chat que podrás consumir mensualmente sin cargo. Si en algún momento cambiamos la cantidad de Brendys gratuitos que asignamos a la cuenta gratuita, o si alguna vez cancelamos esa modalidad, te avisaremos previamente.
+- **Recarga (Top-Up):** un pago que te permite sumar más Brendys a tu cuenta sin necesidad de coger una suscripción. Puedes hacer recargas cuando quieras, pero **¡cuidado!** Hazlo solo cuando efectivamente necesites más tiempo.
+- Los Brendys de recarga que no hayas consumido se conservan de mes en mes. Solo caducan a los 24 meses de no usarse. Por ejemplo, si compraste 50 Brendys de recarga el día 26 del mes y tu plan de suscripción se renueva con 200 Brendys, tendrás 250 Brendys al inicio del siguiente período.
+- **Suscripciones Básico, Superior y Avanzado:** son tres planes de pago periódicos. Cada uno incluye más Brendys que el anterior y a un precio por token más bajo. Puedes ver la tarifa actual pulsando “Mi info” y “Más Tiempo”.
+- Antes de comprar, verás en la app y en Google Play el precio final (con impuestos), los Brendys incluidos y, en las suscripciones, cada cuánto se renuevan.
+- **Nota importante:** los Brendys de suscripción se renuevan cada mes, en la misma fecha en que contrataste, pero no se suman a los no consumidos del periodo anterior. Por ejemplo, si te quedaban 50 Brendys de tu plan de suscripción de 200 Brendys mensuales, tendrás 200 Brendys cuando empiece el nuevo periodo.
+
+# 5. Cómo se paga: a través de Google Play
+
+Todos los pagos se hacen con **Google Play**, que es quien te cobra y quien gestiona tus datos de pago, según sus propias condiciones. Si necesitas consultarlas, clica en este enlace: [Condiciones de Servicio de Google Play](https://play.google.com/intl/es_es/about/play-terms/index.html).
+
+**aiBrenda no pide ni guarda datos bancarios:** ni cuentas, ni tarjetas de crédito o débito, ni ningún otro medio de pago electrónico. Google Play te enviará el justificante de cada compra y nos informará de la cantidad de Brendys que debemos asignar a tu cuenta.
+
+# 6. Renovación y cancelación de suscripciones
+
+- Las suscripciones se **renuevan automáticamente** al final de cada periodo, salvo que las canceles.
+- Puedes cancelarlas cuando quieras en Google Play: abre la app de Google Play, toca tu foto de perfil y entra en “Pagos y suscripciones” > “Suscripciones”.
+- Si cancelas, conservas tu plan hasta que termine el periodo que ya has pagado.
+
+# 7. Cambios de precio
+
+Si cambiamos el precio de una suscripción, te avisaremos con antelación a través de Google Play o de la app. Si no estás de acuerdo, puedes cancelarla antes de que se aplique el nuevo precio.
+
+# 8. Derecho de desistimiento y devoluciones
+
+Como consumidor, en general tienes 14 días para desistir de una compra online. Pero los Brendys son contenido digital que se te entrega al momento. Por eso, al confirmar la compra en Google Play **aceptas expresamente** recibir los Brendys de inmediato y reconoces que, con ello, **pierdes el derecho de desistimiento** (artículo 103 de la Ley General para la Defensa de los Consumidores y Usuarios).
+
+Las devoluciones se gestionan según las políticas de Google Play. Si tienes algún problema con una compra, escríbenos también a soporte@aibrenda.co y te ayudaremos.
+
+# 9. Qué no incluye el servicio
+
+- aiBrenda es entretenimiento. **No ofrece asesoramiento** médico, legal, financiero, fiscal ni psicológico. Si hablas de estos temas, Brenda te recomendará consultar con un profesional.
+- Imagina que aiBrenda es una vecina servicial, un amigo simpático. A veces se les ocurren cosas graciosas e interesantes, pero no son expertos a quienes consultar nada importante.
+- Las respuestas que te ofrece Brenda las genera una inteligencia artificial de proveedores externos y pueden contener errores. No podemos garantizar ningún resultado concreto.
+- No es un servicio de emergencias. Si lo necesitas, llama al 112.
+
+# 10. Disponibilidad del servicio
+
+Intentamos que aiBrenda esté disponible siempre, pero puede haber interrupciones por mantenimiento, fallos técnicos o problemas de nuestros proveedores (internet, servidores o servicios de inteligencia artificial) o incluso por razones legales. No respondemos de las interrupciones que no dependan de nosotros.
+
+# 11. Darte de baja
+
+- Puedes borrar tu cuenta cuando quieras clicando en el botón blanco de tu cuenta (aparece arriba con tu apodo) y clicando en el enlace rojo al final de esa ventana que dice “Quiero eliminar mi cuenta y datos personales” o, si lo prefieres, escribiendo a soporte@aibrenda.co.
+- Si clicaste en tu apodo y no ves el enlace rojo mencionado, debe ser porque el teclado virtual lo está tapando. Quita el teclado y lo verás detrás.
+- Al borrar la cuenta pierdes los Brendys que no hayas usado. Por eso, te recomendamos que los gastes antes del nuevo ciclo de tu plan de suscripción (si lo tienes).
+- **Importante:** borrar la cuenta o desinstalar la app **no cancela la suscripción** en Google Play. Tienes que cancelarla tú allí, como se explica en el punto 6.
+- Recuerda que podemos suspender o cerrar cuentas que incumplan el [Aviso legal](legal.html) o estas condiciones.
+
+# 12. Atención al cliente y reclamaciones
+
+Para cualquier duda, queja o reclamación, escríbenos a **soporte@aibrenda.co**. Te responderemos lo antes posible. También puedes acudir a los organismos de consumo de tu comunidad autónoma o de tu país.
+
+# 13. Ley aplicable
+
+Estas condiciones se rigen por la ley española. Si eres consumidor, conservas la protección que te den las leyes de tu país de residencia y puedes reclamar ante los tribunales de tu domicilio.

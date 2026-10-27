@@ -1076,6 +1076,93 @@ body {
   color: #ffffff;
 }
 
+/* Legal-document popups (privacy, terms, legal, cookies, about): content is the
+   <main> of public/legal/<locale>/<doc>.html. Section headings must show here,
+   unlike the generic .brenda-content h1/h2 rule above. */
+.legal-card .brenda-top {
+  padding: 0 34px; /* long titles stay clear of the × button */
+}
+
+.legal-content h2 {
+  display: block;
+  margin: 1.4em 0 0.5em;
+  font-size: 1.05em;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.legal-content h3 {
+  margin: 1.1em 0 0.4em;
+  font-size: 1em;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.legal-content .updated {
+  margin: 0 0 1em;
+  font-size: 0.9em;
+  color: #6b7280;
+  text-align: center;
+}
+
+.legal-content li {
+  margin-bottom: 0.4em;
+}
+
+.legal-content strong {
+  color: #0f172a;
+}
+
+.legal-content a {
+  color: #2F7CF1;
+  word-break: break-word;
+}
+
+.legal-content .callout {
+  padding: 10px 12px;
+  background: #fef2f2;
+  border-left: 4px solid #dc2626;
+  border-radius: 6px;
+}
+
+.legal-content .table-wrap {
+  margin: 0 0 1em;
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.legal-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+}
+
+.legal-content th,
+.legal-content td {
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.legal-content th {
+  background: #f3f4f6;
+  color: #0f172a;
+}
+
+.legal-content tr:last-child td {
+  border-bottom: 0;
+}
+
+.legal-content code {
+  padding: 1px 4px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
 .delete-account-link {
   display: block;
   width: 100%;
@@ -1692,6 +1779,49 @@ body {
   .auth-privacy {
     margin-top: 6px !important;
   }
+}
+
+/* About / legal / cookies / terms links stacked tight under the privacy link
+   (the card height is fixed, so they take room from the space above the
+   delete-account divider) */
+.auth-privacy.auth-legal-link {
+  margin-top: -4px !important;
+}
+
+#authOverlay .delete-account-link {
+  margin-top: 10px;
+  border-top-color: #b8bec8; /* darker than #e5e7eb, which vanished on some screens */
+}
+
+/* Divider between the anonymous link and the legal links (same line as the
+   delete-account divider) */
+#authOverlay .auth-divider {
+  width: 100%;
+  flex-shrink: 0;
+  margin: 8px 0 4px;
+  border-top: 1px solid #b8bec8;
+}
+
+/* Card keeps its fixed height; when its content is taller (legal links, small
+   phones, short windows) only the form scrolls — avatar/greeting (.auth-top)
+   and the X button stay in place */
+#authOverlay .auth-top {
+  flex-shrink: 0;
+}
+
+#authOverlay .auth-form {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  box-sizing: border-box;
+  padding: 0 3px 4px; /* room for input focus rings inside the scroll area */
+}
+
+/* Without this the form's children shrink to fit instead of scrolling */
+#authOverlay .auth-form > * {
+  flex-shrink: 0;
 }
 
 /* =========================================================

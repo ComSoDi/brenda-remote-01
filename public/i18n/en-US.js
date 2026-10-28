@@ -136,7 +136,7 @@ export default {
     myInfoTitle: "My information",
     myInfoSubtitle: "Please tell me where and what you are",
     myInfoTown: "Town / City",
-    myInfoState: "State / Region (optional)",
+    myInfoState: "State / Region",
     myInfoCountry: "Country",
     myInfoSave: "Save",
     myInfoCancel: "Cancel",
@@ -393,7 +393,7 @@ export default {
     catPill_actualidad: "Current News", catPill_politica: "Politics",
 
     // Usage Monitoring & Subscription Tiers
-    "sub.monthlyMonitor": "Monthly use monitor",
+    "sub.monthlyMonitor": "Time used",
     "sub.voiceMode": "VOICE MODE",
     "sub.chatMode": "CHAT MODE",
     "sub.pctUsed": "{n}% used",

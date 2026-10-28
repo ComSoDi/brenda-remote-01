@@ -320,7 +320,9 @@ body {
   font-size: 1em;
   line-height: 1.3;
   min-height: 44px;
-  max-height: 120px;
+  /* grows with the text up to 6 lines (+ padding + border), then scrolls — see autoGrowTextarea() */
+  max-height: calc(6 * 1.3em + 22px);
+  overflow-y: hidden;
   outline: none;
 }
 

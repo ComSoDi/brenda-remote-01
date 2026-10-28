@@ -471,6 +471,7 @@ class BrendaApp {
         this.sendTextMessage();
       }
     });
+    this.elements.chatInput.addEventListener("input", () => this.autoGrowTextarea());
 
     // I Am Brenda Overlay
     this.elements.brendaAvatar?.addEventListener("click", () => this.openBrendaOverlay());
@@ -3505,8 +3506,12 @@ class BrendaApp {
   autoGrowTextarea() {
     const ta = this.elements.chatInput;
     if (!ta) return;
+    // Cap comes from the CSS max-height (6 lines); past it the box scrolls instead of growing
+    const max = parseFloat(getComputedStyle(ta).maxHeight) || 120;
     ta.style.height = "auto";
-    ta.style.height = Math.min(120, ta.scrollHeight) + "px";
+    const needed = ta.scrollHeight + (ta.offsetHeight - ta.clientHeight); // border-box: add borders
+    ta.style.height = Math.min(max, needed) + "px";
+    ta.style.overflowY = needed > max + 1 ? "auto" : "hidden"; // +1: sub-pixel rounding at exactly 6 lines
   }
 
   /* --------------------

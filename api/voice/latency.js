@@ -43,6 +43,9 @@ export default async function handler(req, res) {
     msWaiting: ms(b.msWaiting),     // part spent before Gemini closed the user's turn (VAD)
     msReplying: ms(b.msReplying),   // part after that (model + network)
     signal: b.signal === "mic" ? "mic" : "txt",
+    // "late" = stop not detected live; counted back from the last mic speech
+    // when Brenda's audio arrived (vad-stopwatch.js). Filter it out for exact work.
+    stopDetect: b.stopDetect === "late" ? "late" : "live",
     locale: String(b.locale || "").slice(0, 10) || null,
     platform: String(b.platform || "").slice(0, 20) || null,
     gitSha: GIT_SHA,

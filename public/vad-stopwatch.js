@@ -104,6 +104,8 @@
   var loudRunStart = 0;       // start of the current uninterrupted run of loud chunks
   var lastUserTxAt = 0;       // last user-transcript fragment
   var haveTx = false;         // got at least one user-transcript fragment this turn
+  var turnStartAt = 0;        // when "talking" began (lastLoudAt before this belongs to an older turn)
+  var maxRunMs = 0;           // longest uninterrupted speech run this turn
   var noiseFloor = 0.015;     // adaptive (frozen while counting)
   var brendaSpeaking = false;
   var _dbgLast = 0;
@@ -233,6 +235,7 @@
     if (rms >= gate) {
       if (now - lastLoudAt > CFG.RUN_GAP_MS) loudRunStart = now;   // fresh run after a real gap (not inter-syllable dips)
       lastLoudAt = now;
+      if (now - loudRunStart > maxRunMs) maxRunMs = now - loudRunStart;
     }
 
     if (CFG.debug && now - _dbgLast > 150) {
@@ -251,13 +254,14 @@
 
   // Sends the felt wait of each finished turn to New Relic (VoiceClientLatency,
   // api/voice/latency.js) so latency is measured, not guessed. Fire-and-forget.
-  function report(now) {
+  function report(now, late) {
     try {
       var body = JSON.stringify({
         msWait: Math.round(now - t0),
         msWaiting: Math.round((redAt || now) - t0),
         msReplying: redAt ? Math.round(now - redAt) : null,
-        signal: micUsable() ? "mic" : "txt",
+        signal: late ? "mic" : (micUsable() ? "mic" : "txt"),
+        stopDetect: late ? "late" : "live",
         locale: (document.documentElement.lang || ""),
         platform: /BrendaAndroid\//.test(navigator.userAgent) ? "android-app" : "web",
       });
@@ -276,6 +280,21 @@
         paint(fmt(now - t0), RED);
         state = "frozen";
         report(now);
+      } else if (state === "talking") {
+        // Brenda answered before the "stopped talking" detection fired (short
+        // last syllable, or a noisy room where the transcript only lands as
+        // she starts). Count back from the last moment the mic heard the user
+        // this turn instead of leaving the clock stuck on 0.00 s.
+        var nowL = performance.now();
+        if (lastLoudAt > 0 && lastLoudAt >= turnStartAt) {
+          t0 = lastLoudAt;
+          redAt = 0;
+          paint(fmt(nowL - t0), RED);
+          report(nowL, true);
+        } else {
+          paint("– s", RED);                  // no usable mic timing this turn — don't guess
+        }
+        state = "frozen";
       }
     } else if (name === "connected" || name === "disconnected") {
       brendaSpeaking = false;
@@ -299,6 +318,8 @@
     if (state === "idle" || state === "frozen") {
       if (recentlyLoud || recentTx) {
         state = "talking";
+        turnStartAt = recentlyLoud ? loudRunStart : now;
+        maxRunMs = recentlyLoud ? lastLoudAt - loudRunStart : 0;
         haveTx = recentTx;                      // keep only this turn's transcript timing
         lastUserTxAt = recentTx ? now : 0;
         if (!recentlyLoud) loudRunStart = 0;
@@ -309,7 +330,9 @@
 
     if (state === "talking") {
       paint("0.00 s", BLACK);
-      var micSpokeEnough = (lastLoudAt - loudRunStart) >= CFG.MIN_SPEECH_MS;
+      // Any real speech run this turn counts — not only the last one, which can
+      // be a short final syllable ("…¿no?") after a pause.
+      var micSpokeEnough = (lastLoudAt - loudRunStart) >= CFG.MIN_SPEECH_MS || maxRunMs >= CFG.MIN_SPEECH_MS;
       var micQuiet = m && !recentlyLoud && lastLoudAt > 0 &&
         (now - lastLoudAt) >= CFG.SILENCE_HOLD_MS && micSpokeEnough;
       var txStopped = haveTx && (now - lastUserTxAt) >= CFG.TX_STOP_MS;

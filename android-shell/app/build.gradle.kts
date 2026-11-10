@@ -42,8 +42,8 @@ android {
 
         // Each Play Console upload must exceed the previous versionCode
         // (1.0.0.8 = 8 was the last upload before 2026-10-06).
-        versionCode = 9
-        versionName = "1.0.0.9"
+        versionCode = 10
+        versionName = "1.0.0.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

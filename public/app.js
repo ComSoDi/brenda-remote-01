@@ -364,6 +364,7 @@ class BrendaApp {
     this._wakeLock = null;
     window.addEventListener("brenda:native", (e) => {
       if (e.detail?.type === "conversation:endRequested") this.hangUp();
+      if (e.detail?.type === "app:reopened") this._onAppReopened();
     });
 
     // Browser Wake Locks are released automatically whenever the tab is
@@ -962,6 +963,23 @@ class BrendaApp {
     if (this._autoTalkChecked) return false;
     this._autoTalkChecked = true;
     return !!me && !me.isAnonymous && me.autoTalk === true;
+  }
+
+  // Android app launched again (icon or "Hey Google, open aiBrenda") while
+  // it was still alive in the background — Back doesn't close it, so the
+  // page never reloads. Treat it like a fresh open: greet if one is due,
+  // then start TALK. Not sent when returning via the recent-apps list.
+  async _onAppReopened() {
+    if (!this.user || this.user.isAnonymous || this.user.autoTalk !== true) return;
+    if (this._lastVoiceStatus && this._lastVoiceStatus !== "disconnected") return; // call still on
+    if (this.elements.toggleBtnTalk?.classList.contains("btn-disconnect-talk")) return;
+    this.setMode("talk");
+    try {
+      await this.checkAndShowGreeting();
+    } catch (err) {
+      console.error("[auto-talk] greeting check on reopen failed", err);
+    }
+    this.onTalkButton();
   }
 
   _startAutoTalk() {

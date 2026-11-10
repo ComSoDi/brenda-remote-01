@@ -281,9 +281,28 @@ class MainActivity : AppCompatActivity() {
         binding.micDeniedOverlay.visibility = android.view.View.VISIBLE
     }
 
+    /** Set when the app is launched again (home-screen icon, or "Hey Google,
+     *  open aiBrenda") while it was still alive in the background — e.g.
+     *  after the Back button, which only moves it behind other apps. Sent to
+     *  the page in onResume, once the WebView is running again, so the page
+     *  can start TALK for users with "Start talking when I open aiBrenda".
+     *  Coming back via the recent-apps list sends no intent, so it doesn't
+     *  count as "opening" the app. */
+    private var reopenedByLauncher = false
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.action == Intent.ACTION_MAIN) reopenedByLauncher = true
+    }
+
     override fun onResume() {
         super.onResume()
         binding.webView.onResume()
+        if (reopenedByLauncher) {
+            reopenedByLauncher = false
+            postToWeb("app:reopened")
+        }
     }
 
     override fun onPause() {

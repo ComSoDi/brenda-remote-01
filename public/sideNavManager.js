@@ -2,12 +2,14 @@
 import { t } from "./i18n/index.js";
 
 // Display order (Mike, 2026-10-03): account (user's Nick, rendered first —
-// see accountRowHtml), Mi info, Mi info 2, ?, Temas, Secciones, Tareas,
-// Inicia tú (Cambia tema), Titulares, Hablar, Escribir.
+// see accountRowHtml), Mi info, Mi info 2, ?, Ajustes, Temas, Secciones,
+// Tareas, Inicia tú (Cambia tema), Titulares, Hablar, Escribir.
+// Ajustes (2026-11-10) holds the Temas + Secciones buttons, which left the header.
 const SIDENAV_HOME_PILLS = [
   { pillKey: "sideNavPillMyInfo",   pillClass: "snp-white",      labelKey: "sideNavLabelMyInfo",   nav: "miInfo" },
   { pillKey: "sideNavPillMyInfo2",  pillClass: "snp-white",      labelKey: "sideNavLabelMyInfo2",  nav: "miInfo02" },
   { pillKey: "sideNavPillHelp",     pillClass: "snp-help",       labelKey: "sideNavLabelHelp",     nav: null },
+  { pillKey: "sideNavPillSettings", pillClass: "snp-white",      labelKey: "sideNavLabelSettings", nav: "settings" },
   { pillKey: "sideNavPillMisTemas", pillClass: "snp-white",      labelKey: "sideNavLabelMisTemas", nav: "misTemas" },
   { pillKey: "sideNavPillNews",     pillClass: "snp-white",      labelKey: "sideNavLabelNews",     nav: "news" },
   { pillKey: "sideNavPillTomas",    pillClass: "snp-white",      labelKey: "sideNavLabelTomas",    nav: "tomas" },
@@ -25,6 +27,7 @@ const SIDENAV_NAV_GA_SUFFIX = {
   tomas: "tomas",
   iniciaTu: "inicia_tu",
   misTemas: "mis_temas",
+  settings: "settings",
   latest: "latest",
   news: "news",
   talk: "talk",
@@ -118,6 +121,7 @@ const SIDENAV_DETAIL_CONFIGS = {
     pillClass: "snp-white",
     titleKey:  "sideNavLabelMisTemas",
     blocks: [
+      { type: "text",  key: "sideNavInSettings" },
       { type: "text",  key: "sideNavMisTemasText1" },
       { type: "text",  key: "sideNavMisTemasText2" },
       { type: "text",  key: "sideNavMisTemasText3" },
@@ -160,6 +164,7 @@ const SIDENAV_DETAIL_CONFIGS = {
     pillClass: "snp-white",
     titleKey:  "sideNavNewsTitleText",
     blocks: [
+      { type: "text", key: "sideNavInSettings" },
       { type: "text", key: "sideNavNewsText1" },
       { type: "text", key: "sideNavNewsText2" },
       { type: "text", key: "sideNavNewsText3" },
@@ -179,6 +184,20 @@ const SIDENAV_DETAIL_CONFIGS = {
       { type: "text",  key: "sideNavLatestText4" },
       { type: "text",     key: "sideNavLatestText5" },
       { type: "pill-btn", key: "sideNavPillNews", pillClass: "snp-white" },
+    ],
+  },
+  settings: {
+    pillKey:   "sideNavPillSettings",
+    pillClass: "snp-white",
+    titleKey:  "sideNavSettingsTitleText",
+    blocks: [
+      { type: "text",     key: "sideNavSettingsText1" },
+      { type: "text",     key: "sideNavSettingsText2" },
+      { type: "pill-btn", key: "sideNavPillMisTemas", pillClass: "snp-white" },
+      { type: "text",     key: "sideNavSettingsText3" },
+      { type: "pill-btn", key: "sideNavPillNews", pillClass: "snp-white" },
+      { type: "text",     key: "sideNavSettingsText4" },
+      { type: "text",     key: "sideNavSettingsText5" },
     ],
   },
   iniciaTu: {

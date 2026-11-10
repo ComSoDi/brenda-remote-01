@@ -54,9 +54,9 @@
           </div>
         </div>
         <div class="header-actions">
-          <button id="subjectsBtn" class="subjects-btn" type="button" data-ga-name="subjects_open_btn"></button>
+          <!-- Subjects + Sections moved inside the Settings popup (2026-11-10) -->
+          <button id="settingsBtn" class="settings-btn" type="button" data-ga-name="settings_open_btn"></button>
           <button id="taskBtn" class="task-btn" type="button" data-ga-name="task_open_btn"></button>
-          <button id="newsSectionsBtn" class="latest-btn" type="button" data-ga-name="news_sections_open_btn"></button>
           <button id="changeSubjectBtn" class="chat-rds-btn" type="button" data-ga-name="change_subject_btn"></button>
           <button id="headlinesBtn" class="headlines-btn" type="button" data-ga-name="headlines_open_btn"></button>
         </div>
@@ -393,6 +393,43 @@
         <div class="privacy-actions">
           <button id="deleteAccountFinalBtn" class="delete-account-confirm-btn" type="button" data-ga-name="account_popup__delete_final_confirm_btn"></button>
         </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS POPUP — placed BEFORE the Subjects / Sections popups so those
+         open on top of it; closing them (× or phone Back) lands back here. -->
+    <div id="settingsOverlay" class="popup-overlay hidden" aria-hidden="true" data-ga-name="settings_popup">
+      <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="popup-card-header">
+          <h1 id="settingsTitle"></h1>
+          <button id="settingsCloseBtn" class="popup-close-btn" type="button" aria-label="Close" data-ga-name="settings_close_btn">×</button>
+        </div>
+
+        <div class="settings-nav">
+          <button id="subjectsBtn" class="settings-nav-btn" type="button" data-ga-name="subjects_open_btn"></button>
+          <button id="newsSectionsBtn" class="settings-nav-btn" type="button" data-ga-name="news_sections_open_btn"></button>
+        </div>
+
+        <!-- Named accounts only (TALK needs an account); saved as soon as it changes -->
+        <label id="settingsAutoTalkRow" class="latest-cat-item settings-toggle-row hidden">
+          <input id="settingsAutoTalk" type="checkbox" role="switch" data-ga-name="auto_talk_checkbox" />
+          <span id="settingsAutoTalkLabel"></span>
+        </label>
+
+        <div class="popup-actions">
+          <button id="settingsDoneBtn" class="popup-btn-cancel" type="button" data-ga-name="settings_done_btn"></button>
+        </div>
+        <div id="settingsStatus" class="popup-status" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <!-- AUTO-TALK "TAP ANYWHERE" — only in a normal browser, which won't let a
+         page play sound before a tap. The Android app never needs it. -->
+    <div id="autoTalkOverlay" class="popup-overlay auto-talk-overlay hidden" aria-hidden="true" data-ga-name="auto_talk_popup">
+      <!-- Frame = the app's width (not the browser's), so the text and × stay over the app -->
+      <div class="auto-talk-frame">
+        <button id="autoTalkStartBtn" class="auto-talk-start-btn" type="button" data-ga-name="auto_talk_start_btn"></button>
+        <button id="autoTalkCloseBtn" class="popup-close-btn auto-talk-close-btn" type="button" aria-label="Close" data-ga-name="auto_talk_close_btn">×</button>
       </div>
     </div>
 
@@ -878,6 +915,11 @@
 
     <!-- SIDENAV MIS TEMAS (detail) -->
     <div id="sideNavMisTemas" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_mis_temas_popup">
+      <div class="sidenav-inner"></div>
+    </div>
+
+    <!-- SIDENAV SETTINGS / AJUSTES (detail) -->
+    <div id="sideNavSettings" class="sidenav-panel sidenav-detail" aria-hidden="true" data-ga-name="sidenav_settings_popup">
       <div class="sidenav-inner"></div>
     </div>
 

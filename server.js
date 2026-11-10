@@ -153,6 +153,7 @@ app.use((req, res, next) => {
 
 app.post("/api/auth/login", loginHandler);
 app.get("/api/auth/me", meHandler);
+app.patch("/api/auth/me", meHandler); // Settings popup: autoTalk (gender too)
 app.post("/api/auth/anonymous", anonymousHandler);
 app.post("/api/auth/logout", logoutHandler);
 app.post("/api/auth/consent", consentHandler);

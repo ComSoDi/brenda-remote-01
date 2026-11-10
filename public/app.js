@@ -203,6 +203,20 @@ class BrendaApp {
       taskBtn: document.getElementById("taskBtn"),
       subjectsBtn: document.getElementById("subjectsBtn"),
 
+      // Settings popup (holds Subjects, Sections, auto-TALK)
+      settingsBtn: document.getElementById("settingsBtn"),
+      settingsOverlay: document.getElementById("settingsOverlay"),
+      settingsTitle: document.getElementById("settingsTitle"),
+      settingsCloseBtn: document.getElementById("settingsCloseBtn"),
+      settingsDoneBtn: document.getElementById("settingsDoneBtn"),
+      settingsAutoTalkRow: document.getElementById("settingsAutoTalkRow"),
+      settingsAutoTalk: document.getElementById("settingsAutoTalk"),
+      settingsAutoTalkLabel: document.getElementById("settingsAutoTalkLabel"),
+      settingsStatus: document.getElementById("settingsStatus"),
+      autoTalkOverlay: document.getElementById("autoTalkOverlay"),
+      autoTalkStartBtn: document.getElementById("autoTalkStartBtn"),
+      autoTalkCloseBtn: document.getElementById("autoTalkCloseBtn"),
+
       // I am Brenda Overlay
       brendaOverlay: document.getElementById("brendaOverlay"),
       brendaCloseBtn: document.getElementById("brendaCloseBtn"),
@@ -440,6 +454,7 @@ class BrendaApp {
 
     // Subjects UI labels
     this.localizeSubjectsUI();
+    this.localizeSettingsUI();
     this.localizeMyInfoUI();
     this.localizeUsageMonitorUI();
     this.localizePlanSelectionUI();
@@ -483,6 +498,14 @@ class BrendaApp {
     this.elements.callMinBtn?.addEventListener("click", () => this.setCallUI("min"));
     this.elements.callExpandBtn?.addEventListener("click", () => this.setCallUI("open"));
     this.elements.callHangBtn?.addEventListener("click", () => this.hangUp());
+
+    // Settings button + popup (Subjects / Sections open on top of it)
+    this.elements.settingsBtn?.addEventListener("click", () => this.onSettingsButton());
+    this.elements.settingsCloseBtn?.addEventListener("click", () => this.closeSettingsOverlay());
+    this.elements.settingsDoneBtn?.addEventListener("click", () => this.closeSettingsOverlay());
+    this.elements.settingsAutoTalk?.addEventListener("change", () => this.onAutoTalkToggle());
+    this.elements.autoTalkStartBtn?.addEventListener("click", () => this.onAutoTalkTap());
+    this.elements.autoTalkCloseBtn?.addEventListener("click", () => this.dismissAutoTalkOverlay());
 
     // Subjects button + popup
     this.elements.subjectsBtn?.addEventListener("click", () => this.onSubjectsButton());
@@ -805,6 +828,7 @@ class BrendaApp {
         talkDisclaimerAcceptedAt: meOrNull.talkDisclaimerAcceptedAt || null,
         policyAcceptedAt: meOrNull.policyAcceptedAt || null,
         isAdmin: !!meOrNull.isAdmin,
+        autoTalk: meOrNull.autoTalk === true,
       }
       : null;
     // TALK latency timer (vad-stopwatch.js) is shown only to admin users
@@ -913,12 +937,68 @@ class BrendaApp {
     this.closeDeleteAccountOverlay();
     this.closeDeleteAccountFinalOverlay();
 
+    // Auto-TALK ("Start talking when I open aiBrenda", Settings popup): switch
+    // to TALK *before* the greeting so Brenda says it instead of writing it.
+    const autoTalk = this._takeAutoTalk(me);
+    if (autoTalk) this.setMode("talk");
+
     await this.loadHistoryAndRender();
     await this.checkAndShowGreeting();
     this.startGreetingHeartbeat();
 
     this.setTalkButtonState({ connected: false, disabled: false });
     this.elements.toggleBtnText.disabled = false;
+
+    if (autoTalk) this._startAutoTalk();
+  }
+
+  /* --------------------
+     AUTO-TALK (accessibility: start in TALK when the app opens)
+  -------------------- */
+
+  // Only once per page load (= app launch), so it never re-dials after the
+  // user hangs up, logs in again, or comes back from another app.
+  _takeAutoTalk(me) {
+    if (this._autoTalkChecked) return false;
+    this._autoTalkChecked = true;
+    return !!me && !me.isAnonymous && me.autoTalk === true;
+  }
+
+  _startAutoTalk() {
+    // The Android app lets the page play sound straight away
+    // (MainActivity: mediaPlaybackRequiresUserGesture = false). A normal
+    // browser doesn't until the user has tapped something — Brenda would be
+    // silent — so there we ask for one tap anywhere on the screen.
+    const inAndroidApp = /BrendaAndroid\//.test(navigator.userAgent);
+    if (inAndroidApp || navigator.userActivation?.hasBeenActive) {
+      this.onTalkButton();
+      return;
+    }
+    const o = this.elements.autoTalkOverlay;
+    if (!o) { this.onTalkButton(); return; }
+    o.classList.remove("hidden");
+    o.setAttribute("aria-hidden", "false");
+    setTimeout(() => this.elements.autoTalkStartBtn?.focus(), 50);
+  }
+
+  _hideAutoTalkOverlay() {
+    const o = this.elements.autoTalkOverlay;
+    if (!o) return;
+    o.classList.add("hidden");
+    o.setAttribute("aria-hidden", "true");
+  }
+
+  onAutoTalkTap() {
+    this._hideAutoTalkOverlay();
+    this.onTalkButton();
+  }
+
+  // × / phone Back on the "tap anywhere" screen: stay in WRITE instead, and
+  // show the greeting as text (it was being kept for the voice call).
+  dismissAutoTalkOverlay() {
+    this._hideAutoTalkOverlay();
+    this.setMode("text");
+    this._showTextGreetingIfPending().catch((e) => console.error("[auto-talk] text greeting", e));
   }
 
   openConsentOverlay() {
@@ -1263,6 +1343,92 @@ class BrendaApp {
     }
     if (this.elements.subjectsSaveBtn) this.elements.subjectsSaveBtn.textContent = t(v, "subjectsSave");
     if (this.elements.subjectsCancelBtn) this.elements.subjectsCancelBtn.textContent = t(v, "subjectsCancel");
+  }
+
+  /* --------------------
+     SETTINGS POPUP (Ajustes)
+  -------------------- */
+  localizeSettingsUI() {
+    const v = this.locale.variant;
+    const e = this.elements;
+    if (e.settingsBtn) e.settingsBtn.textContent = t(v, "settingsBtn");
+    if (e.settingsTitle) e.settingsTitle.textContent = t(v, "settingsTitle");
+    if (e.settingsAutoTalkLabel) e.settingsAutoTalkLabel.textContent = t(v, "settingsAutoTalk");
+    if (e.settingsDoneBtn) e.settingsDoneBtn.textContent = t(v, "settingsClose");
+    if (e.autoTalkStartBtn) e.autoTalkStartBtn.textContent = t(v, "autoTalkTapAnywhere");
+  }
+
+  onSettingsButton() {
+    if (!this.user) {
+      this.openAuthOverlay({ closable: false, resetFields: true });
+      return;
+    }
+    this.openSettingsOverlay();
+  }
+
+  async openSettingsOverlay() {
+    const o = this.elements.settingsOverlay;
+    if (!o) return;
+    this.setSettingsStatus("");
+
+    // Auto-TALK only makes sense for named accounts (anonymous can't TALK).
+    const named = !!this.user && !this.user.isAnonymous;
+    this.elements.settingsAutoTalkRow?.classList.toggle("hidden", !named);
+    const cb = this.elements.settingsAutoTalk;
+    if (cb) cb.checked = !!this.user?.autoTalk;
+
+    o.classList.remove("hidden");
+    o.setAttribute("aria-hidden", "false");
+
+    // Re-read the saved value (the login response doesn't carry it).
+    if (named && cb) {
+      cb.disabled = true;
+      try {
+        const me = await this.apiJSON("/api/auth/me", { method: "GET" });
+        const on = me?.autoTalk === true;
+        if (this.user) this.user.autoTalk = on;
+        cb.checked = on;
+      } catch (err) {
+        console.error("[settings] could not load autoTalk", err);
+      } finally {
+        cb.disabled = false;
+      }
+    }
+  }
+
+  closeSettingsOverlay() {
+    const o = this.elements.settingsOverlay;
+    if (!o) return;
+    o.classList.add("hidden");
+    o.setAttribute("aria-hidden", "true");
+    this.setSettingsStatus("");
+  }
+
+  setSettingsStatus(msg, isError = false) {
+    const el = this.elements.settingsStatus;
+    if (!el) return;
+    el.textContent = msg || "";
+    el.style.color = isError ? "#b00020" : "#2563eb";
+  }
+
+  // Saved straight away (no Save button) — one tap, easy with TalkBack.
+  async onAutoTalkToggle() {
+    const v = this.locale.variant;
+    const cb = this.elements.settingsAutoTalk;
+    if (!cb) return;
+    const want = cb.checked;
+    cb.disabled = true;
+    try {
+      await this.apiJSON("/api/auth/me", { method: "PATCH", body: { autoTalk: want } });
+      if (this.user) this.user.autoTalk = want;
+      this.setSettingsStatus(t(v, "settingsSaved"));
+    } catch (err) {
+      console.error("[settings] autoTalk save failed", err);
+      cb.checked = !want;
+      this.setSettingsStatus(t(v, "settingsSaveError"), true);
+    } finally {
+      cb.disabled = false;
+    }
   }
 
   /* --------------------

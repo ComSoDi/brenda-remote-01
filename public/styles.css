@@ -114,12 +114,12 @@ body {
   margin: 0;
 }
 
-.subjects-btn {
+.settings-btn {
   order: 1;
   align-self: flex-start;
   height: 45px;
   font-size: 24px;
-  width: 180px; /* = .chat-rds-btn (Cambia tema), so Temas lines up above it */
+  width: 180px; /* = .chat-rds-btn (Cambia tema), so Ajustes lines up above it */
   padding: 6px 6px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -129,7 +129,7 @@ body {
   cursor: pointer;
 }
 
-.subjects-btn:hover {
+.settings-btn:hover {
   background: #7eff7e;
   border-color: rgba(27, 148, 78, 0.32);
 }
@@ -2299,7 +2299,7 @@ body {
 
 /* ── News & Gossip — header buttons ────────────────────────────────────────── */
 
-/* Invisible flex line-break: separates row 1 (subjects, latest, med) from row 2 (headlines, chat) */
+/* Invisible flex line-break: separates row 1 (settings, tasks) from row 2 (headlines, chat) */
 .header-actions::before {
   content: '';
   display: block;
@@ -2312,29 +2312,7 @@ body {
   order: 5;
 }
 
-.latest-btn {
-  order: 2;
-
-  align-self: flex-start;
-  height: 45px;
-  font-size: 24px;
-  width: 135px; /* = .headlines-btn (Titulares), so Secciones lines up above it */
-  padding: 6px 6px;
-  background: #fff;
-  color: #0f172a;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-
-.latest-btn:hover {
-  color: #0f172a;
-  background: #7eff7e;
-  border-color: rgba(27, 148, 78, 0.32);
-}
+/* .latest-btn (Secciones) left the header 2026-11-10 — now inside the Settings popup */
 
 .headlines-btn {
   align-self: flex-start;
@@ -2412,6 +2390,79 @@ body {
    from the sections list above. */
 .latest-cat-item.latest-news-greeting {
   margin-top: 18px;
+}
+
+/* ── Settings popup (Ajustes) ───────────────────────────────────────────────
+   Subjects + Sections buttons (white, like the header buttons they replaced)
+   and the "Start talking when I open aiBrenda" checkbox. */
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.settings-nav-btn {
+  height: 48px;
+  font-size: 22px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.settings-nav-btn:hover {
+  background: #7eff7e;
+  border-color: rgba(27, 148, 78, 0.32);
+}
+
+.latest-cat-item.settings-toggle-row {
+  margin-top: 12px;
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.latest-cat-item.settings-toggle-row input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+}
+
+/* ── Auto-TALK "tap anywhere" (normal browsers only) ────────────────────────
+   The whole screen is the button, so it's easy to hit with TalkBack. */
+.auto-talk-overlay {
+  padding: 0;
+}
+
+/* Popup backdrops cover the whole browser window (.container isn't
+   positioned); this frame keeps the text and × within the app's width:
+   640px like .container on desktop, the full width on a phone. */
+.auto-talk-frame {
+  position: relative;
+  width: min(100%, 640px);
+  height: min(800px, 100%);
+}
+
+.auto-talk-start-btn {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.3;
+  padding: 24px;
+  cursor: pointer;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.auto-talk-close-btn {
+  position: absolute;
+  top: calc(14px + var(--shell-safe-top, 0px));
+  right: 14px;
 }
 
 /* ── Headlines card ─────────────────────────────────────────────────────────── */
@@ -2957,7 +3008,7 @@ body {
    PHONE HEADER (≤499px) — compact 3-row header, tuned for a
    360×800 baseline (common mid-range Android). Desktop untouched.
    Row 1: avatar · title · account · My info · ?
-   Row 2: Subjects · Sections · Tasks   (equal widths)
+   Row 2: Settings · Tasks              (equal widths)
    Row 3: Headlines · Change Topic      (equal widths)
    Keeps ≥20px bold labels + existing high-contrast colours for
    senior readability. Selectors are prefixed with .header /

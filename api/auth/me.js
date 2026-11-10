@@ -24,19 +24,40 @@ async function readBody(req) {
 export default async function handler(req, res) {
   const s = getSession(req);
 
-  // PATCH — update gender preference
+  // PATCH — update gender and/or autoTalk preference
   if (req.method === "PATCH") {
     if (!s?.userId || s.isAnonymous) return json(res, 401, { error: "Unauthorized" });
-    const { gender } = await readBody(req);
-    if (!["Woman", "Man", "Other"].includes(gender)) return json(res, 400, { error: "Invalid gender" });
+    const { gender, autoTalk } = await readBody(req);
+    const hasGender = gender !== undefined;
+    const hasAutoTalk = typeof autoTalk === "boolean";
+    if (!hasGender && !hasAutoTalk) return json(res, 400, { error: "Nothing to update" });
+    if (hasGender && !["Woman", "Man", "Other"].includes(gender)) return json(res, 400, { error: "Invalid gender" });
     try {
       const db = await getDb();
-      await db.collection("users").updateOne(
-        { userId: s.userId },
-        { $set: { "preferences.gender": gender } }
-      );
-      setSessionCookie(res, { ...s, gender, iat: Date.now() });
-      return json(res, 200, { ok: true, gender });
+      if (hasGender) {
+        await db.collection("users").updateOne(
+          { userId: s.userId },
+          { $set: { "preferences.gender": gender } }
+        );
+        setSessionCookie(res, { ...s, gender, iat: Date.now() });
+      }
+      if (hasAutoTalk) {
+        // "Start talking when I open aiBrenda" (Settings popup). Every real
+        // change is logged { enabled, at }, like preferences.newsGreetingLog.
+        const now = new Date();
+        await db.collection("users").updateOne(
+          { userId: s.userId, "preferences.autoTalk": { $ne: autoTalk } },
+          {
+            $set: { "preferences.autoTalk": autoTalk, "preferences.autoTalkChangedAt": now },
+            $push: { "preferences.autoTalkLog": { enabled: autoTalk, at: now } },
+          }
+        );
+      }
+      return json(res, 200, {
+        ok: true,
+        ...(hasGender ? { gender } : {}),
+        ...(hasAutoTalk ? { autoTalk } : {}),
+      });
     } catch (e) {
       console.error("[auth/me PATCH]", e.message);
       return json(res, 500, { error: e.message });
@@ -54,16 +75,18 @@ export default async function handler(req, res) {
   // policyAcceptedAt is tracked for anonymous sessions too — the privacy
   // policy is viewable (and "Understood"-able) regardless of account type.
   let policyAcceptedAt = null;
+  let autoTalk = false;
   try {
     const db = await getDb();
     const user = await db.collection("users").findOne(
       { userId: s.userId },
-      { projection: { "preferences.gender": 1, "preferences.consentAcceptedAt": 1, "preferences.talkDisclaimerAcceptedAt": 1, "preferences.policyAcceptedAt": 1 } }
+      { projection: { "preferences.gender": 1, "preferences.consentAcceptedAt": 1, "preferences.talkDisclaimerAcceptedAt": 1, "preferences.policyAcceptedAt": 1, "preferences.autoTalk": 1 } }
     );
     if (!gender) gender = user?.preferences?.gender || null;
     if (!s.isAnonymous) {
       consentAcceptedAt = user?.preferences?.consentAcceptedAt || null;
       talkDisclaimerAcceptedAt = user?.preferences?.talkDisclaimerAcceptedAt || null;
+      autoTalk = user?.preferences?.autoTalk === true;
     }
     policyAcceptedAt = user?.preferences?.policyAcceptedAt || null;
   } catch {
@@ -86,6 +109,7 @@ export default async function handler(req, res) {
     consentAcceptedAt,
     talkDisclaimerAcceptedAt,
     policyAcceptedAt,
+    autoTalk,
     voiceProxyUrl: process.env.VOICE_PROXY_WS_URL || null,
     voiceToken,
   });

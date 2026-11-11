@@ -23,6 +23,9 @@
       this.onTranscript = null;
       this.onAudioData = null;
       this.onError = null;
+      // Proxy-originated control messages, e.g. { action: "end_call" }
+      // (spoken hang-up, server.js END_CALL_TOOL). Not from Gemini.
+      this.onControl = null;
 
       this._outputSampleRate = 24000;
       this._inputSampleRate = 16000;
@@ -259,6 +262,10 @@
               if (response.error) {
                 console.error("Gemini Error:", response.error);
                 if (this.onError) this.onError(response.error);
+                return;
+              }
+              if (response.brendaControl) {
+                if (this.onControl) this.onControl(response.brendaControl);
                 return;
               }
               this.handleGeminiMessage(response);
@@ -856,6 +863,26 @@
           this.speakExact(queued);
         }
       }
+    }
+
+    // Resolves once Brenda's queued audio has finished playing and nothing new
+    // has arrived for quietMs (or after maxMs, whichever comes first).
+    whenPlaybackDone({ quietMs = 800, maxMs = 15000 } = {}) {
+      return new Promise((resolve) => {
+        const startedAt = Date.now();
+        let quietSince = null;
+        const tick = () => {
+          const ctx = this.audioContext;
+          const playing = this.scheduledSources.length > 0
+            || (ctx && this.nextStartTime > ctx.currentTime);
+          if (playing) quietSince = null;
+          else if (quietSince === null) quietSince = Date.now();
+          if ((quietSince !== null && Date.now() - quietSince >= quietMs)
+              || Date.now() - startedAt >= maxMs) { resolve(); return; }
+          setTimeout(tick, 100);
+        };
+        tick();
+      });
     }
 
     queueAudio(base64Data) {

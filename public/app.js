@@ -551,6 +551,9 @@ class BrendaApp {
       this._noteMicSpeech(data);
     };
     this.agent.onError = (err) => this.showError(err);
+    this.agent.onControl = (msg) => {
+      if (msg?.action === "end_call") this._endCallBySpeech();
+    };
 
     // Account button
     // âœ… IMPORTANT: open overlay with resetFields so Nick+PIN are empty when opened from account button
@@ -2428,6 +2431,23 @@ class BrendaApp {
       tile.classList.add("hidden");
       overlay.setAttribute("aria-hidden", "true");
       tile.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  // Spoken hang-up ("adiós Brenda" / "goodbye Brenda"): Brenda called the
+  // end_call tool (server.js). Let her goodbye finish playing, then hang up
+  // exactly like the button — unless the call already ended meanwhile.
+  async _endCallBySpeech() {
+    if (this._endingBySpeech) return;
+    this._endingBySpeech = true;
+    try {
+      await this.agent.whenPlaybackDone();
+      if (this._lastVoiceStatus && this._lastVoiceStatus !== "disconnected") {
+        this._talkDisconnectedByUser = true;
+        this.hangUp();
+      }
+    } finally {
+      this._endingBySpeech = false;
     }
   }
 

@@ -72,6 +72,19 @@ import { brendaBio, brendaSelfRule, brendaVocabulary, brendaSearchRule, brendaSe
 import { recallMemory, RECALL_MEMORY_TOOL } from "./lib/canonMemory.js";
 import { CHALLENGE_TOOL, runChallengeAction } from "./lib/brendaSkills.js";
 
+// Spoken hang-up (TALK only — accessibility: blind users can't find the
+// button). Brenda calls it; the proxy waits for her goodbye turn to finish,
+// then tells the app ({ brendaControl: { action: "end_call" } }), which hangs
+// up once the goodbye has finished playing. Kept short: re-billed every turn.
+const END_CALL_TOOL = {
+  name: "end_call",
+  description:
+    "Hang up this voice call. Only when the user explicitly asks you to hang up, e.g. 'Brenda, hang up " +
+    "the call' / 'Brenda, cuelga la llamada' — a plain goodbye is not enough. First say only: 'OK, <name>, " +
+    "hanging up the call now' / 'OK, <nombre>, colgando la llamada ahora' (user's language), then call it.",
+  parameters: { type: "object", properties: {} },
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT || 3000);
@@ -667,6 +680,7 @@ wss.on("connection", (ws) => {
           { function_declarations: [
             RECALL_MEMORY_TOOL,
             CHALLENGE_TOOL,
+            END_CALL_TOOL,
             // On-demand facts about the user — only in "core" mode (in "full"
             // mode every fact is already in the prompt). See RDS_PROMPT_MODE.
             ...(RDS_PROMPT_MODE === "core" ? [RECALL_USER_FACTS_TOOL] : []),
@@ -720,6 +734,15 @@ wss.on("connection", (ws) => {
       messageBuffer.push(processed);
     }
   });
+
+  function sendEndCall() {
+    clearTimeout(ws.endCallTimer);
+    if (!ws.pendingEndCall) return;
+    ws.pendingEndCall = false;
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ brendaControl: { action: "end_call" } }));
+    }
+  }
 
   geminiWs.on("message", (data) => {
     const text = data.toString();
@@ -785,6 +808,14 @@ wss.on("connection", (ws) => {
                 const db = await getDb();
                 const profile = db ? await getRdsProfile(db, userId) : null;
                 response = searchUserFacts(profile, args.topic);
+              } else if (name === "end_call") {
+                // Hang up after this turn (her goodbye) completes — see
+                // sendEndCall(). Fallback in case turnComplete never comes.
+                console.log(`📴 [voice] end_call requested session=${voiceSessionId} userId=${userId ?? "null"}`);
+                ws.pendingEndCall = true;
+                clearTimeout(ws.endCallTimer);
+                ws.endCallTimer = setTimeout(sendEndCall, 12000);
+                response = { ok: true };
               } else if (name === "challenge") {
                 // While ws.challengeState is set, RDS extraction is suppressed
                 // (see the extractRdsItems() call further down); "end" clears it.
@@ -885,6 +916,7 @@ wss.on("connection", (ws) => {
         }
 
         if (sc.turnComplete) {
+          if (ws.pendingEndCall) sendEndCall();
           if (turnGrounded && userId) {
             const queries = [...turnSearchQueries];
             console.log(`[voice-proxy] google_search session=${voiceSessionId} userId=${userId} queries=${JSON.stringify(queries)}`);

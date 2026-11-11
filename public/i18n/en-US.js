@@ -121,7 +121,7 @@ export default {
     subjectsButton: "Subjects",
     settingsBtn: "Settings",
     settingsTitle: "Settings",
-    settingsAutoTalk: "Start talking when I open aiBrenda",
+    settingsAutoTalk: "Automatic 'TALK' mode",
     settingsClose: "Close",
     settingsSaved: "Saved",
     settingsSaveError: "Couldn't save. Please try again.",

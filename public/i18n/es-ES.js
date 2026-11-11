@@ -110,7 +110,7 @@ export default {
     subjectsButton: "Temas",
     settingsBtn: "Ajustes",
     settingsTitle: "Ajustes",
-    settingsAutoTalk: "Empezar a hablar al abrir aiBrenda",
+    settingsAutoTalk: "Modo 'HABLAR' Automático",
     settingsClose: "Cerrar",
     settingsSaved: "Guardado",
     settingsSaveError: "No se ha podido guardar. Inténtalo de nuevo.",

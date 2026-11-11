@@ -169,7 +169,7 @@ export default {
     sideNavSettingsText1: "Pulsa el botón blanco \"Ajustes\" para cambiar cómo trabajo contigo.",
     sideNavSettingsText2: "\"Temas\": los temas de los que más te gusta hablar.",
     sideNavSettingsText3: "\"Secciones\": los tipos de noticias que busco para ti.",
-    sideNavSettingsText4: "\"Empezar a hablar al abrir aiBrenda\": si lo marcas, empezamos a hablar en voz alta nada más abrir aiBrenda, sin pulsar HABLAR.",
+    sideNavSettingsText4: "\"Modo 'HABLAR' Automático\": si lo marcas, empezamos a hablar en voz alta apenas abras aiBrenda, sin tocar HABLAR. Para terminar la llamada, solo di \"Brenda, cuelga la llamada\".",
     sideNavSettingsText5: "Muy útil si no ves bien la pantalla: en Android di \"Hey Google, abre aiBrenda\" y ya estamos hablando.",
     sideNavInSettings: "Este botón está dentro del botón blanco \"Ajustes\".",
     sideNavPillLatest: "Titulares",

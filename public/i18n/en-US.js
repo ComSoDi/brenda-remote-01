@@ -180,7 +180,7 @@ export default {
     sideNavSettingsText1: "Tap the white \"Settings\" button to adjust how I work for you.",
     sideNavSettingsText2: "\"Subjects\": the topics you most like to talk about.",
     sideNavSettingsText3: "\"Sections\": the kinds of news I look for.",
-    sideNavSettingsText4: "\"Start talking when I open aiBrenda\": if you check it, we start talking out loud as soon as you open aiBrenda, without tapping TALK.",
+    sideNavSettingsText4: "\"Automatic 'TALK' mode\": if you check it, we start talking out loud as soon as you open aiBrenda, without tapping TALK. To end the call, just say \"Brenda, hang up the call\".",
     sideNavSettingsText5: "Very handy if you can't see the screen well: on Android, say \"Hey Google, open aiBrenda\" and we're already talking.",
     sideNavInSettings: "You'll find this button inside the white \"Settings\" button.",
     sideNavPillLatest: "Headlines",
